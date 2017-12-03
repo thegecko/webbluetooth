@@ -1,0 +1,43 @@
+general:
+  artifacts:
+    - ~/docs
+  branches:
+    ignore:
+      - build
+
+machine:
+  node:
+    version: 4.0.0
+  environment:
+    PROJECT_NAME: ${CIRCLE_PROJECT_REPONAME}
+    PROJECT_TAG: ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+    PROJECT_LIVE_BRANCH: build
+    PROJECT_DOCS: ${HOME}/docs
+
+checkout:
+  post:
+    - git config --global user.name thegecko
+    - git config --global user.email github@thegecko.org
+
+compile:
+  override:
+    - npm run gulp
+    - mkdir -p ${PROJECT_DOCS}
+    - cp -r docs/* ${PROJECT_DOCS}/
+
+test:
+  override:
+    - exit 0
+
+deployment:
+  staging:
+    branch: master
+    commands:
+      - echo Syncing $PROJECT_NAME to $PROJECT_LIVE_BRANCH on GitHub...
+      - git add --force docs lib types
+      - git stash save
+      - git checkout $PROJECT_LIVE_BRANCH
+      - git merge master --no-commit
+      - git checkout stash -- .
+      - git commit --allow-empty --message "Automatic Deployment"
+      - git push
