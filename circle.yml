@@ -1,6 +1,8 @@
 machine:
   node:
     version: 4.0.0
+  environment:
+    LIVE_BRANCH: gh-pages
 
 compile:
   override:
@@ -14,9 +16,11 @@ deployment:
   staging:
     branch: master
     commands:
-      - echo Syncing to GitHub...
-      - git config --global user.name thegecko
-      - git config --global user.email github@thegecko.org
+      - echo Syncing to $LIVE_BRANCH on GitHub...
       - git add --force docs lib types
-      - git commit --allow-empty --message "Automatic Deployment"
+      - git stash save
+      - git checkout $LIVE_BRANCH
+      - git merge master --no-commit
+      - git checkout stash -- .
+      - git commit --allow-empty --message "Automatic Deployment [skip ci]"
       - git push
