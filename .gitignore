@@ -1,7 +1,8 @@
 .DS_Store
 .vscode
 node_modules
-package-lock.json
 docs
 lib
 types
+npm-debug.log
+package-lock.json

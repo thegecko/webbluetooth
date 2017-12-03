@@ -24,3 +24,4 @@ deployment:
       - git checkout stash -- .
       - git commit --allow-empty --message "Automatic Deployment [skip ci]"
       - git push
+      - npm publish || true
