@@ -1,4 +1,5 @@
-docs
 .gitignore
 circle.yml
 gulpfile.js
+tsconfig.json
+tslint.json
