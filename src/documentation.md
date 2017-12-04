@@ -8,5 +8,5 @@ Node.js implementation of the Web Bluetooth Specification
 ## Installation
 
 ```bash
-$ npm install web-usb
+$ npm install webbluetooth
 ```

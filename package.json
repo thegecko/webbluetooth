@@ -1,6 +1,6 @@
 {
   "name": "webbluetooth",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Node.js implementation of the Web Bluetooth Specification",
   "homepage": "https://github.com/thegecko/webbluetooth",
   "author": "Rob Moran <rob@thegecko.org>",
@@ -20,10 +20,7 @@
     "gulp": "gulp"
   },
   "engines": {
-    "node": ">=4.0.0"
-  },
-  "dependencies": {
-    "noble": "^1.8.1"
+    "node": ">=4.8.0"
   },
   "devDependencies": {
     "@types/noble": "0.0.34",
@@ -39,5 +36,8 @@
     "tslint-eslint-rules": "^4.1.1",
     "typedoc": "^0.9.0",
     "typescript": "^2.6.2"
+  },
+  "dependencies": {
+    "noble": "^1.8.1"
   }
 }
