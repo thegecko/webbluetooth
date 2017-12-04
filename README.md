@@ -15,6 +15,6 @@ $ npm install webbluetooth
 
 ## Getting Started
 
-See the examples in [lib/examples/](lib/examples/) or view the API documentation at:
+See the examples in [src/examples/](https://github.com/thegecko/webbluetooth/tree/master/src/examples/) or view the API documentation at:
 
 https://thegecko.github.io/webbluetooth/
