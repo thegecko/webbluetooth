@@ -17,6 +17,8 @@ deployment:
     branch: master
     commands:
       - echo Syncing to $LIVE_BRANCH on GitHub...
+      - git config --global user.name monty-bot
+      - git config --global user.email monty-bot@arm.com
       - git add --force docs lib types
       - git stash save
       - git checkout $LIVE_BRANCH
