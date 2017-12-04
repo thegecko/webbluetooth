@@ -12,3 +12,9 @@ Node.js implementation of the Web Bluetooth Specification
 ```bash
 $ npm install webbluetooth
 ```
+
+## Getting Started
+
+See the examples in [lib/examples/](lib/examples/) or view the API documentation at:
+
+https://thegecko.github.io/webbluetooth/
