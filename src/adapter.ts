@@ -30,6 +30,9 @@ import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import * as noble from "noble";
 
+/**
+ * @hidden
+ */
 export interface Adapter {
     startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
     stopScan: (errorFn?: (errorMsg: string) => void) => void;
@@ -47,6 +50,9 @@ export interface Adapter {
     writeDescriptor: (handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
 }
 
+/**
+ * @hidden
+ */
 export class NobleAdapter implements Adapter {
 
     private deviceHandles: {};
@@ -340,3 +346,8 @@ export class NobleAdapter implements Adapter {
         this.descriptorHandles[handle].writeValue(buffer, this.checkForError(errorFn, completeFn));
     }
 }
+
+/**
+ * @hidden
+ */
+export const adapter = new NobleAdapter();

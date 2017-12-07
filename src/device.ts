@@ -27,9 +27,18 @@ import { BluetoothRemoteGATTServer } from "./server";
 
 export class BluetoothDevice {
 
+    /**
+     * @hidden
+     */
     public _handle: string = null;
+
+    /**
+     * @hidden
+     */
     public _allowedServices: Array<string> = [];
+
     public id: string = "unknown";
+
     public name: string = null;
     // public adData: {
     //    public appearance?: null;
@@ -41,6 +50,9 @@ export class BluetoothDevice {
     public gatt: BluetoothRemoteGATTServer = new BluetoothRemoteGATTServer();
     public uuids: Array<string> = [];
 
+    /**
+     * @hidden
+     */
     constructor(init?: Partial<BluetoothDevice>) {
         for (const key in init) {
             if (init.hasOwnProperty(key)) {

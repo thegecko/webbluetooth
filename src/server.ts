@@ -26,7 +26,11 @@
 import { BluetoothDevice } from "./device";
 
 export class BluetoothRemoteGATTServer {
+    /**
+     * @hidden
+     */
     public _services: Array<string> = null;
+
     public device: BluetoothDevice = null;
     public connected: boolean = false;
 }
