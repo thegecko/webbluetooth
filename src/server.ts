@@ -24,78 +24,84 @@
 */
 
 import { BluetoothDevice } from "./device";
+import { BluetoothRemoteGATTService } from "./service";
+import { getServiceUUID } from "./helpers";
+import { adapter } from "./adapter";
 
 export class BluetoothRemoteGATTServer {
     /**
      * @hidden
      */
-    public _services: Array<string> = null;
+    public _services: Array<BluetoothRemoteGATTService> = null;
 
     public device: BluetoothDevice = null;
     public connected: boolean = false;
-}
 
-/*
-    // BluetoothRemoteGATTServer Object
-    var BluetoothRemoteGATTServer = function() {
-        this._services = null;
-
-        this.device = null;
-        this.connected = false;
-    };
-    BluetoothRemoteGATTServer.prototype.connect = function() {
-        return new Promise(function(resolve, reject) {
+    public connect(): Promise<BluetoothRemoteGATTServer> {
+        return new Promise((resolve, reject) => {
             if (this.connected) return reject("connect error: device already connected");
 
-            adapter.connect(this.device._handle, function() {
+            adapter.connect(this.device._handle, () => {
                 this.connected = true;
                 resolve(this);
-            }.bind(this), function() {
+            }, () => {
                 this._services = null;
                 this.connected = false;
-                this.device.dispatchEvent({ type: "gattserverdisconnected", bubbles: true });
-            }.bind(this), wrapReject(reject, "connect error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTServer.prototype.disconnect = function() {
+                this.device.emit(BluetoothDevice.EVENT_DISCONNECTED);
+            }, error => {
+                reject(`connect Error: ${error}`);
+            });
+        });
+    }
+
+    public disconnect() {
         adapter.disconnect(this.device._handle);
         this.connected = false;
-    };
-    BluetoothRemoteGATTServer.prototype.getPrimaryService = function(serviceUUID) {
-        return new Promise(function(resolve, reject) {
+    }
+
+    public getPrimaryService(serviceUUID): Promise<BluetoothRemoteGATTService> {
+        return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryService error: device not connected");
             if (!serviceUUID) return reject("getPrimaryService error: no service specified");
 
             this.getPrimaryServices(serviceUUID)
-            .then(function(services) {
+            .then(services => {
                 if (services.length !== 1) return reject("getPrimaryService error: service not found");
                 resolve(services[0]);
             })
-            .catch(function(error) {
-                reject(error);
+            .catch(error => {
+                reject(`getPrimaryService error: ${error}`);
             });
-        }.bind(this));
-    };
-    BluetoothRemoteGATTServer.prototype.getPrimaryServices = function(serviceUUID) {
-        return new Promise(function(resolve, reject) {
+        });
+    }
+
+    public getPrimaryServices(serviceUUID): Promise<Array<BluetoothRemoteGATTService>> {
+        return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryServices error: device not connected");
 
             function complete() {
                 if (!serviceUUID) return resolve(this._services);
-                var filtered = this._services.filter(function(service) {
-                    return (service.uuid === helpers.getServiceUUID(serviceUUID));
+
+                const filtered = this._services.filter(service => {
+                    return (service.uuid === getServiceUUID(serviceUUID));
                 });
+
                 if (filtered.length !== 1) return reject("getPrimaryServices error: service not found");
                 resolve(filtered);
             }
+
             if (this._services) return complete.call(this);
-            adapter.discoverServices(this.device._handle, this.device._allowedServices, function(services) {
-                this._services = services.map(function(serviceInfo) {
+
+            adapter.discoverServices(this.device._handle, this.device._allowedServices, services => {
+                this._services = services.map(serviceInfo => {
                     serviceInfo.device = this.device;
                     return new BluetoothRemoteGATTService(serviceInfo);
-                }.bind(this));
+                });
+
                 complete.call(this);
-            }.bind(this), wrapReject(reject, "getPrimaryServices error"));
-        }.bind(this));
-    };
-*/
+            }, error => {
+                reject(`getPrimaryServices error: ${error}`);
+            });
+        });
+    }
+}

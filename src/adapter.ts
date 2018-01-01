@@ -55,17 +55,17 @@ export interface Adapter {
  */
 export class NobleAdapter implements Adapter {
 
-    private deviceHandles: {};
-    private serviceHandles: {};
-    private characteristicHandles: {};
-    private descriptorHandles: {};
-    private charNotifies: {};
+    private deviceHandles: {} = {};
+    private serviceHandles: {} = {};
+    private characteristicHandles: {} = {};
+    private descriptorHandles: {} = {};
+    private charNotifies: {} = {};
     private foundFn: (device: Partial<BluetoothDevice>) => void = null;
     private initialised: boolean = false;
 
     private init(completeFn: () => any) {
         if (this.initialised) return completeFn();
-        noble.on("discover", this.discover);
+        noble.on("discover", this.discover.bind(this));
         this.initialised = true;
         completeFn();
     }
@@ -162,7 +162,7 @@ export class NobleAdapter implements Adapter {
             }
             // tslint:disable-next-line:no-string-literal
             if (noble.state === "unknown") noble["once"]("stateChange", stateCB.bind(this));
-            else stateCB(noble.state);
+            else stateCB.call(this, noble.state);
         });
     }
 
@@ -174,13 +174,13 @@ export class NobleAdapter implements Adapter {
     public connect(handle: string, connectFn: () => void, disconnectFn: () => void, errorFn?: (errorMsg: string) => void): void {
         const baseDevice = this.deviceHandles[handle];
         baseDevice.once("connect", connectFn);
-        baseDevice.once("disconnect", function() {
+        baseDevice.once("disconnect", () => {
             this.serviceHandles = {};
             this.characteristicHandles = {};
             this.descriptorHandles = {};
             this.charNotifies = {};
             disconnectFn();
-        }.bind(this));
+        });
         baseDevice.connect(this.checkForError(errorFn));
     }
 
@@ -190,10 +190,9 @@ export class NobleAdapter implements Adapter {
 
     public discoverServices(handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void): void {
         const baseDevice = this.deviceHandles[handle];
-        baseDevice.discoverServices([], this.checkForError(errorFn, function(services) {
-
+        baseDevice.discoverServices([], this.checkForError(errorFn, services => {
             const discovered = [];
-            services.forEach(function(serviceInfo) {
+            services.forEach(serviceInfo => {
                 const serviceUUID = getCanonicalUUID(serviceInfo.uuid);
 
                 if (serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
@@ -205,15 +204,15 @@ export class NobleAdapter implements Adapter {
                         primary: true
                     });
                 }
-            }, this);
+            });
 
             completeFn(discovered);
-        }.bind(this)));
+        }));
     }
 
     public discoverIncludedServices(handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void): void {
         const serviceInfo = this.serviceHandles[handle];
-        serviceInfo.discoverIncludedServices([], this.checkForError(errorFn, function(services) {
+        serviceInfo.discoverIncludedServices([], this.checkForError(errorFn, services => {
 
             const discovered = [];
             services.forEach(service => {
@@ -231,15 +230,15 @@ export class NobleAdapter implements Adapter {
             }, this);
 
             completeFn(discovered);
-        }.bind(this)));
+        }));
     }
 
     public discoverCharacteristics(handle: string, characteristicUUIDs: Array<string>, completeFn: (characteristics: Array<Partial<BluetoothRemoteGATTCharacteristic>>) => void, errorFn?: (errorMsg: string) => void): void {
         const serviceInfo = this.serviceHandles[handle];
-        serviceInfo.discoverCharacteristics([], this.checkForError(errorFn, function(characteristics) {
+        serviceInfo.discoverCharacteristics([], this.checkForError(errorFn, characteristics => {
 
             const discovered = [];
-            characteristics.forEach(function(characteristicInfo) {
+            characteristics.forEach(characteristicInfo => {
                 const charUUID = getCanonicalUUID(characteristicInfo.uuid);
 
                 if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
@@ -261,25 +260,25 @@ export class NobleAdapter implements Adapter {
                         }
                     });
 
-                    characteristicInfo.on("data", function(data, isNotification) {
+                    characteristicInfo.on("data", (data, isNotification) => {
                         if (isNotification === true && typeof this.charNotifies[charUUID] === "function") {
                             const dataView = this.bufferToDataView(data);
                             this.charNotifies[charUUID](dataView);
                         }
-                    }.bind(this));
+                    });
                 }
             }, this);
 
             completeFn(discovered);
-        }.bind(this)));
+        }));
     }
 
     public discoverDescriptors(handle: string, descriptorUUIDs: Array<string>, completeFn: (descriptors: Array<Partial<BluetoothRemoteGATTDescriptor>>) => void, errorFn?: (errorMsg: string) => void): void {
         const characteristicInfo = this.characteristicHandles[handle];
-        characteristicInfo.discoverDescriptors(this.checkForError(errorFn, function(descriptors) {
+        characteristicInfo.discoverDescriptors(this.checkForError(errorFn, descriptors => {
 
             const discovered = [];
-            descriptors.forEach(function(descriptorInfo) {
+            descriptors.forEach(descriptorInfo => {
                 const descUUID = getCanonicalUUID(descriptorInfo.uuid);
 
                 if (descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
@@ -294,7 +293,7 @@ export class NobleAdapter implements Adapter {
             }, this);
 
             completeFn(discovered);
-        }.bind(this)));
+        }));
     }
 
     public readCharacteristic(handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void): void {
@@ -309,7 +308,7 @@ export class NobleAdapter implements Adapter {
         this.characteristicHandles[handle].write(buffer, true, this.checkForError(errorFn, completeFn));
     }
 
-    public enableNotify(handle: string, notifyFn: () => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
+    public enableNotify(handle: string, notifyFn: (value: DataView) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
         if (this.charNotifies[handle]) {
             this.charNotifies[handle] = notifyFn;
             return completeFn();

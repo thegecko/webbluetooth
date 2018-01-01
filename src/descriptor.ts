@@ -23,40 +23,60 @@
 * SOFTWARE.
 */
 
+import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
+import { adapter } from "./adapter";
+
 export class BluetoothRemoteGATTDescriptor {
-}
+    /**
+     * @hidden
+     */
+    public _handle: string = null;
 
-/*
-    // BluetoothRemoteGATTDescriptor Object
-    var BluetoothRemoteGATTDescriptor = function(properties) {
-        this._handle = null;
+    public characteristic: BluetoothRemoteGATTCharacteristic = null;
+    public uuid = null;
+    public value = null;
 
-        this.characteristic = null;
-        this.uuid = null;
-        this.value = null;
+    /**
+     * @hidden
+     */
+    constructor(init?: Partial<BluetoothRemoteGATTDescriptor>) {
+        for (const key in init) {
+            if (init.hasOwnProperty(key)) {
+                this[key] = init[key];
+            }
+        }
+    }
 
-        mergeDictionary(this, properties);
-    };
-    BluetoothRemoteGATTDescriptor.prototype.readValue = function() {
-        return new Promise(function(resolve, reject) {
+    public readValue(): Promise<DataView> {
+        return new Promise((resolve, reject) =>  {
             if (!this.characteristic.service.device.gatt.connected) return reject("readValue error: device not connected");
 
-            adapter.readDescriptor(this._handle, function(dataView) {
+            adapter.readDescriptor(this._handle, dataView => {
                 this.value = dataView;
                 resolve(dataView);
-            }.bind(this), wrapReject(reject, "readValue error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTDescriptor.prototype.writeValue = function(bufferSource) {
-        return new Promise(function(resolve, reject) {
+            }, error => {
+                reject(`readValue error: ${error}`);
+            });
+        });
+    }
+
+    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView) {
+        return new Promise((resolve, reject) => {
             if (!this.characteristic.service.device.gatt.connected) return reject("writeValue error: device not connected");
 
-            var arrayBuffer = bufferSource.buffer || bufferSource;
-            var dataView = new DataView(arrayBuffer);
-            adapter.writeDescriptor(this._handle, dataView, function() {
+            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
+                return (source as ArrayBufferView).buffer !== undefined;
+            }
+
+            const arrayBuffer = isView(bufferSource) ? bufferSource.buffer : bufferSource;
+            const dataView = new DataView(arrayBuffer);
+
+            adapter.writeDescriptor(this._handle, dataView, () => {
                 this.value = dataView;
                 resolve();
-            }.bind(this), wrapReject(reject, "writeValue error"));
-        }.bind(this));
-    };
-*/
+            }, error => {
+                reject(`writeValue error: ${error}`);
+            });
+        });
+    }
+}

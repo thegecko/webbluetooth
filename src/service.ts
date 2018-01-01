@@ -23,102 +23,153 @@
 * SOFTWARE.
 */
 
-export class BluetoothRemoteGATTService {
-}
+import { Emitter } from "./emitter";
+import { BluetoothDevice } from "./device";
+import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
+import { getCharacteristicUUID, getServiceUUID } from "./helpers";
+import { adapter } from "./adapter";
 
-/*
-    // BluetoothRemoteGATTService Object
-    var BluetoothRemoteGATTService = function(properties) {
-        this._handle = null;
-        this._services = null;
-        this._characteristics = null;
+export class BluetoothRemoteGATTService extends Emitter {
 
-        this.device = null;
-        this.uuid = null;
-        this.isPrimary = false;
+    /**
+     * Service Added event
+     * @event
+     */
+    public static EVENT_ADDED: string = "serviceadded";
 
-        mergeDictionary(this, properties);
-        this.dispatchEvent({ type: "serviceadded", bubbles: true });
-    };
-    BluetoothRemoteGATTService.prototype.getCharacteristic = function(characteristicUUID) {
-        return new Promise(function(resolve, reject) {
+    /**
+     * Service Changed event
+     * @event
+     */
+    public static EVENT_CHANGED: string = "servicechanged";
+
+    /**
+     * Service Removed event
+     * @event
+     */
+    public static EVENT_REMOVED: string = "serviceremoved";
+
+    /**
+     * @hidden
+     */
+    public _handle: string = null;
+
+    /**
+     * @hidden
+     */
+    public _services: Array<BluetoothRemoteGATTService> = null;
+
+    /**
+     * @hidden
+     */
+    public _characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
+
+    public device: BluetoothDevice = null;
+    public uuid = null;
+    public isPrimary = false;
+
+    /**
+     * @hidden
+     */
+    constructor(init?: Partial<BluetoothRemoteGATTService>) {
+        super();
+        for (const key in init) {
+            if (init.hasOwnProperty(key)) {
+                this[key] = init[key];
+            }
+        }
+        this.emit(BluetoothRemoteGATTService.EVENT_ADDED);
+    }
+
+    public getCharacteristic(characteristicUUID): Promise<BluetoothRemoteGATTCharacteristic> {
+        return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristic error: device not connected");
             if (!characteristicUUID) return reject("getCharacteristic error: no characteristic specified");
 
             this.getCharacteristics(characteristicUUID)
-            .then(function(characteristics) {
+            .then(characteristics => {
                 if (characteristics.length !== 1) return reject("getCharacteristic error: characteristic not found");
                 resolve(characteristics[0]);
             })
-            .catch(function(error) {
-                reject(error);
+            .catch(error => {
+                reject(`getCharacteristic error: ${error}`);
             });
-        }.bind(this));
-    };
-    BluetoothRemoteGATTService.prototype.getCharacteristics = function(characteristicUUID) {
-        return new Promise(function(resolve, reject) {
+        });
+    }
+
+    public getCharacteristics(characteristicUUID): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
+        return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristics error: device not connected");
 
             function complete() {
                 if (!characteristicUUID) return resolve(this._characteristics);
-                var filtered = this._characteristics.filter(function(characteristic) {
-                    return (characteristic.uuid === helpers.getCharacteristicUUID(characteristicUUID));
+
+                const filtered = this._characteristics.filter(characteristic => {
+                    return (characteristic.uuid === getCharacteristicUUID(characteristicUUID));
                 });
+
                 if (filtered.length !== 1) return reject("getCharacteristics error: characteristic not found");
                 resolve(filtered);
             }
+
             if (this._characteristics) return complete.call(this);
-            adapter.discoverCharacteristics(this._handle, [], function(characteristics) {
-                this._characteristics = characteristics.map(function(characteristicInfo) {
+
+            adapter.discoverCharacteristics(this._handle, [], characteristics => {
+                this._characteristics = characteristics.map(characteristicInfo => {
                     characteristicInfo.service = this;
                     return new BluetoothRemoteGATTCharacteristic(characteristicInfo);
-                }.bind(this));
+                });
+
                 complete.call(this);
-            }.bind(this), wrapReject(reject, "getCharacteristics error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTService.prototype.getIncludedService = function(serviceUUID) {
-        return new Promise(function(resolve, reject) {
+            }, error => {
+                reject(`getCharacteristics error: ${error}`);
+            });
+        });
+    }
+
+    public getIncludedService(serviceUUID): Promise<BluetoothRemoteGATTService> {
+        return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedService error: device not connected");
             if (!serviceUUID) return reject("getIncludedService error: no service specified");
 
             this.getIncludedServices(serviceUUID)
-            .then(function(services) {
+            .then(services => {
                 if (services.length !== 1) return reject("getIncludedService error: service not found");
                 resolve(services[0]);
             })
-            .catch(function(error) {
-                reject(error);
+            .catch(error => {
+                reject(`getIncludedService error: ${error}`);
             });
-        }.bind(this));
-    };
-    BluetoothRemoteGATTService.prototype.getIncludedServices = function(serviceUUID) {
-        return new Promise(function(resolve, reject) {
+        });
+    }
+
+    public getIncludedServices(serviceUUID): Promise<Array<BluetoothRemoteGATTService>> {
+        return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedServices error: device not connected");
 
             function complete() {
                 if (!serviceUUID) return resolve(this._services);
-                var filtered = this._services.filter(function(service) {
-                    return (service.uuid === helpers.getServiceUUID(serviceUUID));
+
+                const filtered = this._services.filter(service => {
+                    return (service.uuid === getServiceUUID(serviceUUID));
                 });
+
                 if (filtered.length !== 1) return reject("getIncludedServices error: service not found");
                 resolve(filtered);
             }
+
             if (this._services) return complete.call(this);
-            adapter.discoverIncludedServices(this._handle, this.device._allowedServices, function(services) {
-                this._services = services.map(function(serviceInfo) {
+
+            adapter.discoverIncludedServices(this._handle, this.device._allowedServices, services => {
+                this._services = services.map(serviceInfo => {
                     serviceInfo.device = this.device;
                     return new BluetoothRemoteGATTService(serviceInfo);
-                }.bind(this));
+                });
+
                 complete.call(this);
-            }.bind(this), wrapReject(reject, "getIncludedServices error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTService.prototype.addEventListener = createListenerFn([
-        "serviceadded",
-        "servicechanged",
-        "serviceremoved"
-    ]);
-    BluetoothRemoteGATTService.prototype.removeEventListener = removeEventListener;
-    BluetoothRemoteGATTService.prototype.dispatchEvent = dispatchEvent;
-*/
+            }, error => {
+                reject(`getIncludedServices error: ${error}`);
+            });
+        });
+    }
+}

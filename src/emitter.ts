@@ -23,51 +23,24 @@
 * SOFTWARE.
 */
 
-import { Emitter } from "./emitter";
-import { BluetoothRemoteGATTServer } from "./server";
+import { EventEmitter } from "events";
 
-export class BluetoothDevice extends Emitter {
+export class Emitter extends EventEmitter {
 
-    /**
-     * Server Disconnected event
-     * @event
-     */
-    public static EVENT_DISCONNECTED: string = "gattserverdisconnected";
+    // tslint:disable-next-line:array-type
+    public addEventListener(event: string | symbol, listener: (...args: any[]) => void) {
+        return super.addListener(event, listener);
+    }
 
-    /**
-     * @hidden
-     */
-    public _handle: string = null;
+    // tslint:disable-next-line:array-type
+    public removeEventListener(event: string | symbol, listener: (...args: any[]) => void) {
+        return super.removeListener(event, listener);
+    }
 
-    /**
-     * @hidden
-     */
-    public _allowedServices: Array<string> = [];
-
-    public id: string = "unknown";
-
-    public name: string = null;
-    // public adData: {
-    //    public appearance?: null;
-    //    public txPower?: null;
-    //    rssi?: number;
-    //    manufacturerData = new Map();
-    //    serviceData = new Map();
-    // }
-    public gatt: BluetoothRemoteGATTServer = new BluetoothRemoteGATTServer();
-    public uuids: Array<string> = [];
-
-    /**
-     * @hidden
-     */
-    constructor(init?: Partial<BluetoothDevice>) {
-        super();
-        for (const key in init) {
-            if (init.hasOwnProperty(key)) {
-                this[key] = init[key];
-            }
-        }
-
-        this.gatt.device = this;
+    public emit(event: string | symbol) {
+        return super.emit(event, {
+            type: event,
+            target: this
+        });
     }
 }

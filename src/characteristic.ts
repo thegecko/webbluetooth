@@ -23,116 +23,162 @@
 * SOFTWARE.
 */
 
-export class BluetoothRemoteGATTCharacteristic {
-}
+import { Emitter } from "./emitter";
+import { BluetoothRemoteGATTService } from "./service";
+import { BluetoothRemoteGATTDescriptor } from "./descriptor";
+import { getDescriptorUUID } from "./helpers";
+import { adapter } from "./adapter";
 
-/*
-    // BluetoothRemoteGATTCharacteristic Object
-    var BluetoothRemoteGATTCharacteristic = function(properties) {
-        this._handle = null;
-        this._descriptors = null;
+export class BluetoothRemoteGATTCharacteristic extends Emitter {
 
-        this.service = null;
-        this.uuid = null;
-        this.properties = {
-            broadcast: false,
-            read: false,
-            writeWithoutResponse: false,
-            write: false,
-            notify: false,
-            indicate: false,
-            authenticatedSignedWrites: false,
-            reliableWrite: false,
-            writableAuxiliaries: false
-        };
-        this.value = null;
+    /**
+     * Characteristic Value Changed event
+     * @event
+     */
+    public static EVENT_CHANGED: string = "characteristicvaluechanged";
 
-        mergeDictionary(this, properties);
+    /**
+     * @hidden
+     */
+    public _handle: string = null;
+
+    /**
+     * @hidden
+     */
+    public _descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
+
+    public service: BluetoothRemoteGATTService = null;
+    public uuid = null;
+    public value = null;
+
+    public properties = {
+        broadcast: false,
+        read: false,
+        writeWithoutResponse: false,
+        write: false,
+        notify: false,
+        indicate: false,
+        authenticatedSignedWrites: false,
+        reliableWrite: false,
+        writableAuxiliaries: false
     };
-    BluetoothRemoteGATTCharacteristic.prototype.getDescriptor = function(descriptorUUID) {
-        return new Promise(function(resolve, reject) {
+
+    /**
+     * @hidden
+     */
+    constructor(init?: Partial<BluetoothRemoteGATTCharacteristic>) {
+        super();
+        for (const key in init) {
+            if (init.hasOwnProperty(key)) {
+                this[key] = init[key];
+            }
+        }
+    }
+
+    public getDescriptor(descriptorUUID): Promise<BluetoothRemoteGATTDescriptor> {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptor error: device not connected");
             if (!descriptorUUID) return reject("getDescriptor error: no descriptor specified");
 
             this.getDescriptors(descriptorUUID)
-            .then(function(descriptors) {
+            .then(descriptors => {
                 if (descriptors.length !== 1) return reject("getDescriptor error: descriptor not found");
                 resolve(descriptors[0]);
             })
-            .catch(function(error) {
-                reject(error);
+            .catch(error =>  {
+                reject(`getDescriptor error: ${error}`);
             });
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.getDescriptors = function(descriptorUUID) {
-        return new Promise(function(resolve, reject) {
+        });
+    }
+
+    public getDescriptors(descriptorUUID): Promise<Array<BluetoothRemoteGATTDescriptor>> {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptors error: device not connected");
 
             function complete() {
                 if (!descriptorUUID) return resolve(this._descriptors);
-                var filtered = this._descriptors.filter(function(descriptor) {
-                    return (descriptor.uuid === helpers.getDescriptorUUID(descriptorUUID));
+
+                const filtered = this._descriptors.filter(descriptor => {
+                    return (descriptor.uuid === getDescriptorUUID(descriptorUUID));
                 });
+
                 if (filtered.length !== 1) return reject("getDescriptors error: descriptor not found");
                 resolve(filtered);
             }
+
             if (this._descriptors) return complete.call(this);
-            adapter.discoverDescriptors(this._handle, [], function(descriptors) {
-                this._descriptors = descriptors.map(function(descriptorInfo) {
+
+            adapter.discoverDescriptors(this._handle, [], descriptors => {
+                this._descriptors = descriptors.map(descriptorInfo => {
                     descriptorInfo.characteristic = this;
                     return new BluetoothRemoteGATTDescriptor(descriptorInfo);
-                }.bind(this));
+                });
+
                 complete.call(this);
-            }.bind(this), wrapReject(reject, "getDescriptors error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.readValue = function() {
-        return new Promise(function(resolve, reject) {
+            }, error => {
+                reject(`getDescriptors error: ${error}`);
+            });
+        });
+    }
+
+    public readValue(): Promise<DataView> {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("readValue error: device not connected");
 
-            adapter.readCharacteristic(this._handle, function(dataView) {
+            adapter.readCharacteristic(this._handle, dataView => {
                 this.value = dataView;
                 resolve(dataView);
-                this.dispatchEvent({ type: "characteristicvaluechanged", bubbles: true });
-            }.bind(this), wrapReject(reject, "readValue error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.writeValue = function(bufferSource) {
-        return new Promise(function(resolve, reject) {
+                this.emit(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
+            }, error => {
+                reject(`readValue error: ${error}`);
+            });
+        });
+    }
+
+    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView) {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
 
-            var arrayBuffer = bufferSource.buffer || bufferSource;
-            var dataView = new DataView(arrayBuffer);
-            adapter.writeCharacteristic(this._handle, dataView, function() {
+            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
+                return (source as ArrayBufferView).buffer !== undefined;
+            }
+
+            const arrayBuffer = isView(bufferSource) ? bufferSource.buffer : bufferSource;
+            const dataView = new DataView(arrayBuffer);
+
+            adapter.writeCharacteristic(this._handle, dataView, () => {
                 this.value = dataView;
                 resolve();
-            }.bind(this), wrapReject(reject, "writeValue error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.startNotifications = function() {
-        return new Promise(function(resolve, reject) {
+            }, error => {
+                reject(`writeValue error: ${error}`);
+            });
+        });
+    }
+
+    public startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
 
-            adapter.enableNotify(this._handle, function(dataView) {
+            adapter.enableNotify(this._handle, dataView => {
                 this.value = dataView;
-                this.dispatchEvent({ type: "characteristicvaluechanged", bubbles: true });
-            }.bind(this), function() {
+                this.emit(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
+            }, () => {
                 resolve(this);
-            }.bind(this), wrapReject(reject, "startNotifications error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.stopNotifications = function() {
-        return new Promise(function(resolve, reject) {
+            }, error => {
+                reject(`startNotifications error: ${error}`);
+            });
+        });
+    }
+
+    public stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+        return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("stopNotifications error: device not connected");
 
-            adapter.disableNotify(this._handle, function() {
+            adapter.disableNotify(this._handle, () => {
                 resolve(this);
-            }.bind(this), wrapReject(reject, "stopNotifications error"));
-        }.bind(this));
-    };
-    BluetoothRemoteGATTCharacteristic.prototype.addEventListener = createListenerFn([
-        "characteristicvaluechanged"
-    ]);
-    BluetoothRemoteGATTCharacteristic.prototype.removeEventListener = removeEventListener;
-    BluetoothRemoteGATTCharacteristic.prototype.dispatchEvent = dispatchEvent;
-*/
+            }, error => {
+                reject(`stopNotifications error: ${error}`);
+            });
+        });
+    }
+}
