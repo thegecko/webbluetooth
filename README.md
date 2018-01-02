@@ -19,6 +19,12 @@ See the examples in [examples](https://github.com/thegecko/webbluetooth/tree/mas
 
 https://thegecko.github.io/webbluetooth/
 
+## Specification
+
+The Web Bluetooth specification can be found here:
+
+https://webbluetoothcg.github.io/web-bluetooth/
+
 ## Implementation Status
 
 ### Web Bluetooth
@@ -67,5 +73,5 @@ https://thegecko.github.io/webbluetooth/
 - [x] Device selector hook
 - [x] Lookups for known services, characteristics and descriptors
 - [x] Canonical UUID helper
+- [x] Examples
 - [ ] API Documentation
-- [ ] Examples

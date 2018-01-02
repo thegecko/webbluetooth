@@ -23,8 +23,7 @@
 * SOFTWARE.
 */
 
-/*
-var bluetooth = require('../index').webbluetooth;
+var bluetooth = require('../').bluetooth;
 var bluetoothDevices = [];
 
 function logError(error) {
@@ -117,4 +116,3 @@ bluetooth.requestDevice({
     process.exit();
 })
 .catch(logError);
-*/

@@ -23,13 +23,19 @@
 * SOFTWARE.
 */
 
-export * from "./bluetooth";
-export * from "./helpers";
+import { Bluetooth } from "./bluetooth";
 
-/*
-import { WebBluetooth } from "./bluetooth";
-import { NobleAdapter } from "./adapter";
+/**
+ * Default bluetooth instance synonymous with `navigator.bluetooth`
+ */
+export const bluetooth = new Bluetooth();
 
-export const bluetooth = new WebBluetooth(new NobleAdapter());
+/**
+ * Bluetooth class for creating new instances
+ */
+export { Bluetooth };
+
+/**
+ * Helper methods and enums
+ */
 export * from "./helpers";
-*/

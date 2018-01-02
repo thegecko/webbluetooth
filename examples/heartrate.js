@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-var bluetooth = require('../index');
+var bluetooth = require('../').bluetooth;
 var gattServer;
 var heartChar;
 
@@ -62,6 +62,9 @@ bluetooth.requestDevice({
 		return sequence.then(() => {
 			return heartChar.readValue();
 		}).then(value => {
+			if (!value.length) {
+				return log('No value');
+			}
 			log('Value: ' + value.getUint16(0));
 		});
 	}, Promise.resolve());
