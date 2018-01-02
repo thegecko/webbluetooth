@@ -29,7 +29,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### Bluetooth
 
-- [ ] referringDevice - specification unstable
+- [x] referringDevice - specification unstable
 - [x] getAvailability() - specification unstable
 - [x] requestDevice()
 

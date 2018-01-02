@@ -47,7 +47,7 @@ export class Bluetooth extends EventDispatcher {
     private defaultScanTime = 10.24 * 1000;
     private scanner = null;
 
-    constructor() {
+    constructor(public referringDevice?: BluetoothDevice) {
         super();
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
             this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
