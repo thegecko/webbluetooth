@@ -10,3 +10,9 @@ Node.js implementation of the Web Bluetooth Specification
 ```bash
 $ npm install webbluetooth
 ```
+
+## Specification
+
+The Web Bluetooth specification can be found here:
+
+https://webbluetoothcg.github.io/web-bluetooth/
