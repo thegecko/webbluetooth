@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { EventEmitter } from "events";
 import { getCanonicalUUID } from "./helpers";
 import { BluetoothDevice } from "./device";
 import { BluetoothRemoteGATTService } from "./service";
@@ -33,7 +34,8 @@ import * as noble from "noble";
 /**
  * @hidden
  */
-export interface Adapter {
+export interface Adapter extends EventEmitter {
+    getEnabled: (completeFn: (enabled: boolean) => void) => void;
     startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
     stopScan: (errorFn?: (errorMsg: string) => void) => void;
     connect: (handle: string, connectFn: () => void, disconnectFn: () => void,	errorFn?: (errorMsg: string) => void) => void;
@@ -53,7 +55,9 @@ export interface Adapter {
 /**
  * @hidden
  */
-export class NobleAdapter implements Adapter {
+export class NobleAdapter extends EventEmitter implements Adapter {
+
+    public static EVENT_ENABLED: string = "enabledchanged";
 
     private deviceHandles: {} = {};
     private serviceHandles: {} = {};
@@ -62,6 +66,22 @@ export class NobleAdapter implements Adapter {
     private charNotifies: {} = {};
     private foundFn: (device: Partial<BluetoothDevice>) => void = null;
     private initialised: boolean = false;
+    private enabled: boolean = false;
+
+    constructor() {
+        super();
+        this.enabled = this.state;
+        noble.on("stateChange", () => {
+            if (this.enabled !== this.state) {
+                this.enabled = this.state;
+                this.emit(NobleAdapter.EVENT_ENABLED, this.enabled);
+            }
+        });
+    }
+
+    private get state(): boolean {
+        return (noble.state === "poweredOn");
+    }
 
     private init(completeFn: () => any) {
         if (this.initialised) return completeFn();
@@ -136,6 +156,16 @@ export class NobleAdapter implements Adapter {
         }
     }
 
+    public getEnabled(completeFn: (enabled: boolean) => void) {
+        function stateCB() {
+            completeFn(this.state);
+        }
+
+        // tslint:disable-next-line:no-string-literal
+        if (noble.state === "unknown") noble["once"]("stateChange", stateCB.bind(this));
+        else stateCB.call(this);
+    }
+
     public startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
 
         if (serviceUUIDs.length === 0) {
@@ -153,8 +183,8 @@ export class NobleAdapter implements Adapter {
 
         this.init(() => {
             this.deviceHandles = {};
-            function stateCB(state) {
-                if (state === "poweredOn") {
+            function stateCB() {
+                if (this.state === true) {
                     noble.startScanning([], false, this.checkForError(errorFn, completeFn));
                 } else {
                     errorFn("adapter not enabled");
@@ -162,7 +192,7 @@ export class NobleAdapter implements Adapter {
             }
             // tslint:disable-next-line:no-string-literal
             if (noble.state === "unknown") noble["once"]("stateChange", stateCB.bind(this));
-            else stateCB.call(this, noble.state);
+            else stateCB.call(this);
         });
     }
 

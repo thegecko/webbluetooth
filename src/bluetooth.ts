@@ -23,9 +23,10 @@
 * SOFTWARE.
 */
 
+import { EventDispatcher } from "./dispatcher";
 import { BluetoothDevice } from "./device";
 import { getServiceUUID } from "./helpers";
-import { adapter } from "./adapter";
+import { adapter, NobleAdapter } from "./adapter";
 
 export interface RequestDeviceOptions {
     acceptAllDevices: boolean;
@@ -35,10 +36,23 @@ export interface RequestDeviceOptions {
     scanTime: any;
 }
 
-export class Bluetooth {
+export class Bluetooth extends EventDispatcher {
+
+    /**
+     * Bluetooth Availability Changed event
+     * @event
+     */
+    public static EVENT_AVAILABILITY: string = "availabilitychanged";
 
     private defaultScanTime = 10.24 * 1000;
     private scanner = null;
+
+    constructor() {
+        super();
+        adapter.on(NobleAdapter.EVENT_ENABLED, value => {
+            this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
+        });
+    }
 
     private filterDevice(options: RequestDeviceOptions, deviceInfo, validServices) {
         let valid = false;
@@ -69,6 +83,14 @@ export class Bluetooth {
 
         if (!valid) return false;
         return deviceInfo;
+    }
+
+    public getAvailability(): Promise<boolean> {
+        return new Promise((resolve, _reject) => {
+            adapter.getEnabled(enabled => {
+                resolve(enabled);
+            });
+        });
     }
 
     public requestDevice(options: RequestDeviceOptions): Promise<BluetoothDevice> {

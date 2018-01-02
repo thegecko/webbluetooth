@@ -40,10 +40,11 @@ export class EventDispatcher extends EventEmitter {
         return super.removeListener(event, listener);
     }
 
-    public dispatchEvent(event: string | symbol) {
+    public dispatchEvent(event: string | symbol, value?: any) {
         return super.emit(event, {
             type: event,
-            target: this
+            target: this,
+            value: value
         });
     }
 }

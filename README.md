@@ -27,15 +27,19 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ## Implementation Status
 
-### Web Bluetooth
+### Bluetooth
 
 - [ ] referringDevice - specification unstable
-- [ ] getAvailability() - specification unstable
+- [x] getAvailability() - specification unstable
 - [x] requestDevice()
+
+### Bluetooth Device
 
 - [x] BluetoothDevice
 - [ ] BluetoothDevice.watchAdvertisements() - specification unstable
 - [ ] BluetoothDevice.unwatchAdvertisements() - specification unstable
+
+### Bluetooth Server
 
 - [x] BluetoothRemoteGATTServer
 - [x] BluetoothRemoteGATTServer.connect()
@@ -43,11 +47,15 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] BluetoothRemoteGATTServer.getPrimaryService()
 - [x] BluetoothRemoteGATTServer.getPrimaryServices()
 
+### Bluetooth Services
+
 - [x] BluetoothRemoteGATTService
 - [x] BluetoothRemoteGATTService.getCharacteristic()
 - [x] BluetoothRemoteGATTService.getCharacteristics()
 - [x] BluetoothRemoteGATTService.getIncludedService()
 - [x] BluetoothRemoteGATTService.getIncludedServices()
+
+### Bluetooth Characteristics
 
 - [x] BluetoothRemoteGATTCharacteristic
 - [x] BluetoothRemoteGATTCharacteristic.getDescriptor()
@@ -57,16 +65,20 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] BluetoothRemoteGATTCharacteristic.startNotifications()
 - [x] BluetoothRemoteGATTCharacteristic.stopNotifications()
 
+### Bluetooth Descriptors
+
 - [x] BluetoothRemoteGATTDescriptor
 - [x] BluetoothRemoteGATTDescriptor.readValue()
 - [x] BluetoothRemoteGATTDescriptor.writeValue()
 
-- [ ] Event: availabilitychanged - specification unstable
-- [x] Event: gattserverdisconnected
-- [x] Event: characteristicvaluechanged
-- [ ] Event: serviceadded
-- [ ] Event: servicechanged
-- [ ] Event: serviceremoved
+### Bluetooth Events
+
+- [x] availabilitychanged - specification unstable
+- [x] gattserverdisconnected
+- [x] characteristicvaluechanged
+- [ ] serviceadded
+- [ ] servicechanged
+- [ ] serviceremoved
 
 ### Other
 
