@@ -24,6 +24,7 @@
 */
 
 import { EventDispatcher } from "./dispatcher";
+import { Bluetooth } from "./bluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
 
 export class BluetoothDevice extends EventDispatcher {
@@ -34,40 +35,46 @@ export class BluetoothDevice extends EventDispatcher {
      */
     public static EVENT_DISCONNECTED: string = "gattserverdisconnected";
 
-    /**
-     * @hidden
-     */
-    public _handle: string = null;
+    public readonly id: string = "unknown";
+    public readonly name: string = null;
+    public readonly gatt: BluetoothRemoteGATTServer = null;
+    public readonly watchingAdvertisements: boolean = false;
 
     /**
      * @hidden
      */
-    public _allowedServices: Array<string> = [];
-
-    public id: string = "unknown";
-
-    public name: string = null;
-    // public adData: {
-    //    public appearance?: null;
-    //    public txPower?: null;
-    //    rssi?: number;
-    //    manufacturerData = new Map();
-    //    serviceData = new Map();
-    // }
-    public gatt: BluetoothRemoteGATTServer = new BluetoothRemoteGATTServer();
-    public uuids: Array<string> = [];
+    public readonly adData: {
+        rssi?: number;
+        txPower?: null;
+        serviceData?: Map<string, DataView>;
+        manufacturerData?: Map<string, DataView>;
+    };
 
     /**
      * @hidden
      */
+    public readonly _bluetooth: Bluetooth = null;
+
+    /**
+     * @hidden
+     */
+    public readonly _allowedServices: Array<string> = [];
+
+    /**
+     * @hidden
+     */
+    public _serviceUUIDs: Array<string> = [];
+
     constructor(init?: Partial<BluetoothDevice>) {
         super();
-        for (const key in init) {
-            if (init.hasOwnProperty(key)) {
-                this[key] = init[key];
-            }
-        }
-
-        this.gatt.device = this;
+        Object.assign(this, init);
+        this.gatt = new BluetoothRemoteGATTServer(this);
     }
+    /*
+    public watchAdvertisements(): Promise<void> {
+    }
+
+    public unwatchAdvertisements() {
+    }
+    */
 }

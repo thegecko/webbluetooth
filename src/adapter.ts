@@ -142,16 +142,15 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             }
 
             this.foundFn({
-                _handle: deviceID,
                 id: deviceID,
                 name: deviceInfo.advertisement.localName,
-                uuids: serviceUUIDs
-                // adData: {
-                //    manufacturerData: manufacturerData,
-                //    serviceData: serviceData,
-                //    txPower: deviceInfo.advertisement.txPowerLevel,
-                //    rssi: deviceInfo.rssi
-                // }
+                _serviceUUIDs: serviceUUIDs,
+                adData: {
+                    rssi: deviceInfo.rssi,
+                    txPower: deviceInfo.advertisement.txPowerLevel,
+                    serviceData: serviceData,
+                    manufacturerData: manufacturerData
+                }
             });
         }
     }
@@ -173,7 +172,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         } else {
             this.foundFn = device => {
                 serviceUUIDs.forEach(serviceUUID => {
-                    if (device.uuids.indexOf(serviceUUID) >= 0) {
+                    if (device._serviceUUIDs.indexOf(serviceUUID) >= 0) {
                         foundFn(device);
                         return;
                     }
@@ -229,7 +228,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     if (!this.serviceHandles[serviceUUID]) this.serviceHandles[serviceUUID] = serviceInfo;
 
                     discovered.push({
-                        _handle: serviceUUID,
                         uuid: serviceUUID,
                         primary: true
                     });
@@ -252,7 +250,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     if (!this.serviceHandles[serviceUUID]) this.serviceHandles[serviceUUID] = service;
 
                     discovered.push({
-                        _handle: serviceUUID,
                         uuid: serviceUUID,
                         primary: false
                     });
@@ -275,7 +272,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     if (!this.characteristicHandles[charUUID]) this.characteristicHandles[charUUID] = characteristicInfo;
 
                     discovered.push({
-                        _handle: charUUID,
                         uuid: charUUID,
                         properties: {
                             broadcast:                  (characteristicInfo.properties.indexOf("broadcast") >= 0),
@@ -316,7 +312,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     if (!this.descriptorHandles[descHandle]) this.descriptorHandles[descHandle] = descriptorInfo;
 
                     discovered.push({
-                        _handle: descHandle,
                         uuid: descUUID
                     });
                 }

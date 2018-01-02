@@ -27,32 +27,28 @@ import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import { adapter } from "./adapter";
 
 export class BluetoothRemoteGATTDescriptor {
-    /**
-     * @hidden
-     */
-    public _handle: string = null;
 
-    public characteristic: BluetoothRemoteGATTCharacteristic = null;
-    public uuid = null;
-    public value = null;
+    public readonly characteristic: BluetoothRemoteGATTCharacteristic = null;
+    public readonly uuid: string = null;
 
-    /**
-     * @hidden
-     */
+    private _value: DataView = null;
+    public get value(): DataView {
+        return this._value;
+    }
+
+    private handle: string = null;
+
     constructor(init?: Partial<BluetoothRemoteGATTDescriptor>) {
-        for (const key in init) {
-            if (init.hasOwnProperty(key)) {
-                this[key] = init[key];
-            }
-        }
+        Object.assign(this, init);
+        this.handle = `${this.characteristic.uuid}-${this.uuid}`;
     }
 
     public readValue(): Promise<DataView> {
         return new Promise((resolve, reject) =>  {
             if (!this.characteristic.service.device.gatt.connected) return reject("readValue error: device not connected");
 
-            adapter.readDescriptor(this._handle, dataView => {
-                this.value = dataView;
+            adapter.readDescriptor(this.handle, dataView => {
+                this._value = dataView;
                 resolve(dataView);
             }, error => {
                 reject(`readValue error: ${error}`);
@@ -60,7 +56,7 @@ export class BluetoothRemoteGATTDescriptor {
         });
     }
 
-    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView) {
+    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.characteristic.service.device.gatt.connected) return reject("writeValue error: device not connected");
 
@@ -71,8 +67,8 @@ export class BluetoothRemoteGATTDescriptor {
             const arrayBuffer = isView(bufferSource) ? bufferSource.buffer : bufferSource;
             const dataView = new DataView(arrayBuffer);
 
-            adapter.writeDescriptor(this._handle, dataView, () => {
-                this.value = dataView;
+            adapter.writeDescriptor(this.handle, dataView, () => {
+                this._value = dataView;
                 resolve();
             }, error => {
                 reject(`writeValue error: ${error}`);

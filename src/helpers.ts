@@ -240,7 +240,7 @@ export enum bluetoothDescriptors {
     "time_trigger_setting" = 0x290E
 }
 
-export function getCanonicalUUID(uuid) {
+export function getCanonicalUUID(uuid: string | number): string {
     if (typeof uuid === "number") uuid = uuid.toString(16);
     uuid = uuid.toLowerCase();
     if (uuid.length <= 8) uuid = ("00000000" + uuid).slice(-8) + "-0000-1000-8000-00805f9b34fb";
@@ -248,17 +248,17 @@ export function getCanonicalUUID(uuid) {
     return uuid;
 }
 
-export function getServiceUUID(uuid) {
+export function getServiceUUID(uuid: string | number): string {
     if (bluetoothServices[uuid]) uuid = bluetoothServices[uuid];
     return getCanonicalUUID(uuid);
 }
 
-export function getCharacteristicUUID(uuid) {
+export function getCharacteristicUUID(uuid: string | number): string {
     if (bluetoothCharacteristics[uuid]) uuid = bluetoothCharacteristics[uuid];
     return getCanonicalUUID(uuid);
 }
 
-export function getDescriptorUUID(uuid) {
+export function getDescriptorUUID(uuid: string | number): string {
     if (bluetoothDescriptors[uuid]) uuid = bluetoothDescriptors[uuid];
     return getCanonicalUUID(uuid);
 }

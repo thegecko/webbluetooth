@@ -37,21 +37,9 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
      */
     public static EVENT_CHANGED: string = "characteristicvaluechanged";
 
-    /**
-     * @hidden
-     */
-    public _handle: string = null;
-
-    /**
-     * @hidden
-     */
-    public _descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
-
-    public service: BluetoothRemoteGATTService = null;
-    public uuid = null;
-    public value = null;
-
-    public properties = {
+    public readonly service: BluetoothRemoteGATTService = null;
+    public readonly uuid = null;
+    public readonly properties = {
         broadcast: false,
         read: false,
         writeWithoutResponse: false,
@@ -63,15 +51,27 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         writableAuxiliaries: false
     };
 
-    /**
-     * @hidden
-     */
+    private _value: DataView = null;
+    public get value(): DataView {
+        return this._value;
+    }
+
+    private handle: string = null;
+    private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
+
     constructor(init?: Partial<BluetoothRemoteGATTCharacteristic>) {
         super();
-        for (const key in init) {
-            if (init.hasOwnProperty(key)) {
-                this[key] = init[key];
-            }
+        Object.assign(this, init);
+        this.handle = this.uuid;
+    }
+
+    private setValue(value?: DataView, emit?: boolean) {
+        this._value = value;
+        if (emit) {
+            this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
+            this.service.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
+            this.service.device.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
+            this.service.device._bluetooth.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
         }
     }
 
@@ -96,9 +96,9 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
             if (!this.service.device.gatt.connected) return reject("getDescriptors error: device not connected");
 
             function complete() {
-                if (!descriptorUUID) return resolve(this._descriptors);
+                if (!descriptorUUID) return resolve(this.descriptors);
 
-                const filtered = this._descriptors.filter(descriptor => {
+                const filtered = this.descriptors.filter(descriptor => {
                     return (descriptor.uuid === getDescriptorUUID(descriptorUUID));
                 });
 
@@ -106,11 +106,13 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
                 resolve(filtered);
             }
 
-            if (this._descriptors) return complete.call(this);
+            if (this.descriptors) return complete.call(this);
 
-            adapter.discoverDescriptors(this._handle, [], descriptors => {
-                this._descriptors = descriptors.map(descriptorInfo => {
-                    descriptorInfo.characteristic = this;
+            adapter.discoverDescriptors(this.handle, [], descriptors => {
+                this.descriptors = descriptors.map(descriptorInfo => {
+                    Object.assign(descriptorInfo, {
+                        characteristic: this
+                    });
                     return new BluetoothRemoteGATTDescriptor(descriptorInfo);
                 });
 
@@ -125,17 +127,16 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("readValue error: device not connected");
 
-            adapter.readCharacteristic(this._handle, dataView => {
-                this.value = dataView;
+            adapter.readCharacteristic(this.handle, dataView => {
+                this.setValue(dataView, true);
                 resolve(dataView);
-                this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
             }, error => {
                 reject(`readValue error: ${error}`);
             });
         });
     }
 
-    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView) {
+    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
 
@@ -146,8 +147,8 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
             const arrayBuffer = isView(bufferSource) ? bufferSource.buffer : bufferSource;
             const dataView = new DataView(arrayBuffer);
 
-            adapter.writeCharacteristic(this._handle, dataView, () => {
-                this.value = dataView;
+            adapter.writeCharacteristic(this.handle, dataView, () => {
+                this.setValue (dataView);
                 resolve();
             }, error => {
                 reject(`writeValue error: ${error}`);
@@ -159,9 +160,8 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
 
-            adapter.enableNotify(this._handle, dataView => {
-                this.value = dataView;
-                this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
+            adapter.enableNotify(this.handle, dataView => {
+                this.setValue(dataView, true);
             }, () => {
                 resolve(this);
             }, error => {
@@ -174,7 +174,7 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("stopNotifications error: device not connected");
 
-            adapter.disableNotify(this._handle, () => {
+            adapter.disableNotify(this.handle, () => {
                 resolve(this);
             }, error => {
                 reject(`stopNotifications error: ${error}`);

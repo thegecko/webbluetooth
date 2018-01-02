@@ -49,36 +49,21 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      */
     public static EVENT_REMOVED: string = "serviceremoved";
 
-    /**
-     * @hidden
-     */
-    public _handle: string = null;
+    public readonly device: BluetoothDevice = null;
+    public readonly uuid: string = null;
+    public readonly isPrimary: boolean = false;
 
-    /**
-     * @hidden
-     */
-    public _services: Array<BluetoothRemoteGATTService> = null;
+    private handle: string = null;
+    private services: Array<BluetoothRemoteGATTService> = null;
+    private characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
 
-    /**
-     * @hidden
-     */
-    public _characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
-
-    public device: BluetoothDevice = null;
-    public uuid = null;
-    public isPrimary = false;
-
-    /**
-     * @hidden
-     */
     constructor(init?: Partial<BluetoothRemoteGATTService>) {
         super();
-        for (const key in init) {
-            if (init.hasOwnProperty(key)) {
-                this[key] = init[key];
-            }
-        }
+        Object.assign(this, init);
+        this.handle = this.uuid;
         this.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
+        this.device.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
+        this.device._bluetooth.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
     }
 
     public getCharacteristic(characteristicUUID): Promise<BluetoothRemoteGATTCharacteristic> {
@@ -102,9 +87,9 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
             if (!this.device.gatt.connected) return reject("getCharacteristics error: device not connected");
 
             function complete() {
-                if (!characteristicUUID) return resolve(this._characteristics);
+                if (!characteristicUUID) return resolve(this.characteristics);
 
-                const filtered = this._characteristics.filter(characteristic => {
+                const filtered = this.characteristics.filter(characteristic => {
                     return (characteristic.uuid === getCharacteristicUUID(characteristicUUID));
                 });
 
@@ -112,11 +97,13 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
                 resolve(filtered);
             }
 
-            if (this._characteristics) return complete.call(this);
+            if (this.characteristics) return complete.call(this);
 
-            adapter.discoverCharacteristics(this._handle, [], characteristics => {
-                this._characteristics = characteristics.map(characteristicInfo => {
-                    characteristicInfo.service = this;
+            adapter.discoverCharacteristics(this.handle, [], characteristics => {
+                this.characteristics = characteristics.map(characteristicInfo => {
+                    Object.assign(characteristicInfo, {
+                        service: this
+                    });
                     return new BluetoothRemoteGATTCharacteristic(characteristicInfo);
                 });
 
@@ -148,9 +135,9 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
             if (!this.device.gatt.connected) return reject("getIncludedServices error: device not connected");
 
             function complete() {
-                if (!serviceUUID) return resolve(this._services);
+                if (!serviceUUID) return resolve(this.services);
 
-                const filtered = this._services.filter(service => {
+                const filtered = this.services.filter(service => {
                     return (service.uuid === getServiceUUID(serviceUUID));
                 });
 
@@ -158,11 +145,13 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
                 resolve(filtered);
             }
 
-            if (this._services) return complete.call(this);
+            if (this.services) return complete.call(this);
 
-            adapter.discoverIncludedServices(this._handle, this.device._allowedServices, services => {
-                this._services = services.map(serviceInfo => {
-                    serviceInfo.device = this.device;
+            adapter.discoverIncludedServices(this.handle, this.device._allowedServices, services => {
+                this.services = services.map(serviceInfo => {
+                    Object.assign(serviceInfo, {
+                        device: this.device
+                    });
                     return new BluetoothRemoteGATTService(serviceInfo);
                 });
 

@@ -29,25 +29,28 @@ import { getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 
 export class BluetoothRemoteGATTServer {
-    /**
-     * @hidden
-     */
-    public _services: Array<BluetoothRemoteGATTService> = null;
 
-    public device: BluetoothDevice = null;
     public connected: boolean = false;
+
+    private handle: string = null;
+    private services: Array<BluetoothRemoteGATTService> = null;
+
+    constructor(public device: BluetoothDevice) {
+        this.handle = this.device.id;
+    }
 
     public connect(): Promise<BluetoothRemoteGATTServer> {
         return new Promise((resolve, reject) => {
             if (this.connected) return reject("connect error: device already connected");
 
-            adapter.connect(this.device._handle, () => {
+            adapter.connect(this.handle, () => {
                 this.connected = true;
                 resolve(this);
             }, () => {
-                this._services = null;
+                this.services = null;
                 this.connected = false;
                 this.device.dispatchEvent(BluetoothDevice.EVENT_DISCONNECTED);
+                this.device._bluetooth.dispatchEvent(BluetoothDevice.EVENT_DISCONNECTED);
             }, error => {
                 reject(`connect Error: ${error}`);
             });
@@ -55,7 +58,7 @@ export class BluetoothRemoteGATTServer {
     }
 
     public disconnect() {
-        adapter.disconnect(this.device._handle);
+        adapter.disconnect(this.handle);
         this.connected = false;
     }
 
@@ -80,9 +83,9 @@ export class BluetoothRemoteGATTServer {
             if (!this.connected) return reject("getPrimaryServices error: device not connected");
 
             function complete() {
-                if (!serviceUUID) return resolve(this._services);
+                if (!serviceUUID) return resolve(this.services);
 
-                const filtered = this._services.filter(service => {
+                const filtered = this.services.filter(service => {
                     return (service.uuid === getServiceUUID(serviceUUID));
                 });
 
@@ -90,11 +93,13 @@ export class BluetoothRemoteGATTServer {
                 resolve(filtered);
             }
 
-            if (this._services) return complete.call(this);
+            if (this.services) return complete.call(this);
 
-            adapter.discoverServices(this.device._handle, this.device._allowedServices, services => {
-                this._services = services.map(serviceInfo => {
-                    serviceInfo.device = this.device;
+            adapter.discoverServices(this.handle, this.device._allowedServices, services => {
+                this.services = services.map(serviceInfo => {
+                    Object.assign(serviceInfo, {
+                        device: this.device
+                    });
                     return new BluetoothRemoteGATTService(serviceInfo);
                 });
 

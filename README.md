@@ -76,9 +76,9 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] availabilitychanged - specification unstable
 - [x] gattserverdisconnected
 - [x] characteristicvaluechanged
-- [ ] serviceadded
-- [ ] servicechanged
-- [ ] serviceremoved
+- [x] serviceadded
+- [ ] servicechanged - unsupported in noble
+- [ ] serviceremoved - unsupported in noble
 
 ### Other
 

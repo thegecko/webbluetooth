@@ -28,12 +28,22 @@ import { BluetoothDevice } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
 
+export interface BluetoothLEScanFilterInit {
+    services?: Array<string>;
+    name?: string;
+    namePrefix?: string;
+    // Maps unsigned shorts to BluetoothDataFilters.
+    // object manufacturerData;
+    // Maps BluetoothServiceUUIDs to BluetoothDataFilters.
+    // object serviceData;
+}
+
 export interface RequestDeviceOptions {
-    acceptAllDevices: boolean;
-    deviceFound: (device: BluetoothDevice, selectFn: any) => boolean;
-    filters: Array<any>;
-    optionalServices: Array<any>;
-    scanTime: any;
+    acceptAllDevices?: boolean;
+    deviceFound?: (device: BluetoothDevice, selectFn: any) => boolean;
+    filters?: Array<BluetoothLEScanFilterInit>;
+    optionalServices?: Array<any>;
+    scanTime?: any;
 }
 
 export class Bluetooth extends EventDispatcher {
@@ -47,7 +57,7 @@ export class Bluetooth extends EventDispatcher {
     private defaultScanTime = 10.24 * 1000;
     private scanner = null;
 
-    constructor(public referringDevice?: BluetoothDevice) {
+    constructor(public readonly referringDevice?: BluetoothDevice) {
         super();
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
             this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
@@ -71,7 +81,7 @@ export class Bluetooth extends EventDispatcher {
             if (filter.services) {
                 const serviceUUIDs = filter.services.map(getServiceUUID);
                 const servicesValid = serviceUUIDs.every(serviceUUID => {
-                    return (deviceInfo.uuids.indexOf(serviceUUID) > -1);
+                    return (deviceInfo._serviceUUIDs.indexOf(serviceUUID) > -1);
                 });
 
                 if (!servicesValid) return;
@@ -158,8 +168,12 @@ export class Bluetooth extends EventDispatcher {
                     }
 
                     // Set unique list of allowed services
-                    deviceInfo._allowedServices = validServices.filter((item, index, array) => {
+                    const allowedServices = validServices.filter((item, index, array) => {
                         return array.indexOf(item) === index;
+                    });
+                    Object.assign(deviceInfo, {
+                        _bluetooth: this,
+                        _allowedServices: allowedServices
                     });
 
                     const bluetoothDevice = new BluetoothDevice(deviceInfo);
