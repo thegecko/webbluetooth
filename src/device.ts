@@ -23,10 +23,10 @@
 * SOFTWARE.
 */
 
-import { Emitter } from "./emitter";
+import { EventDispatcher } from "./dispatcher";
 import { BluetoothRemoteGATTServer } from "./server";
 
-export class BluetoothDevice extends Emitter {
+export class BluetoothDevice extends EventDispatcher {
 
     /**
      * Server Disconnected event

@@ -47,7 +47,7 @@ export class BluetoothRemoteGATTServer {
             }, () => {
                 this._services = null;
                 this.connected = false;
-                this.device.emit(BluetoothDevice.EVENT_DISCONNECTED);
+                this.device.dispatchEvent(BluetoothDevice.EVENT_DISCONNECTED);
             }, error => {
                 reject(`connect Error: ${error}`);
             });

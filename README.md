@@ -58,9 +58,9 @@ https://thegecko.github.io/webbluetooth/
 - [ ] Event: availabilitychanged - specification unstable
 - [x] Event: gattserverdisconnected
 - [x] Event: characteristicvaluechanged
-- [ ] Event: serviceadded;
-- [ ] Event: servicechanged;
-- [ ] Event: serviceremoved;
+- [ ] Event: serviceadded
+- [ ] Event: servicechanged
+- [ ] Event: serviceremoved
 
 ### Other
 

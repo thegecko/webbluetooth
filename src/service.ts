@@ -23,13 +23,13 @@
 * SOFTWARE.
 */
 
-import { Emitter } from "./emitter";
+import { EventDispatcher } from "./dispatcher";
 import { BluetoothDevice } from "./device";
 import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import { getCharacteristicUUID, getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 
-export class BluetoothRemoteGATTService extends Emitter {
+export class BluetoothRemoteGATTService extends EventDispatcher {
 
     /**
      * Service Added event
@@ -78,7 +78,7 @@ export class BluetoothRemoteGATTService extends Emitter {
                 this[key] = init[key];
             }
         }
-        this.emit(BluetoothRemoteGATTService.EVENT_ADDED);
+        this.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
     }
 
     public getCharacteristic(characteristicUUID): Promise<BluetoothRemoteGATTCharacteristic> {

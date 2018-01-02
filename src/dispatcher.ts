@@ -25,7 +25,10 @@
 
 import { EventEmitter } from "events";
 
-export class Emitter extends EventEmitter {
+/**
+ * @hidden
+ */
+export class EventDispatcher extends EventEmitter {
 
     // tslint:disable-next-line:array-type
     public addEventListener(event: string | symbol, listener: (...args: any[]) => void) {
@@ -37,7 +40,7 @@ export class Emitter extends EventEmitter {
         return super.removeListener(event, listener);
     }
 
-    public emit(event: string | symbol) {
+    public dispatchEvent(event: string | symbol) {
         return super.emit(event, {
             type: event,
             target: this

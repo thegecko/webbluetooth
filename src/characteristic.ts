@@ -23,13 +23,13 @@
 * SOFTWARE.
 */
 
-import { Emitter } from "./emitter";
+import { EventDispatcher } from "./dispatcher";
 import { BluetoothRemoteGATTService } from "./service";
 import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
 
-export class BluetoothRemoteGATTCharacteristic extends Emitter {
+export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
 
     /**
      * Characteristic Value Changed event
@@ -128,7 +128,7 @@ export class BluetoothRemoteGATTCharacteristic extends Emitter {
             adapter.readCharacteristic(this._handle, dataView => {
                 this.value = dataView;
                 resolve(dataView);
-                this.emit(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
+                this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
             }, error => {
                 reject(`readValue error: ${error}`);
             });
@@ -161,7 +161,7 @@ export class BluetoothRemoteGATTCharacteristic extends Emitter {
 
             adapter.enableNotify(this._handle, dataView => {
                 this.value = dataView;
-                this.emit(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
+                this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED);
             }, () => {
                 resolve(this);
             }, error => {
