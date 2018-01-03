@@ -32,46 +32,64 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] referringDevice - specification unstable
 - [x] getAvailability() - specification unstable
 - [x] requestDevice()
+- [x] RequestDeviceOptions.name
+- [x] RequestDeviceOptions.namePrefix
+- [x] RequestDeviceOptions.services
+- [x] RequestDeviceOptions.optionalServices
+- [x] RequestDeviceOptions.acceptAllDevices
+- [ ] RequestDeviceOptions.manufacturerData - specification unstable
+- [ ] RequestDeviceOptions.serviceData - specification unstable
 
-### Bluetooth Device
+### BluetoothDevice
 
-- [x] BluetoothDevice
-- [ ] BluetoothDevice.watchAdvertisements() - specification unstable
-- [ ] BluetoothDevice.unwatchAdvertisements() - specification unstable
+- [x] id
+- [x] name
+- [x] gatt
+- [ ] watchingAdvertisements - specification unstable
+- [ ] watchAdvertisements() - specification unstable
+- [ ] unwatchAdvertisements() - specification unstable
 
-### Bluetooth Server
+### BluetoothRemoteGATTServer
 
-- [x] BluetoothRemoteGATTServer
-- [x] BluetoothRemoteGATTServer.connect()
-- [x] BluetoothRemoteGATTServer.disconnect()
-- [x] BluetoothRemoteGATTServer.getPrimaryService()
-- [x] BluetoothRemoteGATTServer.getPrimaryServices()
+- [x] connected
+- [x] device
+- [x] connect()
+- [x] disconnect()
+- [x] getPrimaryService()
+- [x] getPrimaryServices()
 
-### Bluetooth Services
+### BluetoothRemoteGATTService
 
-- [x] BluetoothRemoteGATTService
-- [x] BluetoothRemoteGATTService.getCharacteristic()
-- [x] BluetoothRemoteGATTService.getCharacteristics()
-- [x] BluetoothRemoteGATTService.getIncludedService()
-- [x] BluetoothRemoteGATTService.getIncludedServices()
+- [x] device
+- [x] uuid
+- [x] isPrimary
+- [x] getCharacteristic()
+- [x] getCharacteristics()
+- [x] getIncludedService()
+- [x] getIncludedServices()
 
-### Bluetooth Characteristics
+### BluetoothRemoteGATTCharacteristic
 
-- [x] BluetoothRemoteGATTCharacteristic
-- [x] BluetoothRemoteGATTCharacteristic.getDescriptor()
-- [x] BluetoothRemoteGATTCharacteristic.getDescriptors()
-- [x] BluetoothRemoteGATTCharacteristic.readValue()
-- [x] BluetoothRemoteGATTCharacteristic.writeValue()
-- [x] BluetoothRemoteGATTCharacteristic.startNotifications()
-- [x] BluetoothRemoteGATTCharacteristic.stopNotifications()
+- [x] service
+- [x] uuid
+- [x] properties
+- [x] value
+- [x] getDescriptor()
+- [x] getDescriptors()
+- [x] readValue()
+- [x] writeValue()
+- [x] startNotifications()
+- [x] stopNotifications()
 
-### Bluetooth Descriptors
+### BluetoothRemoteGATTDescriptor
 
-- [x] BluetoothRemoteGATTDescriptor
-- [x] BluetoothRemoteGATTDescriptor.readValue()
-- [x] BluetoothRemoteGATTDescriptor.writeValue()
+- [x] characteristic
+- [x] uuid
+- [x] value
+- [x] readValue()
+- [x] writeValue()
 
-### Bluetooth Events
+### Events
 
 - [x] availabilitychanged - specification unstable
 - [x] gattserverdisconnected
