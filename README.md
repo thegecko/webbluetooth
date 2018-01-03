@@ -27,7 +27,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ## Implementation Status
 
-### Bluetooth
+### bluetooth
 
 - [x] referringDevice - specification unstable
 - [x] getAvailability() - specification unstable

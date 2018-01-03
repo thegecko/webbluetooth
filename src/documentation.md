@@ -13,10 +13,10 @@ $ npm install webbluetooth
 
 ## Usage
 
-The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and some helper methods:
+The module exports a default `navigator.bluetooth` instance, the `WebBluetooth` class to allow you to instantiate your own bluetooth instances and some helper methods:
 
 - bluetooth
-- Bluetooth()
+- WebBluetooth()
 - getCanonicalUUID()
 - getServiceUUID()
 - getCharacteristicUUID()
@@ -45,7 +45,7 @@ bluetooth.requestDevice({
 You may want to create your own instance of the `Bluetooth` class. For example, to control the referring device:
 
 ```JavaScript
-var WebBluetooth = require("webbluetooth").Bluetooth;
+var WebBluetooth = require("webbluetooth").WebBluetooth;
 
 var device; // Known device, perhaps obtained via a previous 'requestDevice()` call
 var bluetooth = new WebBluetooth(device);
