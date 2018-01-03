@@ -35,7 +35,7 @@ export class BluetoothDevice extends EventDispatcher {
      */
     public static EVENT_DISCONNECTED: string = "gattserverdisconnected";
 
-    public readonly id: string = "unknown";
+    public readonly id: string = null;
     public readonly name: string = null;
     public readonly gatt: BluetoothRemoteGATTServer = null;
     public readonly watchingAdvertisements: boolean = false;
@@ -68,6 +68,7 @@ export class BluetoothDevice extends EventDispatcher {
     constructor(init?: Partial<BluetoothDevice>) {
         super();
         Object.assign(this, init);
+        if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
         this.gatt = new BluetoothRemoteGATTServer(this);
     }
     /*
