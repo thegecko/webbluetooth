@@ -63,7 +63,7 @@ export class BluetoothDevice extends EventDispatcher {
     /**
      * @hidden
      */
-    public _serviceUUIDs: Array<string> = [];
+    public readonly _serviceUUIDs: Array<string> = [];
 
     constructor(init?: Partial<BluetoothDevice>) {
         super();

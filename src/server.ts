@@ -30,7 +30,10 @@ import { adapter } from "./adapter";
 
 export class BluetoothRemoteGATTServer {
 
-    public connected: boolean = false;
+    private _connected: boolean = false;
+    public get connected(): boolean {
+        return this._connected;
+    }
 
     private handle: string = null;
     private services: Array<BluetoothRemoteGATTService> = null;
@@ -44,11 +47,11 @@ export class BluetoothRemoteGATTServer {
             if (this.connected) return reject("connect error: device already connected");
 
             adapter.connect(this.handle, () => {
-                this.connected = true;
+                this._connected = true;
                 resolve(this);
             }, () => {
                 this.services = null;
-                this.connected = false;
+                this._connected = false;
                 this.device.dispatchEvent(BluetoothDevice.EVENT_DISCONNECTED);
                 this.device._bluetooth.dispatchEvent(BluetoothDevice.EVENT_DISCONNECTED);
             }, error => {
@@ -59,7 +62,7 @@ export class BluetoothRemoteGATTServer {
 
     public disconnect() {
         adapter.disconnect(this.handle);
-        this.connected = false;
+        this._connected = false;
     }
 
     public getPrimaryService(serviceUUID): Promise<BluetoothRemoteGATTService> {

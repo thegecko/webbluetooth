@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-var webbluetooth = require('../index');
+var webbluetooth = require('../');
 var bluetooth = webbluetooth.bluetooth;
 
 var eddystoneUUID = 0xFEAA;
