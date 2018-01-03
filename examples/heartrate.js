@@ -62,7 +62,7 @@ bluetooth.requestDevice({
 		return sequence.then(() => {
 			return heartChar.readValue();
 		}).then(value => {
-			if (!value.length) {
+			if (!value.buffer.byteLength) {
 				return log('No value');
 			}
 			log('Value: ' + value.getUint16(0));

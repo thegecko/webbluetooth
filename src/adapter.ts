@@ -131,13 +131,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                 company = ("0000" + company.toString(16)).slice(-4);
                 // Remove company ID
                 const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-                manufacturerData[company] = this.bufferToDataView(buffer);
+                manufacturerData.set(company, this.bufferToDataView(buffer));
             }
 
             const serviceData = new Map();
             if (deviceInfo.advertisement.serviceData) {
                 deviceInfo.advertisement.serviceData.forEach(serviceAdvert => {
-                    serviceData[getCanonicalUUID(serviceAdvert.uuid)] = this.bufferToDataView(serviceAdvert.data);
+                    serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
                 });
             }
 
