@@ -39,3 +39,12 @@ export { WebBluetooth };
  * Helper methods and enums
  */
 export * from "./helpers";
+
+/**
+ * Other classes if required
+ */
+export { BluetoothDevice } from "./device";
+export { BluetoothRemoteGATTServer } from "./server";
+export { BluetoothRemoteGATTService } from "./service";
+export { BluetoothRemoteGATTCharacteristic } from "./characteristic";
+export { BluetoothRemoteGATTDescriptor } from "./descriptor";
