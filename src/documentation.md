@@ -15,12 +15,12 @@ $ npm install webbluetooth
 
 The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and some helper methods:
 
-- bluetooth
-- Bluetooth()
-- getCanonicalUUID()
-- getServiceUUID()
-- getCharacteristicUUID()
-- getDescriptorUUID()
+- [bluetooth](globals.html#bluetooth)
+- [Bluetooth()](classes/bluetooth.html)
+- [getCanonicalUUID()](globals.html#getcanonicaluuid)
+- [getServiceUUID()](globals.html#getserviceuuid)
+- [getCharacteristicUUID()](globals.html#getcharacteristicuuid)
+- [getDescriptorUUID()](globals.html#getdescriptoruuid)
 
 ### Using the default bluetooth instance
 
