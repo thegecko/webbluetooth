@@ -55,7 +55,7 @@ export class BluetoothRemoteGATTDescriptor {
      * Descriptor constructor
      * @param init A partial class to initialise values
      */
-    constructor(init?: Partial<BluetoothRemoteGATTDescriptor>) {
+    constructor(init: Partial<BluetoothRemoteGATTDescriptor>) {
         this.characteristic = init.characteristic;
         this.uuid = init.uuid;
         this._value = init.value;

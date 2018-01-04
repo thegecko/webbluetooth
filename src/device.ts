@@ -93,7 +93,7 @@ export class BluetoothDevice extends EventDispatcher {
      * Device constructor
      * @param init A partial class to initialise values
      */
-    constructor(init?: Partial<BluetoothDevice>) {
+    constructor(init: Partial<BluetoothDevice>) {
         super();
 
         this.id = init.id;

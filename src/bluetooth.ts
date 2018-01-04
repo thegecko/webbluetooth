@@ -29,6 +29,26 @@ import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
 
 /**
+ * Bluetooth Options interface
+ */
+export interface BluetoothOptions {
+    /**
+     * A `device found` callback function to allow the user to select a device
+     */
+    deviceFound?: (device: BluetoothDevice, selectFn: () => void) => boolean;
+
+    /**
+     * The amount of seconds to scan for the device (default is 10)
+     */
+    scanTime?: number;
+
+    /**
+     * An optional referring device
+     */
+    referringDevice?: BluetoothDevice;
+}
+
+/**
  * BluetoothLE Scan Filter Init interface
  */
 export interface BluetoothLEScanFilterInit {
@@ -58,16 +78,6 @@ export interface BluetoothLEScanFilterInit {
  */
 export interface RequestDeviceOptions {
     /**
-     * Whether to accept all devices
-     */
-    acceptAllDevices?: boolean;
-
-    /**
-     * A `device found` callback function to allow the user to select a device
-     */
-    deviceFound?: (device: BluetoothDevice, selectFn: any) => boolean;
-
-    /**
      * An array of device filters to match
      */
     filters?: Array<BluetoothLEScanFilterInit>;
@@ -75,12 +85,12 @@ export interface RequestDeviceOptions {
     /**
      * An array of optional services to have access to
      */
-    optionalServices?: Array<any>;
+    optionalServices?: Array<string>;
 
     /**
-     * The amount of seconds to scan for the device (default is 10)
+     * Whether to accept all devices
      */
-    scanTime?: number;
+    acceptAllDevices?: boolean;
 }
 
 /**
@@ -94,15 +104,26 @@ export class Bluetooth extends EventDispatcher {
      */
     public static EVENT_AVAILABILITY: string = "availabilitychanged";
 
-    private defaultScanTime: number = 10.24 * 1000;
+    /**
+     * Referring device for the bluetooth instance
+     */
+    public readonly referringDevice?: BluetoothDevice;
+
+    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = null;
+    private scanTime: number = 10.24 * 1000;
     private scanner = null;
 
     /**
      * Bluetooth constructor
-     * @param referringDevice An optional referring device
+     * @param options Bluetooth initialisation options
      */
-    constructor(public readonly referringDevice?: BluetoothDevice) {
+    constructor(options?: BluetoothOptions) {
         super();
+
+        options = options || {};
+        this.referringDevice = options.referringDevice;
+        this.deviceFound = options.deviceFound;
+        if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
             this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
@@ -159,9 +180,11 @@ export class Bluetooth extends EventDispatcher {
      */
     public requestDevice(options?: RequestDeviceOptions): Promise<BluetoothDevice> {
         return new Promise((resolve, reject) => {
+            options = options || {};
+
             if (this.scanner !== null) return reject("requestDevice error: request in progress");
 
-            if (!options.acceptAllDevices && !options.deviceFound) {
+            if (!options.acceptAllDevices && !this.deviceFound) {
                 // Must have a filter
                 if (!options.filters || options.filters.length === 0) {
                     return reject(new TypeError("requestDevice error: no filters specified"));
@@ -236,7 +259,7 @@ export class Bluetooth extends EventDispatcher {
                         complete.call(this, bluetoothDevice);
                     }
 
-                    if (!options.deviceFound || options.deviceFound(bluetoothDevice, selectFn.bind(this)) === true) {
+                    if (!this.deviceFound || this.deviceFound(bluetoothDevice, selectFn.bind(this)) === true) {
                         // If no deviceFound function, or deviceFound returns true, resolve with this device immediately
                         complete.call(this, bluetoothDevice);
                     }
@@ -247,7 +270,7 @@ export class Bluetooth extends EventDispatcher {
                     .then(() => {
                         if (!found) reject("requestDevice error: no devices found");
                     });
-                }, options.scanTime ? options.scanTime * 1000 : this.defaultScanTime);
+                }, this.scanTime);
             }, error => reject(`requestDevice error: ${error}`));
         });
     }

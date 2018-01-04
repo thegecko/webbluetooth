@@ -75,7 +75,7 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init?: Partial<BluetoothRemoteGATTService>) {
+    constructor(init: Partial<BluetoothRemoteGATTService>) {
         super();
 
         this.device = init.device;

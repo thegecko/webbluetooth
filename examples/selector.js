@@ -23,13 +23,8 @@
 * SOFTWARE.
 */
 
-var bluetooth = require('../').bluetooth;
+var Bluetooth = require('../').Bluetooth;
 var bluetoothDevices = [];
-
-function logError(error) {
-    console.log(error);
-    process.exit();
-}
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('readable', () => {
@@ -44,6 +39,30 @@ process.stdin.on('readable', () => {
         }
     }
 });
+
+function handleDeviceFound(bluetoothDevice, selectFn) {
+    var discovered = bluetoothDevices.some(device => {
+        return (device.id === bluetoothDevice.id);
+    });
+    if (discovered) return;
+
+    if (bluetoothDevices.length === 0) {
+        process.stdin.setRawMode(true);
+        console.log("select a device:");
+    }
+
+    bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
+    console.log(bluetoothDevices.length + ": " + bluetoothDevice.name);
+}
+
+var bluetooth = new Bluetooth({
+	deviceFound: handleDeviceFound
+});
+
+function logError(error) {
+    console.log(error);
+    process.exit();
+}
 
 function enumerateGatt(server) {
     return server.getPrimaryServices()
@@ -75,21 +94,6 @@ function enumerateGatt(server) {
     });
 }
 
-function handleDeviceFound(bluetoothDevice, selectFn) {
-    var discovered = bluetoothDevices.some(device => {
-        return (device.id === bluetoothDevice.id);
-    });
-    if (discovered) return;
-
-    if (bluetoothDevices.length === 0) {
-        process.stdin.setRawMode(true);
-        console.log("select a device:");
-    }
-
-    bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
-    console.log(bluetoothDevices.length + ": " + bluetoothDevice.name);
-}
-
 function selectDevice(index) {
     var device = bluetoothDevices[index];
     device.select();
@@ -98,9 +102,7 @@ function selectDevice(index) {
 var server = null;
 console.log("scanning...");
 
-bluetooth.requestDevice({
-	deviceFound: handleDeviceFound
-})
+bluetooth.requestDevice()
 .then(device => {
     console.log("connecting...");
     return device.gatt.connect();

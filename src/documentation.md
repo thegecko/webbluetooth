@@ -40,20 +40,35 @@ bluetooth.requestDevice({
 })
 ```
 
+The first device matching the filters will be returned.
+
 ### Creating your own bluetooth instances
 
-You may want to create your own instance of the `Bluetooth` class. For example, to control the referring device:
+You may want to create your own instance of the `Bluetooth` class. For example, to inject a device chooser function or control the referring device:
 
 ```JavaScript
 var Bluetooth = require("webbluetooth").Bluetooth;
 
-var device; // Known device, perhaps obtained via a previous 'requestDevice()` call
-var bluetooth = new Bluetooth(device);
+function handleDeviceFound(device, selectFn) {
+	// If device can be automatically selected, do so by returning true
+	if (device.name === "myName") return true;
 
-bluetooth.referringDevice.gatt.connect()
-.then(server => {
-    ...
+	// Otherwise store the selectFn somewhere and execute it later to select this device
+}
+
+var bluetooth = new Bluetooth({
+	deviceFound: handleDeviceFound
 });
+
+bluetooth.requestDevice({
+	filters:[{ services:[ "heart_rate" ] }]
+})
+.then(device => {
+	return device.gatt.connect();
+})
+.then(server => {
+	...
+})
 ```
 
 ## Specification

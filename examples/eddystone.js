@@ -24,7 +24,6 @@
 */
 
 var webbluetooth = require('../');
-var bluetooth = webbluetooth.bluetooth;
 
 var eddystoneUUID = 0xFEAA;
 
@@ -57,6 +56,31 @@ var expansions = {
     0x0c: ".biz",
     0x0d: ".gov"
 }
+
+function handleDeviceFound(bluetoothDevice) {
+    var uuid = webbluetooth.getServiceUUID(eddystoneUUID);
+    var eddyData = bluetoothDevice.adData.serviceData.get(uuid);
+    if (eddyData) {
+        var decoded = decodeEddystone(eddyData);
+        if (decoded) {
+            switch(decoded.type) {
+                case frameTypes.UID:
+                    console.log("txPower: " + decoded.txPower);
+                    break;
+                case frameTypes.URL:
+                    console.log("url: " + decoded.url);
+                    break;
+                case frameTypes.TLM:
+                    console.log("version: " + decoded.version);
+                    break;
+            }
+        }
+    }
+}
+
+var bluetooth = new webbluetooth.Bluetooth({
+	deviceFound: handleDeviceFound
+});
 
 function decodeEddystone(view) {
     var type = view.getUint8(0);
@@ -104,33 +128,11 @@ function decodeEddystone(view) {
     }
 }
 
-function handleDeviceFound(bluetoothDevice) {
-    var uuid = webbluetooth.getServiceUUID(eddystoneUUID);
-    var eddyData = bluetoothDevice.adData.serviceData.get(uuid);
-    if (eddyData) {
-        var decoded = decodeEddystone(eddyData);
-        if (decoded) {
-            switch(decoded.type) {
-                case frameTypes.UID:
-                    console.log("txPower: " + decoded.txPower);
-                    break;
-                case frameTypes.URL:
-                    console.log("url: " + decoded.url);
-                    break;
-                case frameTypes.TLM:
-                    console.log("version: " + decoded.version);
-                    break;
-            }
-        }
-    }
-}
-
 // Recursively scan
 function scan() {
     console.log("scanning...");
     bluetooth.requestDevice({
-        filters:[{ services:[ eddystoneUUID ] }],
-        deviceFound: handleDeviceFound
+        filters:[{ services:[ eddystoneUUID ] }]
     })
     .then(scan)
     .catch(error => {

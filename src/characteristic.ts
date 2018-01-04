@@ -112,7 +112,7 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init?: Partial<BluetoothRemoteGATTCharacteristic>) {
+    constructor(init: Partial<BluetoothRemoteGATTCharacteristic>) {
         super();
 
         this.service = init.service;
