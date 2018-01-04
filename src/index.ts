@@ -23,22 +23,22 @@
 * SOFTWARE.
 */
 
-import { WebBluetooth } from "./webbluetooth";
+import { Bluetooth } from "./bluetooth";
 
 /**
  * Default bluetooth instance synonymous with `navigator.bluetooth`
  */
-export const bluetooth = new WebBluetooth();
-
-/**
- * WebBluetooth class for creating new instances
- */
-export { WebBluetooth };
+export const bluetooth = new Bluetooth();
 
 /**
  * Helper methods and enums
  */
 export * from "./helpers";
+
+/**
+ * Bluetooth class for creating new instances
+ */
+export { Bluetooth };
 
 /**
  * Other classes if required

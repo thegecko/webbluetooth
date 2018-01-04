@@ -24,7 +24,7 @@
 */
 
 import { EventDispatcher } from "./dispatcher";
-import { WebBluetooth } from "./webbluetooth";
+import { Bluetooth } from "./bluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
 
 /**
@@ -77,7 +77,7 @@ export class BluetoothDevice extends EventDispatcher {
     /**
      * @hidden
      */
-    public readonly _bluetooth: WebBluetooth = null;
+    public readonly _bluetooth: Bluetooth = null;
 
     /**
      * @hidden

@@ -84,9 +84,9 @@ export interface RequestDeviceOptions {
 }
 
 /**
- * WebBluetooth class
+ * Bluetooth class
  */
-export class WebBluetooth extends EventDispatcher {
+export class Bluetooth extends EventDispatcher {
 
     /**
      * Bluetooth Availability Changed event
@@ -98,14 +98,14 @@ export class WebBluetooth extends EventDispatcher {
     private scanner = null;
 
     /**
-     * WebBluetooth constructor
+     * Bluetooth constructor
      * @param referringDevice An optional referring device
      */
     constructor(public readonly referringDevice?: BluetoothDevice) {
         super();
 
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
-            this.dispatchEvent(WebBluetooth.EVENT_AVAILABILITY, value);
+            this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
         });
     }
 
