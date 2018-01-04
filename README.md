@@ -2,6 +2,8 @@
 Node.js implementation of the Web Bluetooth Specification
 
 [![Circle CI](https://circleci.com/gh/thegecko/webbluetooth.svg?style=shield)](https://circleci.com/gh/thegecko/webbluetooth/)
+[![npm](https://img.shields.io/npm/dm/webbluetooth.svg)](https://www.npmjs.com/package/webbluetooth)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
 ## Prerequisites
 
