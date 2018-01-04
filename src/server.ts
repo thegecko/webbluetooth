@@ -93,7 +93,7 @@ export class BluetoothRemoteGATTServer {
      * @param service service UUID
      * @returns Promise containing the service
      */
-    public getPrimaryService(service: string): Promise<BluetoothRemoteGATTService> {
+    public getPrimaryService(service: string | number): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryService error: device not connected");
             if (!service) return reject("getPrimaryService error: no service specified");
@@ -114,7 +114,7 @@ export class BluetoothRemoteGATTServer {
      * @param service service UUID
      * @returns Promise containing an array of services
      */
-    public getPrimaryServices(service?: string): Promise<Array<BluetoothRemoteGATTService>> {
+    public getPrimaryServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryServices error: device not connected");
 

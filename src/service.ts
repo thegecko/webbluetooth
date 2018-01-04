@@ -94,7 +94,7 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      * @param characteristic characteristic UUID
      * @returns Promise containing the characteristic
      */
-    public getCharacteristic(characteristic: string): Promise<BluetoothRemoteGATTCharacteristic> {
+    public getCharacteristic(characteristic: string | number): Promise<BluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristic error: device not connected");
             if (!characteristic) return reject("getCharacteristic error: no characteristic specified");
@@ -115,7 +115,7 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      * @param characteristic characteristic UUID
      * @returns Promise containing an array of characteristics
      */
-    public getCharacteristics(characteristic?: string): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
+    public getCharacteristics(characteristic?: string | number): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristics error: device not connected");
 
@@ -152,7 +152,7 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      * @param service service UUID
      * @returns Promise containing the service
      */
-    public getIncludedService(service: string): Promise<BluetoothRemoteGATTService> {
+    public getIncludedService(service: string | number): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedService error: device not connected");
             if (!service) return reject("getIncludedService error: no service specified");
@@ -173,7 +173,7 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      * @param service service UUID
      * @returns Promise containing an array of services
      */
-    public getIncludedServices(service?: string): Promise<Array<BluetoothRemoteGATTService>> {
+    public getIncludedServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedServices error: device not connected");
 

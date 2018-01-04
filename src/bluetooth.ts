@@ -55,7 +55,7 @@ export interface BluetoothLEScanFilterInit {
     /**
      * An array of service UUIDs to filter on
      */
-    services?: Array<string>;
+    services?: Array<string | number>;
 
     /**
      * The device name to filter on
@@ -85,7 +85,7 @@ export interface RequestDeviceOptions {
     /**
      * An array of optional services to have access to
      */
-    optionalServices?: Array<string>;
+    optionalServices?: Array<string | number>;
 
     /**
      * Whether to accept all devices

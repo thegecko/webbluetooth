@@ -138,7 +138,7 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
      * @param descriptor descriptor UUID
      * @returns Promise containing the descriptor
      */
-    public getDescriptor(descriptor: string): Promise<BluetoothRemoteGATTDescriptor> {
+    public getDescriptor(descriptor: string | number): Promise<BluetoothRemoteGATTDescriptor> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptor error: device not connected");
             if (!descriptor) return reject("getDescriptor error: no descriptor specified");
@@ -159,7 +159,7 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
      * @param descriptor descriptor UUID
      * @returns Promise containing an array of descriptors
      */
-    public getDescriptors(descriptor?: string): Promise<Array<BluetoothRemoteGATTDescriptor>> {
+    public getDescriptors(descriptor?: string | number): Promise<Array<BluetoothRemoteGATTDescriptor>> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptors error: device not connected");
 
