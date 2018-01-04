@@ -29,6 +29,9 @@ import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import { getCharacteristicUUID, getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 
+/**
+ * Bluetooth Remote GATT Service class
+ */
 export class BluetoothRemoteGATTService extends EventDispatcher {
 
     /**
@@ -49,29 +52,54 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
      */
     public static EVENT_REMOVED: string = "serviceremoved";
 
+    /**
+     * The device the service is related to
+     */
     public readonly device: BluetoothDevice = null;
+
+    /**
+     * The unique identifier of the service
+     */
     public readonly uuid: string = null;
+
+    /**
+     * Whether the service is a primary one
+     */
     public readonly isPrimary: boolean = false;
 
     private handle: string = null;
     private services: Array<BluetoothRemoteGATTService> = null;
     private characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
 
+    /**
+     * Service constructor
+     * @param init A partial class to initialise values
+     */
     constructor(init?: Partial<BluetoothRemoteGATTService>) {
         super();
-        Object.assign(this, init);
+
+        this.device = init.device;
+        this.uuid = init.uuid;
+        this.isPrimary = init.isPrimary;
+
         this.handle = this.uuid;
+
         this.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
         this.device.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
         this.device._bluetooth.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
     }
 
-    public getCharacteristic(characteristicUUID): Promise<BluetoothRemoteGATTCharacteristic> {
+    /**
+     * Gets a single characteristic contained in the service
+     * @param characteristic characteristic UUID
+     * @returns Promise containing the characteristic
+     */
+    public getCharacteristic(characteristic: string): Promise<BluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristic error: device not connected");
-            if (!characteristicUUID) return reject("getCharacteristic error: no characteristic specified");
+            if (!characteristic) return reject("getCharacteristic error: no characteristic specified");
 
-            this.getCharacteristics(characteristicUUID)
+            this.getCharacteristics(characteristic)
             .then(characteristics => {
                 if (characteristics.length !== 1) return reject("getCharacteristic error: characteristic not found");
                 resolve(characteristics[0]);
@@ -82,15 +110,20 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
         });
     }
 
-    public getCharacteristics(characteristicUUID): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
+    /**
+     * Gets a list of characteristics contained in the service
+     * @param characteristic characteristic UUID
+     * @returns Promise containing an array of characteristics
+     */
+    public getCharacteristics(characteristic?: string): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getCharacteristics error: device not connected");
 
             function complete() {
-                if (!characteristicUUID) return resolve(this.characteristics);
+                if (!characteristic) return resolve(this.characteristics);
 
-                const filtered = this.characteristics.filter(characteristic => {
-                    return (characteristic.uuid === getCharacteristicUUID(characteristicUUID));
+                const filtered = this.characteristics.filter(characteristicObject => {
+                    return (characteristicObject.uuid === getCharacteristicUUID(characteristic));
                 });
 
                 if (filtered.length !== 1) return reject("getCharacteristics error: characteristic not found");
@@ -114,12 +147,17 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
         });
     }
 
-    public getIncludedService(serviceUUID): Promise<BluetoothRemoteGATTService> {
+    /**
+     * Gets a single service included in the service
+     * @param service service UUID
+     * @returns Promise containing the service
+     */
+    public getIncludedService(service: string): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedService error: device not connected");
-            if (!serviceUUID) return reject("getIncludedService error: no service specified");
+            if (!service) return reject("getIncludedService error: no service specified");
 
-            this.getIncludedServices(serviceUUID)
+            this.getIncludedServices(service)
             .then(services => {
                 if (services.length !== 1) return reject("getIncludedService error: service not found");
                 resolve(services[0]);
@@ -130,15 +168,20 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
         });
     }
 
-    public getIncludedServices(serviceUUID): Promise<Array<BluetoothRemoteGATTService>> {
+    /**
+     * Gets a list of services included in the service
+     * @param service service UUID
+     * @returns Promise containing an array of services
+     */
+    public getIncludedServices(service?: string): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject("getIncludedServices error: device not connected");
 
             function complete() {
-                if (!serviceUUID) return resolve(this.services);
+                if (!service) return resolve(this.services);
 
-                const filtered = this.services.filter(service => {
-                    return (service.uuid === getServiceUUID(serviceUUID));
+                const filtered = this.services.filter(serviceObject => {
+                    return (serviceObject.uuid === getServiceUUID(service));
                 });
 
                 if (filtered.length !== 1) return reject("getIncludedServices error: service not found");

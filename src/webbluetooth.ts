@@ -28,24 +28,64 @@ import { BluetoothDevice } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
 
+/**
+ * BluetoothLE Scan Filter Init interface
+ */
 export interface BluetoothLEScanFilterInit {
+    /**
+     * An array of service UUIDs to filter on
+     */
     services?: Array<string>;
+
+    /**
+     * The device name to filter on
+     */
     name?: string;
+
+    /**
+     * The device name prefix to filter on
+     */
     namePrefix?: string;
+
     // Maps unsigned shorts to BluetoothDataFilters.
     // object manufacturerData;
     // Maps BluetoothServiceUUIDs to BluetoothDataFilters.
     // object serviceData;
 }
 
+/**
+ * Request Device Options interface
+ */
 export interface RequestDeviceOptions {
+    /**
+     * Whether to accept all devices
+     */
     acceptAllDevices?: boolean;
+
+    /**
+     * A `device found` callback function to allow the user to select a device
+     */
     deviceFound?: (device: BluetoothDevice, selectFn: any) => boolean;
+
+    /**
+     * An array of device filters to match
+     */
     filters?: Array<BluetoothLEScanFilterInit>;
+
+    /**
+     * An array of optional services to have access to
+     */
     optionalServices?: Array<any>;
-    scanTime?: any;
+
+    /**
+     * The amount of seconds to scan for the device (default is 10)
+     */
+    scanTime?: number;
 }
 
+/**
+ * WebBluetooth class
+ */
 export class WebBluetooth extends EventDispatcher {
 
     /**
@@ -54,11 +94,16 @@ export class WebBluetooth extends EventDispatcher {
      */
     public static EVENT_AVAILABILITY: string = "availabilitychanged";
 
-    private defaultScanTime = 10.24 * 1000;
+    private defaultScanTime: number = 10.24 * 1000;
     private scanner = null;
 
+    /**
+     * WebBluetooth constructor
+     * @param referringDevice An optional referring device
+     */
     constructor(public readonly referringDevice?: BluetoothDevice) {
         super();
+
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
             this.dispatchEvent(WebBluetooth.EVENT_AVAILABILITY, value);
         });
@@ -95,6 +140,10 @@ export class WebBluetooth extends EventDispatcher {
         return deviceInfo;
     }
 
+    /**
+     * Gets the availability of a bluetooth adapter
+     * @returns Promise containing a flag indicating bluetooth availability
+     */
     public getAvailability(): Promise<boolean> {
         return new Promise((resolve, _reject) => {
             adapter.getEnabled(enabled => {
@@ -103,7 +152,12 @@ export class WebBluetooth extends EventDispatcher {
         });
     }
 
-    public requestDevice(options: RequestDeviceOptions): Promise<BluetoothDevice> {
+    /**
+     * Scans for a device matching optional filters
+     * @param options The options to use when scanning
+     * @returns Promise containing a device which matches the options
+     */
+    public requestDevice(options?: RequestDeviceOptions): Promise<BluetoothDevice> {
         return new Promise((resolve, reject) => {
             if (this.scanner !== null) return reject("requestDevice error: request in progress");
 
@@ -193,11 +247,14 @@ export class WebBluetooth extends EventDispatcher {
                     .then(() => {
                         if (!found) reject("requestDevice error: no devices found");
                     });
-                }, options.scanTime || this.defaultScanTime);
+                }, options.scanTime ? options.scanTime * 1000 : this.defaultScanTime);
             }, error => reject(`requestDevice error: ${error}`));
         });
     }
 
+    /**
+     * Cancels the scan for devices
+     */
     public cancelRequest(): Promise<void> {
         return new Promise((resolve, _reject) => {
             if (this.scanner) {

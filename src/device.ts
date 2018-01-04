@@ -27,6 +27,9 @@ import { EventDispatcher } from "./dispatcher";
 import { WebBluetooth } from "./webbluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
 
+/**
+ * Bluetooth Device class
+ */
 export class BluetoothDevice extends EventDispatcher {
 
     /**
@@ -35,9 +38,30 @@ export class BluetoothDevice extends EventDispatcher {
      */
     public static EVENT_DISCONNECTED: string = "gattserverdisconnected";
 
+    /**
+     * Advertisement Received event
+     * @event
+     */
+    public static EVENT_ADVERT: string = "advertisementreceived";
+
+    /**
+     * The unique identifier of the device
+     */
     public readonly id: string = null;
+
+    /**
+     * The name of the device
+     */
     public readonly name: string = null;
+
+    /**
+     * The gatt server of the device
+     */
     public readonly gatt: BluetoothRemoteGATTServer = null;
+
+    /**
+     * Whether adverts are being watched (not implemented)
+     */
     public readonly watchingAdvertisements: boolean = false;
 
     /**
@@ -65,17 +89,42 @@ export class BluetoothDevice extends EventDispatcher {
      */
     public readonly _serviceUUIDs: Array<string> = [];
 
+    /**
+     * Device constructor
+     * @param init A partial class to initialise values
+     */
     constructor(init?: Partial<BluetoothDevice>) {
         super();
-        Object.assign(this, init);
+
+        this.id = init.id;
+        this.name = init.name;
+        this.gatt = init.gatt;
+        this.watchAdvertisements = init.watchAdvertisements;
+        this.adData = init.adData;
+
+        this._bluetooth = init._bluetooth;
+        this._allowedServices = init._allowedServices;
+        this._serviceUUIDs = init._serviceUUIDs;
+
         if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        this.gatt = new BluetoothRemoteGATTServer(this);
-    }
-    /*
-    public watchAdvertisements(): Promise<void> {
+        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServer(this);
     }
 
-    public unwatchAdvertisements() {
+    /**
+     * Starts watching adverts from this device (not implemented)
+     */
+    public watchAdvertisements(): Promise<void> {
+        return new Promise((_resolve, reject) => {
+            reject("watchAdvertisements error: method not implemented");
+        });
     }
-    */
+
+    /**
+     * Stops watching adverts from this device (not implemented)
+     */
+    public unwatchAdvertisements() {
+        return new Promise((_resolve, reject) => {
+            reject("unwatchAdvertisements error: method not implemented");
+        });
+    }
 }

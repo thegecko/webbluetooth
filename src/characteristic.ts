@@ -29,6 +29,51 @@ import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
 
+/**
+ * Bluetooth Characteristic Propertiesinterface
+ */
+export interface BluetoothCharacteristicProperties {
+    /**
+     * Broadcast property
+     */
+    broadcast: boolean;
+    /**
+     * Read property
+     */
+    read: boolean;
+    /**
+     * Write without response property
+     */
+    writeWithoutResponse: boolean;
+    /**
+     * Write property
+     */
+    write: boolean;
+    /**
+     * Notify property
+     */
+    notify: boolean;
+    /**
+     * Indicate property
+     */
+    indicate: boolean;
+    /**
+     * Authenticated signed writes property
+     */
+    authenticatedSignedWrites: boolean;
+    /**
+     * Reliable write property
+     */
+    reliableWrite: boolean;
+    /**
+     * Writable auxiliaries property
+     */
+    writableAuxiliaries: boolean;
+}
+
+/**
+ * Bluetooth Remote GATT Characteristic class
+ */
 export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
 
     /**
@@ -37,21 +82,25 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
      */
     public static EVENT_CHANGED: string = "characteristicvaluechanged";
 
+    /**
+     * The service the characteristic is related to
+     */
     public readonly service: BluetoothRemoteGATTService = null;
+
+    /**
+     * The unique identifier of the characteristic
+     */
     public readonly uuid = null;
-    public readonly properties = {
-        broadcast: false,
-        read: false,
-        writeWithoutResponse: false,
-        write: false,
-        notify: false,
-        indicate: false,
-        authenticatedSignedWrites: false,
-        reliableWrite: false,
-        writableAuxiliaries: false
-    };
+
+    /**
+     * The properties of the characteristic
+     */
+    public readonly properties: BluetoothCharacteristicProperties;
 
     private _value: DataView = null;
+    /**
+     * The value of the characteristic
+     */
     public get value(): DataView {
         return this._value;
     }
@@ -59,9 +108,18 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
     private handle: string = null;
     private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
 
+    /**
+     * Characteristic constructor
+     * @param init A partial class to initialise values
+     */
     constructor(init?: Partial<BluetoothRemoteGATTCharacteristic>) {
         super();
-        Object.assign(this, init);
+
+        this.service = init.service;
+        this.uuid = init.uuid;
+        this.properties = init.properties;
+        this._value = init.value;
+
         this.handle = this.uuid;
     }
 
@@ -75,12 +133,17 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         }
     }
 
-    public getDescriptor(descriptorUUID): Promise<BluetoothRemoteGATTDescriptor> {
+    /**
+     * Gets a single characteristic descriptor
+     * @param descriptor descriptor UUID
+     * @returns Promise containing the descriptor
+     */
+    public getDescriptor(descriptor: string): Promise<BluetoothRemoteGATTDescriptor> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptor error: device not connected");
-            if (!descriptorUUID) return reject("getDescriptor error: no descriptor specified");
+            if (!descriptor) return reject("getDescriptor error: no descriptor specified");
 
-            this.getDescriptors(descriptorUUID)
+            this.getDescriptors(descriptor)
             .then(descriptors => {
                 if (descriptors.length !== 1) return reject("getDescriptor error: descriptor not found");
                 resolve(descriptors[0]);
@@ -91,15 +154,20 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         });
     }
 
-    public getDescriptors(descriptorUUID): Promise<Array<BluetoothRemoteGATTDescriptor>> {
+    /**
+     * Gets a list of the characteristic's descriptors
+     * @param descriptor descriptor UUID
+     * @returns Promise containing an array of descriptors
+     */
+    public getDescriptors(descriptor?: string): Promise<Array<BluetoothRemoteGATTDescriptor>> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("getDescriptors error: device not connected");
 
             function complete() {
-                if (!descriptorUUID) return resolve(this.descriptors);
+                if (!descriptor) return resolve(this.descriptors);
 
-                const filtered = this.descriptors.filter(descriptor => {
-                    return (descriptor.uuid === getDescriptorUUID(descriptorUUID));
+                const filtered = this.descriptors.filter(descriptorObject => {
+                    return (descriptorObject.uuid === getDescriptorUUID(descriptor));
                 });
 
                 if (filtered.length !== 1) return reject("getDescriptors error: descriptor not found");
@@ -123,6 +191,10 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         });
     }
 
+    /**
+     * Gets the value of the characteristic
+     * @returns Promise containing the value
+     */
     public readValue(): Promise<DataView> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("readValue error: device not connected");
@@ -136,7 +208,11 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         });
     }
 
-    public writeValue(bufferSource: ArrayBuffer | ArrayBufferView): Promise<void> {
+    /**
+     * Updates the value of the characteristic
+     * @param value The value to write
+     */
+    public writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
 
@@ -144,7 +220,7 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
                 return (source as ArrayBufferView).buffer !== undefined;
             }
 
-            const arrayBuffer = isView(bufferSource) ? bufferSource.buffer : bufferSource;
+            const arrayBuffer = isView(value) ? value.buffer : value;
             const dataView = new DataView(arrayBuffer);
 
             adapter.writeCharacteristic(this.handle, dataView, () => {
@@ -156,6 +232,10 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         });
     }
 
+    /**
+     * Start notifications of changes for the characteristic
+     * @returns Promise containing the characteristic
+     */
     public startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
@@ -170,6 +250,10 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
         });
     }
 
+    /**
+     * Stop notifications of changes for the characteristic
+     * @returns Promise containing the characteristic
+     */
     public stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("stopNotifications error: device not connected");

@@ -104,4 +104,4 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] Lookups for known services, characteristics and descriptors
 - [x] Canonical UUID helper
 - [x] Examples
-- [ ] API Documentation
+- [x] API Documentation

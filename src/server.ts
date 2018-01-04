@@ -28,9 +28,20 @@ import { BluetoothRemoteGATTService } from "./service";
 import { getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 
+/**
+ * Bluetooth Remote GATT Server class
+ */
 export class BluetoothRemoteGATTServer {
 
+    /**
+     * The device the gatt server is related to
+     */
+    public readonly device: BluetoothDevice = null;
+
     private _connected: boolean = false;
+    /**
+     * Whether the gatt server is connected
+     */
     public get connected(): boolean {
         return this._connected;
     }
@@ -38,10 +49,19 @@ export class BluetoothRemoteGATTServer {
     private handle: string = null;
     private services: Array<BluetoothRemoteGATTService> = null;
 
-    constructor(public device: BluetoothDevice) {
+    /**
+     * Server constructor
+     * @param device Device the gatt server relates to
+     */
+    constructor(device: BluetoothDevice) {
+        this.device = device;
         this.handle = this.device.id;
     }
 
+    /**
+     * Connect the gatt server
+     * @returns Promise containing the gatt server
+     */
     public connect(): Promise<BluetoothRemoteGATTServer> {
         return new Promise((resolve, reject) => {
             if (this.connected) return reject("connect error: device already connected");
@@ -60,17 +80,25 @@ export class BluetoothRemoteGATTServer {
         });
     }
 
+    /**
+     * Disconnect the gatt server
+     */
     public disconnect() {
         adapter.disconnect(this.handle);
         this._connected = false;
     }
 
-    public getPrimaryService(serviceUUID): Promise<BluetoothRemoteGATTService> {
+    /**
+     * Gets a single primary service contained in the gatt server
+     * @param service service UUID
+     * @returns Promise containing the service
+     */
+    public getPrimaryService(service: string): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryService error: device not connected");
-            if (!serviceUUID) return reject("getPrimaryService error: no service specified");
+            if (!service) return reject("getPrimaryService error: no service specified");
 
-            this.getPrimaryServices(serviceUUID)
+            this.getPrimaryServices(service)
             .then(services => {
                 if (services.length !== 1) return reject("getPrimaryService error: service not found");
                 resolve(services[0]);
@@ -81,15 +109,20 @@ export class BluetoothRemoteGATTServer {
         });
     }
 
-    public getPrimaryServices(serviceUUID): Promise<Array<BluetoothRemoteGATTService>> {
+    /**
+     * Gets a list of primary services contained in the gatt server
+     * @param service service UUID
+     * @returns Promise containing an array of services
+     */
+    public getPrimaryServices(service?: string): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
             if (!this.connected) return reject("getPrimaryServices error: device not connected");
 
             function complete() {
-                if (!serviceUUID) return resolve(this.services);
+                if (!service) return resolve(this.services);
 
-                const filtered = this.services.filter(service => {
-                    return (service.uuid === getServiceUUID(serviceUUID));
+                const filtered = this.services.filter(serviceObject => {
+                    return (serviceObject.uuid === getServiceUUID(service));
                 });
 
                 if (filtered.length !== 1) return reject("getPrimaryServices error: service not found");

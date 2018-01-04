@@ -23,6 +23,9 @@
 * SOFTWARE.
 */
 
+/**
+ * Known services enum
+ */
 export enum bluetoothServices {
     "alert_notification" = 0x1811,
     "automation_io" = 0x1815,
@@ -58,6 +61,9 @@ export enum bluetoothServices {
     "weight_scale" = 0x181D
 }
 
+/**
+ * Known characteristics enum
+ */
 export enum bluetoothCharacteristics {
     "aerobic_heart_rate_lower_limit" = 0x2A7E,
     "aerobic_heart_rate_upper_limit" = 0x2A84,
@@ -222,6 +228,9 @@ export enum bluetoothCharacteristics {
     "wind_chill" = 0x2A79
 }
 
+/**
+ * Known descriptors enum
+ */
 export enum bluetoothDescriptors {
     "gatt.characteristic_extended_properties" = 0x2900,
     "gatt.characteristic_user_description" = 0x2901,
@@ -240,6 +249,11 @@ export enum bluetoothDescriptors {
     "time_trigger_setting" = 0x290E
 }
 
+/**
+ * Gets a canonical UUID from a partial UUID in string or hex format
+ * @param uuid The partial UUID
+ * @returns canonical UUID
+ */
 export function getCanonicalUUID(uuid: string | number): string {
     if (typeof uuid === "number") uuid = uuid.toString(16);
     uuid = uuid.toLowerCase();
@@ -248,17 +262,32 @@ export function getCanonicalUUID(uuid: string | number): string {
     return uuid;
 }
 
-export function getServiceUUID(uuid: string | number): string {
-    if (bluetoothServices[uuid]) uuid = bluetoothServices[uuid];
-    return getCanonicalUUID(uuid);
+/**
+ * Gets a canonical service UUID from a known service name or partial UUID in string or hex format
+ * @param service The known service name
+ * @returns canonical UUID
+ */
+export function getServiceUUID(service: string | number): string {
+    if (bluetoothServices[service]) service = bluetoothServices[service];
+    return getCanonicalUUID(service);
 }
 
-export function getCharacteristicUUID(uuid: string | number): string {
-    if (bluetoothCharacteristics[uuid]) uuid = bluetoothCharacteristics[uuid];
-    return getCanonicalUUID(uuid);
+/**
+ * Gets a canonical characteristic UUID from a known characteristic name or partial UUID in string or hex format
+ * @param characteristic The known characteristic name
+ * @returns canonical UUID
+ */
+export function getCharacteristicUUID(characteristic: string | number): string {
+    if (bluetoothCharacteristics[characteristic]) characteristic = bluetoothCharacteristics[characteristic];
+    return getCanonicalUUID(characteristic);
 }
 
-export function getDescriptorUUID(uuid: string | number): string {
-    if (bluetoothDescriptors[uuid]) uuid = bluetoothDescriptors[uuid];
-    return getCanonicalUUID(uuid);
+/**
+ * Gets a canonical descriptor UUID from a known descriptor name or partial UUID in string or hex format
+ * @param descriptor The known descriptor name
+ * @returns canonical UUID
+ */
+export function getDescriptorUUID(descriptor: string | number): string {
+    if (bluetoothDescriptors[descriptor]) descriptor = bluetoothDescriptors[descriptor];
+    return getCanonicalUUID(descriptor);
 }
