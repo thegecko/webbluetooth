@@ -30,7 +30,7 @@ import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
 
 /**
- * Bluetooth Characteristic Propertiesinterface
+ * Bluetooth Characteristic Properties interface
  */
 export interface BluetoothCharacteristicProperties {
     /**
