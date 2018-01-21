@@ -30,13 +30,13 @@ To use existing Web Bluetooth scripts, you can simply use the default `bluetooth
 var bluetooth = require("webbluetooth").bluetooth;
 
 bluetooth.requestDevice({
-	filters:[{ services:[ "heart_rate" ] }]
+    filters:[{ services:[ "heart_rate" ] }]
 })
 .then(device => {
-	return device.gatt.connect();
+    return device.gatt.connect();
 })
 .then(server => {
-	...
+    ...
 })
 ```
 
@@ -50,24 +50,24 @@ You may want to create your own instance of the `Bluetooth` class. For example, 
 var Bluetooth = require("webbluetooth").Bluetooth;
 
 function handleDeviceFound(device, selectFn) {
-	// If device can be automatically selected, do so by returning true
-	if (device.name === "myName") return true;
+    // If device can be automatically selected, do so by returning true
+    if (device.name === "myName") return true;
 
-	// Otherwise store the selectFn somewhere and execute it later to select this device
+    // Otherwise store the selectFn somewhere and execute it later to select this device
 }
 
 var bluetooth = new Bluetooth({
-	deviceFound: handleDeviceFound
+    deviceFound: handleDeviceFound
 });
 
 bluetooth.requestDevice({
-	filters:[{ services:[ "heart_rate" ] }]
+    filters:[{ services:[ "heart_rate" ] }]
 })
 .then(device => {
-	return device.gatt.connect();
+    return device.gatt.connect();
 })
 .then(server => {
-	...
+    ...
 })
 ```
 
