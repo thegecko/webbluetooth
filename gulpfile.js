@@ -1,12 +1,11 @@
 var path        = require("path");
 var del         = require("del");
 var merge       = require("merge2");
-var tslint      = require("tslint");
 var gulp        = require("gulp");
 var sourcemaps  = require("gulp-sourcemaps");
-var gulpTs      = require("gulp-typescript");
-var gulpTslint  = require("gulp-tslint");
-var gulpTypedoc = require("gulp-typedoc");
+var typescript  = require("gulp-typescript");
+var tslint      = require("gulp-tslint");
+var typedoc     = require("gulp-typedoc");
 
 var name = "Node Web Bluetooth";
 var docsToc = "";
@@ -35,14 +34,11 @@ gulp.task("clean", function() {
 
 // Lint the source
 gulp.task("lint", function() {
-    var program = tslint.Linter.createProgram("./");
-
     gulp.src(srcFiles)
-    .pipe(gulpTslint({
-        program: program,
+    .pipe(tslint({
         formatter: "stylish"
     }))
-    .pipe(gulpTslint.report({
+    .pipe(tslint.report({
         emitError: !watching
     }))
 });
@@ -50,7 +46,7 @@ gulp.task("lint", function() {
 // Create documentation
 gulp.task("doc", function() {
     return gulp.src(srcFiles)
-    .pipe(gulpTypedoc({
+    .pipe(typedoc({
         name: name,
         readme: "src/documentation.md",
         theme: "src/theme",
@@ -70,7 +66,7 @@ gulp.task("doc", function() {
 gulp.task("compile", ["clean"], function() {
     var tsResult = gulp.src(srcFiles)
     .pipe(sourcemaps.init())
-    .pipe(gulpTs.createProject("tsconfig.json")())
+    .pipe(typescript.createProject("tsconfig.json")())
     .on("error", handleError);
 
     return merge([
