@@ -329,11 +329,14 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     public writeCharacteristic(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
-        const characteristic = this.characteristicHandles[handle];
         const buffer = this.dataViewToBuffer(value);
-        // Default to writing without a response if supported
-        const withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0;
-        characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn));
+        const characteristic = this.characteristicHandles[handle];
+
+        // Default to writing with a response if supported (writeWithoutResponse and authenticatedSignedWrites don't require a response)
+        const withResponse = characteristic.properties.indexOf("write") >= 0
+                          || characteristic.properties.indexOf("reliableWrite") >= 0;
+
+        characteristic.write(buffer, !withResponse, this.checkForError(errorFn, completeFn));
     }
 
     public enableNotify(handle: string, notifyFn: (value: DataView) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
