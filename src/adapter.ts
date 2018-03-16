@@ -338,7 +338,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                              || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
 
         // Add a small delay for writing without response
-        const delay = withoutResponse ? 250 : null;
+        const delay = withoutResponse ? 1 : null;
 
         characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
     }
