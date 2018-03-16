@@ -29,7 +29,7 @@ gulp.task("setWatch", function() {
 
 // Clear built directories
 gulp.task("clean", function() {
-    return del([nodeDir, typesDir]);
+    if (!watching) return del([nodeDir, typesDir]);
 });
 
 // Lint the source
