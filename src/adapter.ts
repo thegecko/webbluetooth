@@ -90,12 +90,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         completeFn();
     }
 
-    private checkForError(errorFn, continueFn?) {
+    private checkForError(errorFn, continueFn?, delay?: number) {
         return function(error) {
             if (error) errorFn(error);
             else if (typeof continueFn === "function") {
                 const args = [].slice.call(arguments, 1);
-                continueFn.apply(this, args);
+                if (delay === null) continueFn.apply(this, args);
+                else setTimeout(() => continueFn.apply(this, args), delay);
             }
         };
     }
@@ -332,11 +333,14 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const buffer = this.dataViewToBuffer(value);
         const characteristic = this.characteristicHandles[handle];
 
-        // Default to writing with a response if supported (writeWithoutResponse and authenticatedSignedWrites don't require a response)
-        const withResponse = characteristic.properties.indexOf("write") >= 0
-                          || characteristic.properties.indexOf("reliableWrite") >= 0;
+        // writeWithoutResponse and authenticatedSignedWrites don't require a response
+        const withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
+                             || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
 
-        characteristic.write(buffer, !withResponse, this.checkForError(errorFn, completeFn));
+        // Add a small delay for writing without response
+        const delay = withoutResponse ? 250 : null;
+
+        characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
     }
 
     public enableNotify(handle: string, notifyFn: (value: DataView) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
