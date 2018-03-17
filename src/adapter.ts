@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { platform } from "os";
 import { EventEmitter } from "events";
 import { getCanonicalUUID } from "./helpers";
 import { BluetoothDevice } from "./device";
@@ -67,6 +68,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     private foundFn: (device: Partial<BluetoothDevice>) => void = null;
     private initialised: boolean = false;
     private enabled: boolean = false;
+    private os: string = platform();
 
     constructor() {
         super();
@@ -337,8 +339,8 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
                              || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
 
-        // Add a small delay for writing without response
-        const delay = withoutResponse ? 1 : null;
+        // Add a small delay for writing without response when not on MacOS
+        const delay = (this.os !== "darwin" && withoutResponse) ? 25 : null;
 
         characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
     }
