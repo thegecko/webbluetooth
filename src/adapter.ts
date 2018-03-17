@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { platform } from "os";
 import { EventEmitter } from "events";
 import { getCanonicalUUID } from "./helpers";
 import { BluetoothDevice } from "./device";
@@ -67,6 +68,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     private foundFn: (device: Partial<BluetoothDevice>) => void = null;
     private initialised: boolean = false;
     private enabled: boolean = false;
+    private os: string = platform();
 
     constructor() {
         super();
@@ -90,12 +92,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         completeFn();
     }
 
-    private checkForError(errorFn, continueFn?) {
+    private checkForError(errorFn, continueFn?, delay?: number) {
         return function(error) {
             if (error) errorFn(error);
             else if (typeof continueFn === "function") {
                 const args = [].slice.call(arguments, 1);
-                continueFn.apply(this, args);
+                if (delay === null) continueFn.apply(this, args);
+                else setTimeout(() => continueFn.apply(this, args), delay);
             }
         };
     }
@@ -330,7 +333,16 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     public writeCharacteristic(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
         const buffer = this.dataViewToBuffer(value);
-        this.characteristicHandles[handle].write(buffer, true, this.checkForError(errorFn, completeFn));
+        const characteristic = this.characteristicHandles[handle];
+
+        // writeWithoutResponse and authenticatedSignedWrites don't require a response
+        const withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
+                             || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
+
+        // Add a small delay for writing without response when not on MacOS
+        const delay = (this.os !== "darwin" && withoutResponse) ? 25 : null;
+
+        characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
     }
 
     public enableNotify(handle: string, notifyFn: (value: DataView) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
