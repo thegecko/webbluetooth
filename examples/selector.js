@@ -23,13 +23,13 @@
 * SOFTWARE.
 */
 
-var Bluetooth = require('../').Bluetooth;
+var Bluetooth = require("../").Bluetooth;
 var bluetoothDevices = [];
 
-process.stdin.setEncoding('utf8');
-process.stdin.on('readable', () => {
+process.stdin.setEncoding("utf8");
+process.stdin.on("readable", () => {
     var input = process.stdin.read();
-    if (input === '\u0003') {
+    if (input === "\u0003") {
         process.exit();
     } else {
         var index = parseInt(input);
@@ -52,7 +52,11 @@ function handleDeviceFound(bluetoothDevice, selectFn) {
     }
 
     bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
+
     console.log(bluetoothDevices.length + ": " + bluetoothDevice.name);
+    if (bluetoothDevice._serviceUUIDs.length) {
+        console.log("\tAdvertising: " + bluetoothDevice._serviceUUIDs);
+    }
 }
 
 var bluetooth = new Bluetooth({

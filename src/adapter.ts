@@ -169,25 +169,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     public startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
-
-        if (serviceUUIDs.length === 0) {
-            this.foundFn = foundFn;
-        } else {
-            this.foundFn = device => {
-                serviceUUIDs.forEach(serviceUUID => {
-                    if (device._serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                        foundFn(device);
-                        return;
-                    }
-                });
-            };
-        }
+        this.foundFn = foundFn;
 
         this.init(() => {
             this.deviceHandles = {};
             function stateCB() {
                 if (this.state === true) {
-                    noble.startScanning([], false, this.checkForError(errorFn, completeFn));
+                    noble.startScanning(serviceUUIDs, true, this.checkForError(errorFn, completeFn));
                 } else {
                     errorFn("adapter not enabled");
                 }

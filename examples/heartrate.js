@@ -23,30 +23,30 @@
 * SOFTWARE.
 */
 
-var bluetooth = require('../').bluetooth;
+var bluetooth = require("../").bluetooth;
 
-console.log('Requesting Bluetooth Devices...');
+console.log("Requesting Bluetooth Devices...");
 bluetooth.requestDevice({
 	filters:[{ services:[ "heart_rate" ] }]
 })
 .then(device => {
-	console.log('Found device: ' + device.name);
+	console.log("Found device: " + device.name);
 	return device.gatt.connect();
 })
 .then(server => {
-	console.log('Gatt server connected: ' + server.connected);
+	console.log("Gatt server connected: " + server.connected);
 	return server.getPrimaryService("heart_rate");
 })
 .then(service => {
-	console.log('Primary service: ' + service.uuid);
+	console.log("Primary service: " + service.uuid);
 	return service.getCharacteristic("heart_rate_measurement");
 })
 .then(characteristic => {
-	console.log('Characteristic: ' + characteristic.uuid);
+	console.log("Characteristic: " + characteristic.uuid);
 	return characteristic.startNotifications();
 })
 .then(characteristic => {
-	console.log('Notifications started');
+	console.log("Notifications started");
 
 	characteristic.addEventListener("characteristicvaluechanged", event => {
 		if (event.value.buffer.byteLength) console.log(event.value.getUint16(0));
