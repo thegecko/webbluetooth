@@ -85,7 +85,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         return (noble.state === "poweredOn");
     }
 
-    private init(completeFn: () => any) {
+    private init(completeFn: () => any): void {
         if (this.initialised) return completeFn();
         noble.on("discover", deviceInfo => {
             if (this.discoverFn) this.discoverFn(deviceInfo);
@@ -105,13 +105,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         };
     }
 
-    private bufferToDataView(buffer) {
+    private bufferToDataView(buffer: Buffer): DataView {
         // Buffer to ArrayBuffer
         const arrayBuffer = new Uint8Array(buffer).buffer;
         return new DataView(arrayBuffer);
     }
 
-    private dataViewToBuffer(dataView) {
+    private dataViewToBuffer(dataView: DataView): Buffer {
         // DataView to TypedArray
         const typedArray = new Uint8Array(dataView.buffer);
         return new Buffer(typedArray);
@@ -151,11 +151,11 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const manufacturerData = new Map();
         if (deviceInfo.advertisement.manufacturerData) {
             // First 2 bytes are 16-bit company identifier
-            let company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
-            company = ("0000" + company.toString(16)).slice(-4);
+            const company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
+
             // Remove company ID
             const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-            manufacturerData.set(company, this.bufferToDataView(buffer));
+            manufacturerData.set(("0000" + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
         }
 
         const serviceData = new Map();
