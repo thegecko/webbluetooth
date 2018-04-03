@@ -268,7 +268,11 @@ export function getCanonicalUUID(uuid: string | number): string {
  * @returns canonical UUID
  */
 export function getServiceUUID(service: string | number): string {
-    if (bluetoothServices[service]) service = bluetoothServices[service];
+    // Check for string as enums also allow a reverse lookup which will match any numbers passed in
+    if (typeof service === "string" && bluetoothServices[service]) {
+        service = bluetoothServices[service];
+    }
+
     return getCanonicalUUID(service);
 }
 
@@ -278,7 +282,11 @@ export function getServiceUUID(service: string | number): string {
  * @returns canonical UUID
  */
 export function getCharacteristicUUID(characteristic: string | number): string {
-    if (bluetoothCharacteristics[characteristic]) characteristic = bluetoothCharacteristics[characteristic];
+    // Check for string as enums also allow a reverse lookup which will match any numbers passed in
+    if (typeof characteristic === "string" && bluetoothCharacteristics[characteristic]) {
+        characteristic = bluetoothCharacteristics[characteristic];
+    }
+
     return getCanonicalUUID(characteristic);
 }
 
@@ -288,6 +296,10 @@ export function getCharacteristicUUID(characteristic: string | number): string {
  * @returns canonical UUID
  */
 export function getDescriptorUUID(descriptor: string | number): string {
-    if (bluetoothDescriptors[descriptor]) descriptor = bluetoothDescriptors[descriptor];
+    // Check for string as enums also allow a reverse lookup which will match any numbers passed in
+    if (typeof descriptor === "string" && bluetoothDescriptors[descriptor]) {
+        descriptor = bluetoothDescriptors[descriptor];
+    }
+
     return getCanonicalUUID(descriptor);
 }
