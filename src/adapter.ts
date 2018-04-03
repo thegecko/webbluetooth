@@ -65,7 +65,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     private characteristicHandles: {} = {};
     private descriptorHandles: {} = {};
     private charNotifies: {} = {};
-    private foundFn: (device: Partial<BluetoothDevice>) => void = null;
+    private discoverFn: (device: noble.Peripheral) => void = null;
     private initialised: boolean = false;
     private enabled: boolean = false;
     private os: string = platform();
@@ -85,9 +85,11 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         return (noble.state === "poweredOn");
     }
 
-    private init(completeFn: () => any) {
+    private init(completeFn: () => any): void {
         if (this.initialised) return completeFn();
-        noble.on("discover", this.discover.bind(this));
+        noble.on("discover", deviceInfo => {
+            if (this.discoverFn) this.discoverFn(deviceInfo);
+        });
         this.initialised = true;
         completeFn();
     }
@@ -103,59 +105,77 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         };
     }
 
-    private bufferToDataView(buffer) {
+    private bufferToDataView(buffer: Buffer): DataView {
         // Buffer to ArrayBuffer
         const arrayBuffer = new Uint8Array(buffer).buffer;
         return new DataView(arrayBuffer);
     }
 
-    private dataViewToBuffer(dataView) {
+    private dataViewToBuffer(dataView: DataView): Buffer {
         // DataView to TypedArray
         const typedArray = new Uint8Array(dataView.buffer);
         return new Buffer(typedArray);
     }
 
-    private discover(deviceInfo) {
-        if (this.foundFn) {
-            const deviceID = (deviceInfo.address && deviceInfo.address !== "unknown") ? deviceInfo.address : deviceInfo.id;
-            if (!this.deviceHandles[deviceID]) this.deviceHandles[deviceID] = deviceInfo;
+    private validDevice(deviceInfo: noble.Peripheral, serviceUUIDs: Array<string>): boolean {
+        if (serviceUUIDs.length === 0) {
+            // Match any device
+            return true;
+        }
 
-            const serviceUUIDs = [];
-            if (deviceInfo.advertisement.serviceUuids) {
-                deviceInfo.advertisement.serviceUuids.forEach(serviceUUID => {
-                    serviceUUIDs.push(getCanonicalUUID(serviceUUID));
-                });
-            }
+        if (!deviceInfo.advertisement.serviceUuids) {
+            // No advertised services, no match
+            return false;
+        }
 
-            const manufacturerData = new Map();
-            if (deviceInfo.advertisement.manufacturerData) {
-                // First 2 bytes are 16-bit company identifier
-                let company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
-                company = ("0000" + company.toString(16)).slice(-4);
-                // Remove company ID
-                const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-                manufacturerData.set(company, this.bufferToDataView(buffer));
-            }
+        const advertisedUUIDs = deviceInfo.advertisement.serviceUuids.map(serviceUUID => {
+            return getCanonicalUUID(serviceUUID);
+        });
 
-            const serviceData = new Map();
-            if (deviceInfo.advertisement.serviceData) {
-                deviceInfo.advertisement.serviceData.forEach(serviceAdvert => {
-                    serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
-                });
-            }
+        return serviceUUIDs.some(serviceUUID => {
+            // An advertised UUID matches our search UUIDs
+            return (advertisedUUIDs.indexOf(serviceUUID) >= 0);
+        });
+    }
 
-            this.foundFn({
-                id: deviceID,
-                name: deviceInfo.advertisement.localName,
-                _serviceUUIDs: serviceUUIDs,
-                adData: {
-                    rssi: deviceInfo.rssi,
-                    txPower: deviceInfo.advertisement.txPowerLevel,
-                    serviceData: serviceData,
-                    manufacturerData: manufacturerData
-                }
+    private deviceToBluetoothDevice(deviceInfo): Partial<BluetoothDevice> {
+        const deviceID = (deviceInfo.address && deviceInfo.address !== "unknown") ? deviceInfo.address : deviceInfo.id;
+
+        const serviceUUIDs = [];
+        if (deviceInfo.advertisement.serviceUuids) {
+            deviceInfo.advertisement.serviceUuids.forEach(serviceUUID => {
+                serviceUUIDs.push(getCanonicalUUID(serviceUUID));
             });
         }
+
+        const manufacturerData = new Map();
+        if (deviceInfo.advertisement.manufacturerData) {
+            // First 2 bytes are 16-bit company identifier
+            const company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
+
+            // Remove company ID
+            const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
+            manufacturerData.set(("0000" + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
+        }
+
+        const serviceData = new Map();
+        if (deviceInfo.advertisement.serviceData) {
+            deviceInfo.advertisement.serviceData.forEach(serviceAdvert => {
+                serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
+            });
+        }
+
+        return {
+            id: deviceID,
+            name: deviceInfo.advertisement.localName,
+            _serviceUUIDs: serviceUUIDs,
+            adData: {
+                rssi: deviceInfo.rssi,
+                txPower: deviceInfo.advertisement.txPowerLevel,
+                serviceData: serviceData,
+                manufacturerData: manufacturerData
+            }
+        };
     }
 
     public getEnabled(completeFn: (enabled: boolean) => void) {
@@ -170,24 +190,25 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     public startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
 
-        if (serviceUUIDs.length === 0) {
-            this.foundFn = foundFn;
-        } else {
-            this.foundFn = device => {
-                serviceUUIDs.forEach(serviceUUID => {
-                    if (device._serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                        foundFn(device);
-                        return;
-                    }
-                });
-            };
-        }
+        this.discoverFn = deviceInfo => {
+            if (this.validDevice(deviceInfo, serviceUUIDs)) {
+                const device = this.deviceToBluetoothDevice(deviceInfo);
+
+                if (!this.deviceHandles[device.id]) {
+                    this.deviceHandles[device.id] = deviceInfo;
+                    // Only call the found function the first time we find a valid device
+                    foundFn(device);
+                }
+            }
+        };
 
         this.init(() => {
             this.deviceHandles = {};
             function stateCB() {
                 if (this.state === true) {
-                    noble.startScanning([], false, this.checkForError(errorFn, completeFn));
+                    // Noble doesn't correctly match short and canonical UUIDs on Linux, so we need to check ourselves
+                    // Continually scan to pick up all advertised UUIDs
+                    noble.startScanning([], true, this.checkForError(errorFn, completeFn));
                 } else {
                     errorFn("adapter not enabled");
                 }
@@ -199,7 +220,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     public stopScan(_errorFn?: (errorMsg: string) => void): void {
-        this.foundFn = null;
+        this.discoverFn = null;
         noble.stopScanning();
     }
 

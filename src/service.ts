@@ -122,8 +122,11 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
             function complete() {
                 if (!characteristic) return resolve(this.characteristics);
 
+                // Canonical-ize characteristic
+                characteristic = getCharacteristicUUID(characteristic);
+
                 const filtered = this.characteristics.filter(characteristicObject => {
-                    return (characteristicObject.uuid === getCharacteristicUUID(characteristic));
+                    return (characteristicObject.uuid === characteristic);
                 });
 
                 if (filtered.length !== 1) return reject("getCharacteristics error: characteristic not found");
