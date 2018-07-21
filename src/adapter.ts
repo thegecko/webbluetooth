@@ -238,7 +238,10 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     public disconnect(handle: string, errorFn?: (errorMsg: string) => void): void {
-        this.deviceHandles[handle].disconnect(this.checkForError(errorFn));
+        const baseDevice = this.deviceHandles[handle];
+        baseDevice.removeAllListeners("connect");
+        baseDevice.removeAllListeners("disconnect");
+        baseDevice.disconnect(this.checkForError(errorFn));
     }
 
     public discoverServices(handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void): void {
