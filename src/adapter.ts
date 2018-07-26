@@ -226,6 +226,8 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     public connect(handle: string, connectFn: () => void, disconnectFn: () => void, errorFn?: (errorMsg: string) => void): void {
         const baseDevice = this.deviceHandles[handle];
+        baseDevice.removeAllListeners("connect");
+        baseDevice.removeAllListeners("disconnect");
         baseDevice.once("connect", connectFn);
         baseDevice.once("disconnect", () => {
             this.serviceHandles = {};
@@ -239,8 +241,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     public disconnect(handle: string, errorFn?: (errorMsg: string) => void): void {
         const baseDevice = this.deviceHandles[handle];
-        baseDevice.removeAllListeners("connect");
-        baseDevice.removeAllListeners("disconnect");
         baseDevice.disconnect(this.checkForError(errorFn));
     }
 
