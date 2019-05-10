@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "module": "commonjs",
         "alwaysStrict": true,
         "noEmitOnError": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "declaration": true
+        "sourceMap": true,
+        "declaration": true,
+        "declarationDir": "types"
     }
 }

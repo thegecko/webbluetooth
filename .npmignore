@@ -1,6 +1,9 @@
+.DS_Store
+.vscode
 .gitignore
+.rpt2_cache
+node_modules
 circle.yml
-gulpfile.js
 index.html
-tsconfig.json
-tslint.json
+docs-theme
+npm-debug.log

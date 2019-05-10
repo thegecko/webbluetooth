@@ -19,7 +19,6 @@
         "no-console": [true],
         "no-empty-interface": false,
         "no-trailing-whitespace": [true],
-        "no-unused-variable": [true],
         "object-curly-spacing": [true, "always"],
         "object-literal-shorthand": false,
         "object-literal-sort-keys": false,
