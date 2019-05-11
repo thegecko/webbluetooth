@@ -1,30 +1,45 @@
-machine:
-  node:
-    version: 4.8.0
-  environment:
-    LIVE_BRANCH: gh-pages
+version: 2
 
-compile:
-  override:
-    - npm run gulp
+jobs:
+  build:
+    docker:
+      - image: circleci/node:6.15.0
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run build
+      - persist_to_workspace:
+          root: ../
+          paths:
+            - project
 
-test:
-  override:
-    - exit 0
+  deploy:
+    docker:
+      - image: circleci/node:6.15.0
+    steps:
+      - attach_workspace:
+          at: ../
+      - run: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run: git config --global user.name thegecko
+      - run: git config --global user.email github@thegecko.org
+      - run: git add --force dist types docs
+      - run: git stash save
+      - run: git checkout gh-pages
+      - run: git merge master --no-commit
+      - run: git checkout stash -- .
+      - run: git commit --allow-empty --message "Automatic Deployment [skip ci]"
+      - run: git push
+      - run: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
+      - run: npm publish || true
 
-deployment:
-  staging:
-    branch: master
-    commands:
-      - echo Syncing to $LIVE_BRANCH on GitHub...
-      - git config --global user.name thegecko
-      - git config --global user.email github@thegecko.org
-      - git add --force docs lib types
-      - git stash save
-      - git checkout $LIVE_BRANCH
-      - git merge master --no-commit
-      - git checkout stash -- .
-      - git commit --allow-empty --message "Automatic Deployment [skip ci]"
-      - git push
-      - 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
-      - npm publish || true
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master

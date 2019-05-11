@@ -7,7 +7,7 @@ Node.js implementation of the Web Bluetooth Specification
 
 ## Prerequisites
 
-[Node.js > v4.8.0](https://nodejs.org), which includes `npm`.
+[Node.js > v6.15.0](https://nodejs.org), which includes `npm`.
 
 ## Installation
 
