@@ -183,9 +183,12 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             completeFn(this.state);
         }
 
-        // tslint:disable-next-line:no-string-literal
-        if (noble.state === "unknown") noble["once"]("stateChange", stateCB.bind(this));
-        else stateCB.call(this);
+        if (noble.state === "unknown" || noble.state === "poweredOff") {
+            // tslint:disable-next-line:no-string-literal
+            noble["once"]("stateChange", stateCB.bind(this));
+        } else {
+            stateCB.call(this);
+        }
     }
 
     public startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
@@ -213,9 +216,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     errorFn("adapter not enabled");
                 }
             }
-            // tslint:disable-next-line:no-string-literal
-            if (noble.state === "unknown") noble["once"]("stateChange", stateCB.bind(this));
-            else stateCB.call(this);
+
+            if (noble.state === "unknown" || noble.state === "poweredOff") {
+                // tslint:disable-next-line:no-string-literal
+                noble["once"]("stateChange", stateCB.bind(this));
+            } else {
+                stateCB.call(this);
+            }
         });
     }
 
