@@ -4,11 +4,17 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/examples/selector.js"
+            "name": "Launch Example",
+            "program": "${workspaceFolder}/examples/selector.js",
+            "outFiles": [
+                "${workspaceFolder}/examples/**/*.js",
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "sourceMaps": true
         }
     ]
 }

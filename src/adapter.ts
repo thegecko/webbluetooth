@@ -30,7 +30,7 @@ import { BluetoothDevice } from "./device";
 import { BluetoothRemoteGATTService } from "./service";
 import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
-import * as noble from "noble";
+import * as noble from "@abandonware/noble";
 
 /**
  * @hidden
