@@ -21,7 +21,7 @@ jobs:
           at: ../
       - run: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
       - run: npm --no-git-tag-version version prerelease --preid=next.$(echo $CIRCLE_SHA1 | cut -c -7)
-      - run: npm publish --tag next
+      - run: npm publish --tag next || true
       - run: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - run: git config --global user.name thegecko
       - run: git config --global user.email github@thegecko.org
