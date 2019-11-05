@@ -34,12 +34,11 @@
     "rollup-plugin-typescript2": "^0.21.0",
     "tslint": "^5.16.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typedoc": "^0.14.2",
+    "typedoc": "^0.15.0",
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "@types/noble": "0.0.34",
     "@types/node": "^8.0.54",
-    "noble": "thegecko/noble"
+    "@abandonware/noble": "thegecko/noble"
   }
 }
