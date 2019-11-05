@@ -39,7 +39,6 @@
   },
   "dependencies": {
     "@types/node": "^8.0.54",
-    "@types/noble": "0.0.39",
     "@abandonware/noble": "^1.9.2-5"
   }
 }
