@@ -1,6 +1,6 @@
 {
   "name": "webbluetooth",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Node.js implementation of the Web Bluetooth Specification",
   "homepage": "https://github.com/thegecko/webbluetooth",
   "author": "Rob Moran <rob@thegecko.org>",
@@ -29,7 +29,7 @@
     "rollup-plugin-delete": "^0.2.2",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-sourcemaps": "^0.4.2",
-    "rollup-plugin-terser": "^4.0.4",
+    "rollup-plugin-terser": "^5.1.3",
     "rollup-plugin-tslint": "^0.2.2",
     "rollup-plugin-typescript2": "^0.21.0",
     "tslint": "^5.16.0",
