@@ -24,7 +24,6 @@
 */
 
 import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTService } from "./service";
 import { getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 

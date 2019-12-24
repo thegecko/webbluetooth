@@ -23,7 +23,6 @@
 * SOFTWARE.
 */
 
-import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import { adapter } from "./adapter";
 
 /**
