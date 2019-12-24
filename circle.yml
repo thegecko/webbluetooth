@@ -28,7 +28,7 @@ jobs:
       - run: git add --force dist types docs
       - run: git stash save
       - run: git checkout gh-pages
-      - run: git merge master --no-commit
+      - run: git merge master --no-commit -X theirs
       - run: git checkout stash -- .
       - run: git commit --allow-empty --message "Automatic Deployment [skip ci]"
       - run: git push
