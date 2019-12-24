@@ -23,10 +23,11 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher } from "./dispatcher";
-import { BluetoothDevice } from "./device";
+import { EventDispatcher, TypedDispatcher } from "./dispatcher";
+import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
+import { BluetoothRemoteGATTServiceEvents } from "./service";
 
 /**
  * Bluetooth Options interface
@@ -94,9 +95,19 @@ export interface RequestDeviceOptions {
 }
 
 /**
+ * Events raised by the Bluetooth class
+ */
+export interface BluetoothEvents extends BluetoothDeviceEvents, BluetoothRemoteGATTServiceEvents {
+    /**
+     * Bluetooth Availability Changed event
+     */
+    availabilitychanged: boolean;
+}
+
+/**
  * Bluetooth class
  */
-export class Bluetooth extends EventDispatcher {
+export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) {
 
     /**
      * Bluetooth Availability Changed event
@@ -126,7 +137,7 @@ export class Bluetooth extends EventDispatcher {
         if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
         adapter.on(NobleAdapter.EVENT_ENABLED, value => {
-            this.dispatchEvent(Bluetooth.EVENT_AVAILABILITY, value);
+            this.dispatchEvent("availabilitychanged", value);
         });
     }
 

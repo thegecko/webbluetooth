@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2019 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -28,23 +28,61 @@ import { EventEmitter } from "events";
 /**
  * @hidden
  */
-export class EventDispatcher extends EventEmitter {
-
+export interface TypedDispatcher<T> {
+    addEventListener<K extends keyof T>(type: K, listener: (event: CustomEvent<T[K]>) => void): void;
+    removeEventListener<K extends keyof T>(type: K, callback: (event: CustomEvent<T[K]>) => void): void;
+    dispatchEvent(event: CustomEvent<T>): boolean;
+    dispatchEvent<K extends keyof T>(type: K, detail: T[K]): boolean;
+    addListener<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    on<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    once<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    prependListener<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    prependOnceListener<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    removeListener<K extends keyof T>(event: K, listener: (data: T[K]) => void): this;
+    removeAllListeners<K extends keyof T>(event?: K): this;
+    // tslint:disable-next-line:ban-types
+    listeners<K extends keyof T>(event: K): Array<Function>;
+    emit<K extends keyof T>(event: K, data: T[K]): boolean;
     // tslint:disable-next-line:array-type
-    public addEventListener(event: string | symbol, listener: (...args: any[]) => void) {
-        return super.addListener(event, listener);
+    eventNames<K extends keyof T>(): Array<K>;
+    listenerCount<K extends keyof T>(type: K): number;
+    setMaxListeners(n: number): this;
+    getMaxListeners(): number;
+}
+
+/**
+ * @hidden
+ */
+export class EventDispatcher extends EventEmitter implements EventTarget {
+
+    private isEventListenerObject = (listener: EventListenerOrEventListenerObject): listener is EventListenerObject => (listener as EventListenerObject).handleEvent !== undefined;
+
+    public addEventListener(type: string, listener: EventListenerOrEventListenerObject | null) {
+        if (listener) {
+            const handler = this.isEventListenerObject(listener) ? listener.handleEvent : listener;
+            super.addListener(type, handler);
+        }
     }
 
-    // tslint:disable-next-line:array-type
-    public removeEventListener(event: string | symbol, listener: (...args: any[]) => void) {
-        return super.removeListener(event, listener);
+    public removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null) {
+        if (callback) {
+            const handler = this.isEventListenerObject(callback) ? callback.handleEvent : callback;
+            super.removeListener(type, handler);
+        }
     }
 
-    public dispatchEvent(event: string | symbol, value?: any) {
-        return super.emit(event, {
-            type: event,
-            target: this,
-            value: value
-        });
+    public dispatchEvent(event: Event): boolean;
+    public dispatchEvent<T>(type: string, detail: T): boolean;
+    public dispatchEvent<T>(eventOrType: Event | string, detail?: T): boolean {
+        let event: Event;
+        if (typeof eventOrType === "string") {
+            event = new CustomEvent(eventOrType, {
+                detail
+            });
+        } else {
+            event = eventOrType;
+        }
+
+        return super.emit(event.type, event);
     }
 }

@@ -23,34 +23,34 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher } from "./dispatcher";
+import { EventDispatcher, TypedDispatcher } from "./dispatcher";
 import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
+import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from "./characteristic";
 import { getCharacteristicUUID, getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 
 /**
+ * Events raised by the BluetoothRemoteGATTService class
+ */
+export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCharacteristicEvents {
+    /**
+     * Service added event
+     */
+    serviceadded: undefined;
+    /**
+     * Service changed event
+     */
+    servicechanged: undefined;
+    /**
+     * Service removed event
+     */
+    serviceremoved: undefined;
+}
+
+/**
  * Bluetooth Remote GATT Service class
  */
-export class BluetoothRemoteGATTService extends EventDispatcher {
-
-    /**
-     * Service Added event
-     * @event
-     */
-    public static EVENT_ADDED: string = "serviceadded";
-
-    /**
-     * Service Changed event
-     * @event
-     */
-    public static EVENT_CHANGED: string = "servicechanged";
-
-    /**
-     * Service Removed event
-     * @event
-     */
-    public static EVENT_REMOVED: string = "serviceremoved";
+export class BluetoothRemoteGATTService extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTServiceEvents>) {
 
     /**
      * The device the service is related to
@@ -84,9 +84,9 @@ export class BluetoothRemoteGATTService extends EventDispatcher {
 
         this.handle = this.uuid;
 
-        this.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
-        this.device.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
-        this.device._bluetooth.dispatchEvent(BluetoothRemoteGATTService.EVENT_ADDED);
+        this.dispatchEvent("serviceadded", undefined);
+        this.device.dispatchEvent("serviceadded", undefined);
+        this.device._bluetooth.dispatchEvent("serviceadded", undefined);
     }
 
     /**

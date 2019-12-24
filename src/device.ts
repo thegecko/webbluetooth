@@ -23,26 +23,29 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher } from "./dispatcher";
+import { EventDispatcher, TypedDispatcher } from "./dispatcher";
 import { Bluetooth } from "./bluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
+import { BluetoothRemoteGATTServiceEvents } from "./service";
+
+/**
+ * Events raised by the BluetoothDevice class
+ */
+export interface BluetoothDeviceEvents extends BluetoothRemoteGATTServiceEvents {
+    /**
+     * GATT server disconnected event
+     */
+    gattserverdisconnected: undefined;
+    /**
+     * Advertisement received event
+     */
+    advertisementreceived: undefined;
+}
 
 /**
  * Bluetooth Device class
  */
-export class BluetoothDevice extends EventDispatcher {
-
-    /**
-     * Server Disconnected event
-     * @event
-     */
-    public static EVENT_DISCONNECTED: string = "gattserverdisconnected";
-
-    /**
-     * Advertisement Received event
-     * @event
-     */
-    public static EVENT_ADVERT: string = "advertisementreceived";
+export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatcher<BluetoothDeviceEvents>) {
 
     /**
      * The unique identifier of the device

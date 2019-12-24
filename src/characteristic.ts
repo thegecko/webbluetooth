@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher } from "./dispatcher";
+import { EventDispatcher, TypedDispatcher } from "./dispatcher";
 import { BluetoothRemoteGATTService } from "./service";
 import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
@@ -72,15 +72,19 @@ export interface BluetoothCharacteristicProperties {
 }
 
 /**
+ * Events raised by the BluetoothRemoteGATTCharacteristic class
+ */
+export interface BluetoothRemoteGATTCharacteristicEvents {
+    /**
+     * Characteristic value changed event
+     */
+    characteristicvaluechanged: DataView | undefined;
+}
+
+/**
  * Bluetooth Remote GATT Characteristic class
  */
-export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
-
-    /**
-     * Characteristic Value Changed event
-     * @event
-     */
-    public static EVENT_CHANGED: string = "characteristicvaluechanged";
+export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) {
 
     /**
      * The service the characteristic is related to
@@ -126,10 +130,10 @@ export class BluetoothRemoteGATTCharacteristic extends EventDispatcher {
     private setValue(value?: DataView, emit?: boolean) {
         this._value = value;
         if (emit) {
-            this.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
-            this.service.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
-            this.service.device.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
-            this.service.device._bluetooth.dispatchEvent(BluetoothRemoteGATTCharacteristic.EVENT_CHANGED, value);
+            this.dispatchEvent("characteristicvaluechanged", value);
+            this.service.dispatchEvent("characteristicvaluechanged", value);
+            this.service.device.dispatchEvent("characteristicvaluechanged", value);
+            this.service.device._bluetooth.dispatchEvent("characteristicvaluechanged", value);
         }
     }
 
