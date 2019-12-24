@@ -23,25 +23,26 @@
 * SOFTWARE.
 */
 
-var Bluetooth = require("../").Bluetooth;
-var bluetoothDevices = [];
+const Bluetooth = require("../").Bluetooth;
+const bluetoothDevices = [];
 
 process.stdin.setEncoding("utf8");
 process.stdin.on("readable", () => {
-    var input = process.stdin.read();
+    const input = process.stdin.read();
     if (input === "\u0003") {
         process.exit();
-    } else {
-        var index = parseInt(input);
-        if (index && index <= bluetoothDevices.length) {
-            process.stdin.setRawMode(false);
-            selectDevice(index - 1);
-        }
+    }
+
+    const index = parseInt(input);
+    if (index && index <= bluetoothDevices.length) {
+        process.stdin.setRawMode(false);
+        const device = bluetoothDevices[index - 1];
+        device.select();
     }
 });
 
-function handleDeviceFound(bluetoothDevice, selectFn) {
-    var discovered = bluetoothDevices.some(device => {
+const deviceFound = (bluetoothDevice, selectFn) => {
+    const discovered = bluetoothDevices.some(device => {
         return (device.id === bluetoothDevice.id);
     });
     if (discovered) return;
@@ -53,72 +54,49 @@ function handleDeviceFound(bluetoothDevice, selectFn) {
 
     bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
 
-    console.log(bluetoothDevices.length + ": " + bluetoothDevice.name);
+    console.log(`${bluetoothDevices.length}: ${bluetoothDevice.name}`);
     if (bluetoothDevice._serviceUUIDs.length) {
-        console.log("\tAdvertising: " + bluetoothDevice._serviceUUIDs);
+        console.log(`\tAdvertising: ${bluetoothDevice._serviceUUIDs}`);
     }
-}
+};
 
-var bluetooth = new Bluetooth({
-	deviceFound: handleDeviceFound
-});
-
-function logError(error) {
-    console.log(error);
-    process.exit();
-}
-
-function enumerateGatt(server) {
-    return server.getPrimaryServices()
-    .then(services => {
-        var sPromises = services.map(service => {
-            return service.getCharacteristics()
-            .then(characteristics => {
-                var cPromises = characteristics.map(characteristic => {
-                    return characteristic.getDescriptors()
-                    .then(descriptors => {
-                        descriptors = descriptors.map(descriptor => `\t\t└descriptor: ${descriptor.uuid}`);
-                        descriptors.unshift(`\t└characteristic: ${characteristic.uuid}`);
-                        return descriptors.join("\n");
-                    });
-                });
-
-                return Promise.all(cPromises)
-                .then(descriptors => {
-                    descriptors.unshift(`service: ${service.uuid}`);
-                    return descriptors.join("\n");
-                });
-            });
+const enumerateGatt = async server => {
+    const services = await server.getPrimaryServices();
+    const sPromises = services.map(async service => {
+        const characteristics = await service.getCharacteristics();
+        const cPromises = characteristics.map(async characteristic => {
+            let descriptors = await characteristic.getDescriptors();
+            descriptors = descriptors.map(descriptor => `\t\t└descriptor: ${descriptor.uuid}`);
+            descriptors.unshift(`\t└characteristic: ${characteristic.uuid}`);
+            return descriptors.join("\n");
         });
 
-        return Promise.all(sPromises)
-        .then(services => {
-            console.log(services.join("\n"));
-        });
+        const descriptors = await Promise.all(cPromises);
+        descriptors.unshift(`service: ${service.uuid}`);
+        return descriptors.join("\n");
     });
-}
 
-function selectDevice(index) {
-    var device = bluetoothDevices[index];
-    device.select();
-}
+    const result = await Promise.all(sPromises);
+    console.log(result.join("\n"));
+};
 
-var server = null;
+const bluetooth = new Bluetooth({ deviceFound });
 console.log("scanning...");
 
-bluetooth.requestDevice()
-.then(device => {
-    console.log("connecting...");
-    return device.gatt.connect();
-})
-.then(gattServer => {
-    console.log("connected");
-    server = gattServer;
-    return enumerateGatt(server);
-})
-.then(() => server.disconnect())
-.then(() => {
-    console.log("\ndisconnected");
-    process.exit();
-})
-.catch(logError);
+(async () => {
+    try {
+        const device = await bluetooth.requestDevice();
+        console.log("connecting...");
+
+        const server = await device.gatt.connect();
+        console.log("connected");
+
+        await enumerateGatt(server);
+        await server.disconnect();
+
+        console.log("\ndisconnected");
+    } catch (error) {
+        console.log(error);
+    }
+    process.exit(0);
+})();

@@ -27,17 +27,14 @@ The module exports a default `navigator.bluetooth` instance, the `Bluetooth` cla
 To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
 
 ```JavaScript
-var bluetooth = require("webbluetooth").bluetooth;
+const bluetooth = require("webbluetooth").bluetooth;
 
-bluetooth.requestDevice({
+const device = await bluetooth.requestDevice({
     filters:[{ services:[ "heart_rate" ] }]
-})
-.then(device => {
-    return device.gatt.connect();
-})
-.then(server => {
-    ...
-})
+});
+
+const server = await device.gatt.connect();
+...
 ```
 
 The first device matching the filters will be returned.
@@ -47,28 +44,23 @@ The first device matching the filters will be returned.
 You may want to create your own instance of the `Bluetooth` class. For example, to inject a device chooser function or control the referring device:
 
 ```JavaScript
-var Bluetooth = require("webbluetooth").Bluetooth;
+const Bluetooth = require("webbluetooth").Bluetooth;
 
-function handleDeviceFound(device, selectFn) {
+const deviceFound = (device, selectFn) => {
     // If device can be automatically selected, do so by returning true
     if (device.name === "myName") return true;
 
     // Otherwise store the selectFn somewhere and execute it later to select this device
-}
+};
 
-var bluetooth = new Bluetooth({
-    deviceFound: handleDeviceFound
+const bluetooth = new Bluetooth({ deviceFound });
+
+const device = await bluetooth.requestDevice({
+    filters:[{ services:[ "heart_rate" ] }]
 });
 
-bluetooth.requestDevice({
-    filters:[{ services:[ "heart_rate" ] }]
-})
-.then(device => {
-    return device.gatt.connect();
-})
-.then(server => {
-    ...
-})
+const server = await device.gatt.connect();
+...
 ```
 
 ## Specification

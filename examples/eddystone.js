@@ -23,24 +23,24 @@
 * SOFTWARE.
 */
 
-var webbluetooth = require("../");
+const webbluetooth = require("../");
 
-var eddystoneUUID = 0xFEAA;
+const eddystoneUUID = 0xFEAA;
 
-var frameTypes = {
+const frameTypes = {
     "UID": 0x00,
     "URL": 0x10,
     "TLM": 0x20
 }
 
-var schemes = {
+const schemes = {
     0x00: "http://www.",
     0x01: "https://www.",
     0x02: "http://",
     0x03: "https://"
 }
 
-var expansions = {
+const expansions = {
     0x00: ".com/",
     0x01: ".org/",
     0x02: ".edu/",
@@ -57,39 +57,37 @@ var expansions = {
     0x0d: ".gov"
 }
 
-function handleDeviceFound(bluetoothDevice) {
-    var uuid = webbluetooth.getServiceUUID(eddystoneUUID);
-    var eddyData = bluetoothDevice.adData.serviceData.get(uuid);
+const deviceFound = bluetoothDevice => {
+    const uuid = webbluetooth.getServiceUUID(eddystoneUUID);
+    const eddyData = bluetoothDevice.adData.serviceData.get(uuid);
     if (eddyData) {
-        var decoded = decodeEddystone(eddyData);
+        const decoded = decodeEddystone(eddyData);
         if (decoded) {
             switch(decoded.type) {
                 case frameTypes.UID:
-                    console.log("txPower: " + decoded.txPower);
+                    console.log(`txPower: ${decoded.txPower}`);
                     break;
                 case frameTypes.URL:
-                    console.log("url: " + decoded.url);
+                    console.log(`url: ${decoded.url}`);
                     break;
                 case frameTypes.TLM:
-                    console.log("version: " + decoded.version);
+                    console.log(`version: ${decoded.version}`);
                     break;
             }
         }
     }
-}
+};
 
-var bluetooth = new webbluetooth.Bluetooth({
-	deviceFound: handleDeviceFound
-});
+const bluetooth = new webbluetooth.Bluetooth({ deviceFound });
 
-function decodeEddystone(view) {
-    var type = view.getUint8(0);
-    if (typeof type === "undefined") return null;
+const decodeEddystone = view => {
+    const type = view.getUint8(0);
+    if (typeof type === "undefined") return undefined;
 
     if (type === frameTypes.UID) {
-        var uidArray = [];
-        for (var i = 2; i < view.byteLength; i++) {
-            var hex = view.getUint8(i).toString(16);
+        const uidArray = [];
+        for (let i = 2; i < view.byteLength; i++) {
+            const hex = view.getUint8(i).toString(16);
             uidArray.push(("00" + hex).slice(-2));
         }
         return {
@@ -101,8 +99,8 @@ function decodeEddystone(view) {
     }
 
     if (type === frameTypes.URL) {
-        var url = "";
-        for (var i = 2; i < view.byteLength; i++) {
+        const url = "";
+        for (let i = 2; i < view.byteLength; i++) {
             if (i === 2) {
                 url += schemes[view.getUint8(i)];
             } else {
@@ -128,16 +126,18 @@ function decodeEddystone(view) {
     }
 }
 
-// Recursively scan
-function scan() {
+// Continuously scan
+(async () => {
     console.log("scanning...");
-    bluetooth.requestDevice({
-        filters:[{ services:[ eddystoneUUID ] }]
-    })
-    .then(scan)
-    .catch(error => {
-        console.log(error);
-        process.exit();
-    });
-}
-scan();
+
+    while (true) {
+        try {
+            await bluetooth.requestDevice({
+                filters:[{ services:[ eddystoneUUID ] }]
+            });
+        } catch (error) {
+            console.log(error);
+            process.exit();
+        }
+    }
+})();
