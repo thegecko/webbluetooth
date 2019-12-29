@@ -43,7 +43,6 @@ export interface TypedDispatcher<T> {
     // tslint:disable-next-line:ban-types
     listeners<K extends keyof T>(event: K): Array<Function>;
     emit<K extends keyof T>(event: K, data: T[K]): boolean;
-    // tslint:disable-next-line:array-type
     eventNames<K extends keyof T>(): Array<K>;
     listenerCount<K extends keyof T>(type: K): number;
     setMaxListeners(n: number): this;

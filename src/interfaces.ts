@@ -26,26 +26,6 @@
 /**
  * @hidden
  */
-export interface DOMEvent extends Event {}
-
-/**
- * @hidden
- */
-export interface W3CCharacteristicEventHandlers extends CharacteristicEventHandlers {}
-
-/**
- * @hidden
- */
-export interface W3CServiceEventHandlers extends ServiceEventHandlers {}
-
-/**
- * @hidden
- */
-export interface W3CBluetoothDeviceEventHandlers extends BluetoothDeviceEventHandlers {}
-
-/**
- * @hidden
- */
 export interface W3CBluetooth extends Bluetooth {}
 
 /**

@@ -28,51 +28,10 @@ import { BluetoothRemoteGATTService } from "./service";
 import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
+import { W3CBluetoothRemoteGATTCharacteristic } from "./interfaces";
 
 /**
- * Bluetooth Characteristic Properties interface
- */
-export interface BluetoothCharacteristicProperties {
-    /**
-     * Broadcast property
-     */
-    broadcast: boolean;
-    /**
-     * Read property
-     */
-    read: boolean;
-    /**
-     * Write without response property
-     */
-    writeWithoutResponse: boolean;
-    /**
-     * Write property
-     */
-    write: boolean;
-    /**
-     * Notify property
-     */
-    notify: boolean;
-    /**
-     * Indicate property
-     */
-    indicate: boolean;
-    /**
-     * Authenticated signed writes property
-     */
-    authenticatedSignedWrites: boolean;
-    /**
-     * Reliable write property
-     */
-    reliableWrite: boolean;
-    /**
-     * Writable auxiliaries property
-     */
-    writableAuxiliaries: boolean;
-}
-
-/**
- * Events raised by the BluetoothRemoteGATTCharacteristic class
+ * @hidden
  */
 export interface BluetoothRemoteGATTCharacteristicEvents {
     /**
@@ -84,7 +43,7 @@ export interface BluetoothRemoteGATTCharacteristicEvents {
 /**
  * Bluetooth Remote GATT Characteristic class
  */
-export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) {
+export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) implements W3CBluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
@@ -111,6 +70,15 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
 
     private handle: string = null;
     private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
+
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        }
+        this._oncharacteristicvaluechanged = fn;
+        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+    }
 
     /**
      * Characteristic constructor
@@ -240,7 +208,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+    public startNotifications(): Promise<W3CBluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
 

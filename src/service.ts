@@ -28,9 +28,10 @@ import { BluetoothDevice } from "./device";
 import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from "./characteristic";
 import { getCharacteristicUUID, getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
+import { W3CBluetoothRemoteGATTService } from "./interfaces";
 
 /**
- * Events raised by the BluetoothRemoteGATTService class
+ * @hidden
  */
 export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCharacteristicEvents {
     /**
@@ -50,7 +51,7 @@ export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCha
 /**
  * Bluetooth Remote GATT Service class
  */
-export class BluetoothRemoteGATTService extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTServiceEvents>) {
+export class BluetoothRemoteGATTService extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTServiceEvents>) implements W3CBluetoothRemoteGATTService {
 
     /**
      * The device the service is related to
@@ -70,6 +71,42 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
     private handle: string = null;
     private services: Array<BluetoothRemoteGATTService> = null;
     private characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
+
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        }
+        this._oncharacteristicvaluechanged = fn;
+        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+    }
+
+    private _onserviceadded: (ev: Event) => void;
+    public set onserviceadded(fn: (ev: Event) => void) {
+        if (this._onserviceadded) {
+            this.removeEventListener("serviceadded", this._onserviceadded);
+        }
+        this._onserviceadded = fn;
+        this.addEventListener("serviceadded", this._onserviceadded);
+    }
+
+    private _onservicechanged: (ev: Event) => void;
+    public set onservicechanged(fn: (ev: Event) => void) {
+        if (this._onservicechanged) {
+            this.removeEventListener("servicechanged", this._onservicechanged);
+        }
+        this._onservicechanged = fn;
+        this.addEventListener("servicechanged", this._onservicechanged);
+    }
+
+    private _onserviceremoved: (ev: Event) => void;
+    public set onserviceremoved(fn: (ev: Event) => void) {
+        if (this._onserviceremoved) {
+            this.removeEventListener("serviceremoved", this._onserviceremoved);
+        }
+        this._onserviceremoved = fn;
+        this.addEventListener("serviceremoved", this._onserviceremoved);
+    }
 
     /**
      * Service constructor

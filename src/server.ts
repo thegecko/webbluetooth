@@ -26,11 +26,13 @@
 import { BluetoothDevice } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
+import { W3CBluetoothRemoteGATTServer } from "./interfaces";
+import { BluetoothRemoteGATTService } from "./service";
 
 /**
  * Bluetooth Remote GATT Server class
  */
-export class BluetoothRemoteGATTServer {
+export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
 
     /**
      * The device the gatt server is related to

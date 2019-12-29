@@ -27,7 +27,7 @@ import { EventDispatcher, TypedDispatcher } from "./dispatcher";
 import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
-import { BluetoothRemoteGATTServiceEvents } from "./service";
+import { W3CBluetooth } from "./interfaces";
 
 /**
  * Bluetooth Options interface
@@ -50,54 +50,9 @@ export interface BluetoothOptions {
 }
 
 /**
- * BluetoothLE Scan Filter Init interface
+ * @hidden
  */
-export interface BluetoothLEScanFilterInit {
-    /**
-     * An array of service UUIDs to filter on
-     */
-    services?: Array<string | number>;
-
-    /**
-     * The device name to filter on
-     */
-    name?: string;
-
-    /**
-     * The device name prefix to filter on
-     */
-    namePrefix?: string;
-
-    // Maps unsigned shorts to BluetoothDataFilters.
-    // object manufacturerData;
-    // Maps BluetoothServiceUUIDs to BluetoothDataFilters.
-    // object serviceData;
-}
-
-/**
- * Request Device Options interface
- */
-export interface RequestDeviceOptions {
-    /**
-     * An array of device filters to match
-     */
-    filters?: Array<BluetoothLEScanFilterInit>;
-
-    /**
-     * An array of optional services to have access to
-     */
-    optionalServices?: Array<string | number>;
-
-    /**
-     * Whether to accept all devices
-     */
-    acceptAllDevices?: boolean;
-}
-
-/**
- * Events raised by the Bluetooth class
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents, BluetoothRemoteGATTServiceEvents {
+export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
      * Bluetooth Availability Changed event
      */
@@ -107,7 +62,7 @@ export interface BluetoothEvents extends BluetoothDeviceEvents, BluetoothRemoteG
 /**
  * Bluetooth class
  */
-export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) {
+export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) implements W3CBluetooth {
 
     /**
      * Bluetooth Availability Changed event
@@ -123,6 +78,69 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
     private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = null;
     private scanTime: number = 10.24 * 1000;
     private scanner = null;
+
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        }
+        this._oncharacteristicvaluechanged = fn;
+        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+    }
+
+    private _onserviceadded: (ev: Event) => void;
+    public set onserviceadded(fn: (ev: Event) => void) {
+        if (this._onserviceadded) {
+            this.removeEventListener("serviceadded", this._onserviceadded);
+        }
+        this._onserviceadded = fn;
+        this.addEventListener("serviceadded", this._onserviceadded);
+    }
+
+    private _onservicechanged: (ev: Event) => void;
+    public set onservicechanged(fn: (ev: Event) => void) {
+        if (this._onservicechanged) {
+            this.removeEventListener("servicechanged", this._onservicechanged);
+        }
+        this._onservicechanged = fn;
+        this.addEventListener("servicechanged", this._onservicechanged);
+    }
+
+    private _onserviceremoved: (ev: Event) => void;
+    public set onserviceremoved(fn: (ev: Event) => void) {
+        if (this._onserviceremoved) {
+            this.removeEventListener("serviceremoved", this._onserviceremoved);
+        }
+        this._onserviceremoved = fn;
+        this.addEventListener("serviceremoved", this._onserviceremoved);
+    }
+
+    private _ongattserverdisconnected: (ev: Event) => void;
+    public set ongattserverdisconnected(fn: (ev: Event) => void) {
+        if (this._ongattserverdisconnected) {
+            this.removeEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+        }
+        this._ongattserverdisconnected = fn;
+        this.addEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+    }
+
+    private _onadvertisementreceived: (ev: Event) => void;
+    public set onadvertisementreceived(fn: (ev: Event) => void) {
+        if (this._onadvertisementreceived) {
+            this.removeEventListener("advertisementreceived", this._onadvertisementreceived);
+        }
+        this._onadvertisementreceived = fn;
+        this.addEventListener("advertisementreceived", this._onadvertisementreceived);
+    }
+
+    private _onavailabilitychanged: (ev: Event) => void;
+    public set onavailabilitychanged(fn: (ev: Event) => void) {
+        if (this._onavailabilitychanged) {
+            this.removeEventListener("availabilitychanged", this._onavailabilitychanged);
+        }
+        this._onavailabilitychanged = fn;
+        this.addEventListener("availabilitychanged", this._onavailabilitychanged);
+    }
 
     /**
      * Bluetooth constructor
