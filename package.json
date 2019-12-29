@@ -22,7 +22,7 @@
     "watch": "rollup -c -w"
   },
   "engines": {
-    "node": ">=6.15.0"
+    "node": ">=8.14.0"
   },
   "devDependencies": {
     "rollup": "^1.10.1",
