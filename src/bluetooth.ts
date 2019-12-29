@@ -159,10 +159,10 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         });
     }
 
-    private filterDevice(options: RequestDeviceOptions, deviceInfo, validServices) {
+    private filterDevice(filters: Array<BluetoothRequestDeviceFilter>, deviceInfo, validServices) {
         let valid = false;
 
-        options.filters.forEach(filter => {
+        filters.forEach(filter => {
             // Name
             if (filter.name && filter.name !== deviceInfo.name) return;
 
@@ -207,47 +207,60 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @param options The options to use when scanning
      * @returns Promise containing a device which matches the options
      */
-    public requestDevice(options?: RequestDeviceOptions): Promise<BluetoothDevice> {
+    public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
         return new Promise((resolve, reject) => {
-            options = options || {};
 
             if (this.scanner !== null) return reject("requestDevice error: request in progress");
 
-            if (!options.acceptAllDevices && !this.deviceFound) {
-                // Must have a filter
-                if (!options.filters || options.filters.length === 0) {
-                    return reject(new TypeError("requestDevice error: no filters specified"));
-                }
-
-                // Don't allow empty filters
-                const emptyFilter = options.filters.some(filter => {
-                    return (Object.keys(filter).length === 0);
-                });
-                if (emptyFilter) {
-                    return reject(new TypeError("requestDevice error: empty filter specified"));
-                }
-
-                // Don't allow empty namePrefix
-                const emptyPrefix = options.filters.some(filter => {
-                    return (typeof filter.namePrefix !== "undefined" && filter.namePrefix === "");
-                });
-                if (emptyPrefix) {
-                    return reject(new TypeError("requestDevice error: empty namePrefix specified"));
-                }
+            interface Filtered {
+                filters: Array<BluetoothRequestDeviceFilter>;
+                optionalServices?: Array<BluetoothServiceUUID>;
             }
 
+            interface AcceptAll {
+                acceptAllDevices: boolean;
+                optionalServices?: Array<BluetoothServiceUUID>;
+            }
+
+            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered => (maybeFiltered as Filtered).filters !== undefined;
+            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll => (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
             let searchUUIDs = [];
 
-            if (options.filters) {
+            if (isFiltered(options)) {
+                if (!this.deviceFound) {
+                    // Must have a filter
+                    if (options.filters.length === 0) {
+                        return reject(new TypeError("requestDevice error: no filters specified"));
+                    }
+
+                    // Don't allow empty filters
+                    const emptyFilter = options.filters.some(filter => {
+                        return (Object.keys(filter).length === 0);
+                    });
+                    if (emptyFilter) {
+                        return reject(new TypeError("requestDevice error: empty filter specified"));
+                    }
+
+                    // Don't allow empty namePrefix
+                    const emptyPrefix = options.filters.some(filter => {
+                        return (typeof filter.namePrefix !== "undefined" && filter.namePrefix === "");
+                    });
+                    if (emptyPrefix) {
+                        return reject(new TypeError("requestDevice error: empty namePrefix specified"));
+                    }
+                }
+
                 options.filters.forEach(filter => {
                     if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
-                });
-            }
 
-            // Unique-ify
-            searchUUIDs = searchUUIDs.filter((item, index, array) => {
-                return array.indexOf(item) === index;
-            });
+                    // Unique-ify
+                    searchUUIDs = searchUUIDs.filter((item, index, array) => {
+                        return array.indexOf(item) === index;
+                    });
+                });
+            } else if (!isAcceptAll(options)) {
+                return reject(new TypeError("requestDevice error: specify filters or acceptAllDevices"));
+            }
 
             let found = false;
             adapter.startScan(searchUUIDs, deviceInfo => {
@@ -261,8 +274,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                 }
 
                 // filter devices if filters specified
-                if (options.filters) {
-                    deviceInfo = this.filterDevice(options, deviceInfo, validServices);
+                if (isFiltered(options)) {
+                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
                 }
 
                 if (deviceInfo) {
