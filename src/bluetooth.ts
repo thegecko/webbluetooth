@@ -222,32 +222,34 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                 optionalServices?: Array<BluetoothServiceUUID>;
             }
 
-            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered => (maybeFiltered as Filtered).filters !== undefined;
-            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll => (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
+                (maybeFiltered as Filtered).filters !== undefined;
+
+            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
+                (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+
             let searchUUIDs = [];
 
             if (isFiltered(options)) {
-                if (!this.deviceFound) {
-                    // Must have a filter
-                    if (options.filters.length === 0) {
-                        return reject(new TypeError("requestDevice error: no filters specified"));
-                    }
+                // Must have a filter
+                if (options.filters.length === 0) {
+                    return reject(new TypeError("requestDevice error: no filters specified"));
+                }
 
-                    // Don't allow empty filters
-                    const emptyFilter = options.filters.some(filter => {
-                        return (Object.keys(filter).length === 0);
-                    });
-                    if (emptyFilter) {
-                        return reject(new TypeError("requestDevice error: empty filter specified"));
-                    }
+                // Don't allow empty filters
+                const emptyFilter = options.filters.some(filter => {
+                    return (Object.keys(filter).length === 0);
+                });
+                if (emptyFilter) {
+                    return reject(new TypeError("requestDevice error: empty filter specified"));
+                }
 
-                    // Don't allow empty namePrefix
-                    const emptyPrefix = options.filters.some(filter => {
-                        return (typeof filter.namePrefix !== "undefined" && filter.namePrefix === "");
-                    });
-                    if (emptyPrefix) {
-                        return reject(new TypeError("requestDevice error: empty namePrefix specified"));
-                    }
+                // Don't allow empty namePrefix
+                const emptyPrefix = options.filters.some(filter => {
+                    return (typeof filter.namePrefix !== "undefined" && filter.namePrefix === "");
+                });
+                if (emptyPrefix) {
+                    return reject(new TypeError("requestDevice error: empty namePrefix specified"));
                 }
 
                 options.filters.forEach(filter => {

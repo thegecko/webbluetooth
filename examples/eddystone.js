@@ -133,7 +133,7 @@ const decodeEddystone = view => {
     while (true) {
         try {
             await bluetooth.requestDevice({
-                filters:[{ services:[ eddystoneUUID ] }]
+                filters: [{ services: [ eddystoneUUID ] }]
             });
         } catch (error) {
             console.log(error);

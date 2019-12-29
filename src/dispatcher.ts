@@ -73,15 +73,8 @@ export class EventDispatcher extends EventEmitter implements EventTarget {
     public dispatchEvent(event: Event): boolean;
     public dispatchEvent<T>(type: string, detail: T): boolean;
     public dispatchEvent<T>(eventOrType: Event | string, detail?: T): boolean {
-        let event: Event;
-        if (typeof eventOrType === "string") {
-            event = new CustomEvent(eventOrType, {
-                detail
-            });
-        } else {
-            event = eventOrType;
-        }
-
-        return super.emit(event.type, event);
+        const type = (typeof eventOrType === "string") ? eventOrType : eventOrType.type;
+        const data = detail || eventOrType;
+        return super.emit(type, data);
     }
 }

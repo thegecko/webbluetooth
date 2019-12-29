@@ -30,7 +30,7 @@ const bluetooth = require("../").bluetooth;
 		console.log("Requesting Bluetooth Devices...");
 
 		const device = await bluetooth.requestDevice({
-			filters:[{ services:[ "heart_rate" ] }]
+			filters: [{ services: [ "heart_rate" ] }]
 		});
 		console.log(`Found device: ${device.name}`);
 
