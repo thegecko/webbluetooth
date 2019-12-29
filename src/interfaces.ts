@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2019 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,19 +23,52 @@
 * SOFTWARE.
 */
 
-import { Bluetooth, BluetoothOptions } from "./bluetooth";
+/**
+ * @hidden
+ */
+export interface DOMEvent extends Event {}
 
 /**
- * Default bluetooth instance synonymous with `navigator.bluetooth`
+ * @hidden
  */
-export const bluetooth = new Bluetooth();
+export interface W3CCharacteristicEventHandlers extends CharacteristicEventHandlers {}
 
 /**
- * Bluetooth class for creating new instances
+ * @hidden
  */
-export { Bluetooth, BluetoothOptions };
+export interface W3CServiceEventHandlers extends ServiceEventHandlers {}
 
 /**
- * Helper methods and enums
+ * @hidden
  */
-export * from "./helpers";
+export interface W3CBluetoothDeviceEventHandlers extends BluetoothDeviceEventHandlers {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetooth extends Bluetooth {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetoothDevice extends BluetoothDevice {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTServer extends BluetoothRemoteGATTServer {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTService extends BluetoothRemoteGATTService {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTCharacteristic extends BluetoothRemoteGATTCharacteristic {}
+
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTDescriptor extends BluetoothRemoteGATTDescriptor {}
