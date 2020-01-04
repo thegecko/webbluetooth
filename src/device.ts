@@ -28,6 +28,7 @@ import { Bluetooth } from "./bluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
 import { BluetoothRemoteGATTServiceEvents } from "./service";
 import { W3CBluetoothDevice } from "./interfaces";
+import { Event } from "./events";
 
 /**
  * @hidden
@@ -36,11 +37,11 @@ export interface BluetoothDeviceEvents extends BluetoothRemoteGATTServiceEvents 
     /**
      * GATT server disconnected event
      */
-    gattserverdisconnected: undefined;
+    gattserverdisconnected: Event;
     /**
      * Advertisement received event
      */
-    advertisementreceived: undefined;
+    advertisementreceived: Event;
 }
 
 /**

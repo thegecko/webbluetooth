@@ -28,6 +28,7 @@ import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
 import { W3CBluetooth } from "./interfaces";
+import { Event } from "./events";
 
 /**
  * Bluetooth Options interface
@@ -56,7 +57,7 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
      * Bluetooth Availability Changed event
      */
-    availabilitychanged: boolean;
+    availabilitychanged: Event;
 }
 
 /**
@@ -154,8 +155,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.deviceFound = options.deviceFound;
         if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
-        adapter.on(NobleAdapter.EVENT_ENABLED, value => {
-            this.dispatchEvent("availabilitychanged", value);
+        adapter.on(NobleAdapter.EVENT_ENABLED, _value => {
+            this.dispatchEvent(new Event(this, "availabilitychanged"));
         });
     }
 

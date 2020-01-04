@@ -29,6 +29,7 @@ import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEve
 import { getCharacteristicUUID, getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
 import { W3CBluetoothRemoteGATTService } from "./interfaces";
+import { Event } from "./events";
 
 /**
  * @hidden
@@ -37,15 +38,15 @@ export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCha
     /**
      * Service added event
      */
-    serviceadded: undefined;
+    serviceadded: Event;
     /**
      * Service changed event
      */
-    servicechanged: undefined;
+    servicechanged: Event;
     /**
      * Service removed event
      */
-    serviceremoved: undefined;
+    serviceremoved: Event;
 }
 
 /**
@@ -121,9 +122,9 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
 
         this.handle = this.uuid;
 
-        this.dispatchEvent("serviceadded", undefined);
-        this.device.dispatchEvent("serviceadded", undefined);
-        this.device._bluetooth.dispatchEvent("serviceadded", undefined);
+        this.dispatchEvent(new Event(this, "serviceadded"));
+        this.device.dispatchEvent(new Event(this, "serviceadded"));
+        this.device._bluetooth.dispatchEvent(new Event(this, "serviceadded"));
     }
 
     /**

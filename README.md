@@ -93,12 +93,24 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### Events
 
-- [x] availabilitychanged - specification unstable
+#### Bluetooth
+
+- [x] availabilitychanged
+
+#### Bluetooth Device
+
 - [x] gattserverdisconnected
-- [x] characteristicvaluechanged
+- [ ] advertisementreceived - specification unstable
+
+#### Bluetooth Service
+
 - [x] serviceadded
 - [ ] servicechanged - unsupported in noble
 - [ ] serviceremoved - unsupported in noble
+
+#### Bluetooth Characteristic
+
+- [x] characteristicvaluechanged
 
 ### Other
 

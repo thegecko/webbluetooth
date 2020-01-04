@@ -29,6 +29,7 @@ import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
 import { W3CBluetoothRemoteGATTCharacteristic } from "./interfaces";
+import { Event } from "./events";
 
 /**
  * @hidden
@@ -37,7 +38,7 @@ export interface BluetoothRemoteGATTCharacteristicEvents {
     /**
      * Characteristic value changed event
      */
-    characteristicvaluechanged: DataView | undefined;
+    characteristicvaluechanged: Event;
 }
 
 /**
@@ -98,10 +99,10 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     private setValue(value?: DataView, emit?: boolean) {
         this._value = value;
         if (emit) {
-            this.dispatchEvent("characteristicvaluechanged", value);
-            this.service.dispatchEvent("characteristicvaluechanged", value);
-            this.service.device.dispatchEvent("characteristicvaluechanged", value);
-            this.service.device._bluetooth.dispatchEvent("characteristicvaluechanged", value);
+            this.dispatchEvent(new Event(this, "characteristicvaluechanged"));
+            this.service.dispatchEvent(new Event(this, "characteristicvaluechanged"));
+            this.service.device.dispatchEvent(new Event(this, "characteristicvaluechanged"));
+            this.service.device._bluetooth.dispatchEvent(new Event(this, "characteristicvaluechanged"));
         }
     }
 
