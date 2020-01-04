@@ -27,7 +27,8 @@ import { EventDispatcher, TypedDispatcher } from "./dispatcher";
 import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
-import { BluetoothRemoteGATTServiceEvents } from "./service";
+import { W3CBluetooth } from "./interfaces";
+import { DOMEvent } from "./events";
 
 /**
  * Bluetooth Options interface
@@ -50,64 +51,19 @@ export interface BluetoothOptions {
 }
 
 /**
- * BluetoothLE Scan Filter Init interface
+ * @hidden
  */
-export interface BluetoothLEScanFilterInit {
-    /**
-     * An array of service UUIDs to filter on
-     */
-    services?: Array<string | number>;
-
-    /**
-     * The device name to filter on
-     */
-    name?: string;
-
-    /**
-     * The device name prefix to filter on
-     */
-    namePrefix?: string;
-
-    // Maps unsigned shorts to BluetoothDataFilters.
-    // object manufacturerData;
-    // Maps BluetoothServiceUUIDs to BluetoothDataFilters.
-    // object serviceData;
-}
-
-/**
- * Request Device Options interface
- */
-export interface RequestDeviceOptions {
-    /**
-     * An array of device filters to match
-     */
-    filters?: Array<BluetoothLEScanFilterInit>;
-
-    /**
-     * An array of optional services to have access to
-     */
-    optionalServices?: Array<string | number>;
-
-    /**
-     * Whether to accept all devices
-     */
-    acceptAllDevices?: boolean;
-}
-
-/**
- * Events raised by the Bluetooth class
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents, BluetoothRemoteGATTServiceEvents {
+export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
      * Bluetooth Availability Changed event
      */
-    availabilitychanged: boolean;
+    availabilitychanged: Event;
 }
 
 /**
  * Bluetooth class
  */
-export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) {
+export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) implements W3CBluetooth {
 
     /**
      * Bluetooth Availability Changed event
@@ -124,6 +80,69 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
     private scanTime: number = 10.24 * 1000;
     private scanner = null;
 
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        }
+        this._oncharacteristicvaluechanged = fn;
+        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+    }
+
+    private _onserviceadded: (ev: Event) => void;
+    public set onserviceadded(fn: (ev: Event) => void) {
+        if (this._onserviceadded) {
+            this.removeEventListener("serviceadded", this._onserviceadded);
+        }
+        this._onserviceadded = fn;
+        this.addEventListener("serviceadded", this._onserviceadded);
+    }
+
+    private _onservicechanged: (ev: Event) => void;
+    public set onservicechanged(fn: (ev: Event) => void) {
+        if (this._onservicechanged) {
+            this.removeEventListener("servicechanged", this._onservicechanged);
+        }
+        this._onservicechanged = fn;
+        this.addEventListener("servicechanged", this._onservicechanged);
+    }
+
+    private _onserviceremoved: (ev: Event) => void;
+    public set onserviceremoved(fn: (ev: Event) => void) {
+        if (this._onserviceremoved) {
+            this.removeEventListener("serviceremoved", this._onserviceremoved);
+        }
+        this._onserviceremoved = fn;
+        this.addEventListener("serviceremoved", this._onserviceremoved);
+    }
+
+    private _ongattserverdisconnected: (ev: Event) => void;
+    public set ongattserverdisconnected(fn: (ev: Event) => void) {
+        if (this._ongattserverdisconnected) {
+            this.removeEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+        }
+        this._ongattserverdisconnected = fn;
+        this.addEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+    }
+
+    private _onadvertisementreceived: (ev: Event) => void;
+    public set onadvertisementreceived(fn: (ev: Event) => void) {
+        if (this._onadvertisementreceived) {
+            this.removeEventListener("advertisementreceived", this._onadvertisementreceived);
+        }
+        this._onadvertisementreceived = fn;
+        this.addEventListener("advertisementreceived", this._onadvertisementreceived);
+    }
+
+    private _onavailabilitychanged: (ev: Event) => void;
+    public set onavailabilitychanged(fn: (ev: Event) => void) {
+        if (this._onavailabilitychanged) {
+            this.removeEventListener("availabilitychanged", this._onavailabilitychanged);
+        }
+        this._onavailabilitychanged = fn;
+        this.addEventListener("availabilitychanged", this._onavailabilitychanged);
+    }
+
     /**
      * Bluetooth constructor
      * @param options Bluetooth initialisation options
@@ -136,15 +155,15 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.deviceFound = options.deviceFound;
         if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
-        adapter.on(NobleAdapter.EVENT_ENABLED, value => {
-            this.dispatchEvent("availabilitychanged", value);
+        adapter.on(NobleAdapter.EVENT_ENABLED, _value => {
+            this.dispatchEvent(new DOMEvent(this, "availabilitychanged"));
         });
     }
 
-    private filterDevice(options: RequestDeviceOptions, deviceInfo, validServices) {
+    private filterDevice(filters: Array<BluetoothRequestDeviceFilter>, deviceInfo, validServices) {
         let valid = false;
 
-        options.filters.forEach(filter => {
+        filters.forEach(filter => {
             // Name
             if (filter.name && filter.name !== deviceInfo.name) return;
 
@@ -189,15 +208,32 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @param options The options to use when scanning
      * @returns Promise containing a device which matches the options
      */
-    public requestDevice(options?: RequestDeviceOptions): Promise<BluetoothDevice> {
+    public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
         return new Promise((resolve, reject) => {
-            options = options || {};
 
             if (this.scanner !== null) return reject("requestDevice error: request in progress");
 
-            if (!options.acceptAllDevices && !this.deviceFound) {
+            interface Filtered {
+                filters: Array<BluetoothRequestDeviceFilter>;
+                optionalServices?: Array<BluetoothServiceUUID>;
+            }
+
+            interface AcceptAll {
+                acceptAllDevices: boolean;
+                optionalServices?: Array<BluetoothServiceUUID>;
+            }
+
+            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
+                (maybeFiltered as Filtered).filters !== undefined;
+
+            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
+                (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+
+            let searchUUIDs = [];
+
+            if (isFiltered(options)) {
                 // Must have a filter
-                if (!options.filters || options.filters.length === 0) {
+                if (options.filters.length === 0) {
                     return reject(new TypeError("requestDevice error: no filters specified"));
                 }
 
@@ -216,20 +252,18 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                 if (emptyPrefix) {
                     return reject(new TypeError("requestDevice error: empty namePrefix specified"));
                 }
-            }
 
-            let searchUUIDs = [];
-
-            if (options.filters) {
                 options.filters.forEach(filter => {
                     if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
-                });
-            }
 
-            // Unique-ify
-            searchUUIDs = searchUUIDs.filter((item, index, array) => {
-                return array.indexOf(item) === index;
-            });
+                    // Unique-ify
+                    searchUUIDs = searchUUIDs.filter((item, index, array) => {
+                        return array.indexOf(item) === index;
+                    });
+                });
+            } else if (!isAcceptAll(options)) {
+                return reject(new TypeError("requestDevice error: specify filters or acceptAllDevices"));
+            }
 
             let found = false;
             adapter.startScan(searchUUIDs, deviceInfo => {
@@ -243,8 +277,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                 }
 
                 // filter devices if filters specified
-                if (options.filters) {
-                    deviceInfo = this.filterDevice(options, deviceInfo, validServices);
+                if (isFiltered(options)) {
+                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
                 }
 
                 if (deviceInfo) {

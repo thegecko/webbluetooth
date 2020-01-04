@@ -28,7 +28,6 @@ import { EventEmitter } from "events";
 import { getCanonicalUUID } from "./helpers";
 import { BluetoothDevice } from "./device";
 import { BluetoothRemoteGATTService } from "./service";
-import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
 import * as noble from "@abandonware/noble";
 

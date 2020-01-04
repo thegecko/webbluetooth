@@ -28,63 +28,23 @@ import { BluetoothRemoteGATTService } from "./service";
 import { BluetoothRemoteGATTDescriptor } from "./descriptor";
 import { getDescriptorUUID } from "./helpers";
 import { adapter } from "./adapter";
+import { W3CBluetoothRemoteGATTCharacteristic } from "./interfaces";
+import { DOMEvent } from "./events";
 
 /**
- * Bluetooth Characteristic Properties interface
- */
-export interface BluetoothCharacteristicProperties {
-    /**
-     * Broadcast property
-     */
-    broadcast: boolean;
-    /**
-     * Read property
-     */
-    read: boolean;
-    /**
-     * Write without response property
-     */
-    writeWithoutResponse: boolean;
-    /**
-     * Write property
-     */
-    write: boolean;
-    /**
-     * Notify property
-     */
-    notify: boolean;
-    /**
-     * Indicate property
-     */
-    indicate: boolean;
-    /**
-     * Authenticated signed writes property
-     */
-    authenticatedSignedWrites: boolean;
-    /**
-     * Reliable write property
-     */
-    reliableWrite: boolean;
-    /**
-     * Writable auxiliaries property
-     */
-    writableAuxiliaries: boolean;
-}
-
-/**
- * Events raised by the BluetoothRemoteGATTCharacteristic class
+ * @hidden
  */
 export interface BluetoothRemoteGATTCharacteristicEvents {
     /**
      * Characteristic value changed event
      */
-    characteristicvaluechanged: DataView | undefined;
+    characteristicvaluechanged: Event;
 }
 
 /**
  * Bluetooth Remote GATT Characteristic class
  */
-export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) {
+export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) implements W3CBluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
@@ -112,6 +72,15 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     private handle: string = null;
     private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
 
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        }
+        this._oncharacteristicvaluechanged = fn;
+        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+    }
+
     /**
      * Characteristic constructor
      * @param init A partial class to initialise values
@@ -130,10 +99,10 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     private setValue(value?: DataView, emit?: boolean) {
         this._value = value;
         if (emit) {
-            this.dispatchEvent("characteristicvaluechanged", value);
-            this.service.dispatchEvent("characteristicvaluechanged", value);
-            this.service.device.dispatchEvent("characteristicvaluechanged", value);
-            this.service.device._bluetooth.dispatchEvent("characteristicvaluechanged", value);
+            this.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
+            this.service.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
+            this.service.device.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
+            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
         }
     }
 
@@ -240,7 +209,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+    public startNotifications(): Promise<W3CBluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
 

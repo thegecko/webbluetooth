@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2019 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,34 +23,32 @@
 * SOFTWARE.
 */
 
-const bluetooth = require("../").bluetooth;
+/**
+ * @hidden
+ */
+export interface W3CBluetooth extends Bluetooth {}
 
-(async () => {
-	try {
-		console.log("Requesting Bluetooth Devices...");
+/**
+ * @hidden
+ */
+export interface W3CBluetoothDevice extends BluetoothDevice {}
 
-		const device = await bluetooth.requestDevice({
-			filters: [{ services: [ "heart_rate" ] }]
-		});
-		console.log(`Found device: ${device.name}`);
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTServer extends BluetoothRemoteGATTServer {}
 
-		const server = await device.gatt.connect();
-		console.log(`Gatt server connected: ${server.connected}`);
-		
-		const service = await server.getPrimaryService("heart_rate");
-		console.log(`Primary service: ${service.uuid}`);
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTService extends BluetoothRemoteGATTService {}
 
-		const characteristic = await service.getCharacteristic("heart_rate_measurement");
-		console.log(`Characteristic: ${characteristic.uuid}`);
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTCharacteristic extends BluetoothRemoteGATTCharacteristic {}
 
-		await characteristic.startNotifications();
-		console.log("Notifications started");
-
-		characteristic.addEventListener("characteristicvaluechanged", event => {
-			if (event.value.buffer.byteLength) console.log(event.value.getUint16(0));
-		});
-	} catch(error) {
-		console.log(error);
-		process.exit(1);
-	};
-})();
+/**
+ * @hidden
+ */
+export interface W3CBluetoothRemoteGATTDescriptor extends BluetoothRemoteGATTDescriptor {}

@@ -24,14 +24,16 @@
 */
 
 import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTService } from "./service";
 import { getServiceUUID } from "./helpers";
 import { adapter } from "./adapter";
+import { W3CBluetoothRemoteGATTServer } from "./interfaces";
+import { BluetoothRemoteGATTService } from "./service";
+import { DOMEvent } from "./events";
 
 /**
  * Bluetooth Remote GATT Server class
  */
-export class BluetoothRemoteGATTServer {
+export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
 
     /**
      * The device the gatt server is related to
@@ -72,8 +74,8 @@ export class BluetoothRemoteGATTServer {
             }, () => {
                 this.services = null;
                 this._connected = false;
-                this.device.dispatchEvent("gattserverdisconnected", undefined);
-                this.device._bluetooth.dispatchEvent("gattserverdisconnected", undefined);
+                this.device.dispatchEvent(new DOMEvent(this.device, "gattserverdisconnected"));
+                this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, "gattserverdisconnected"));
             }, error => {
                 reject(`connect Error: ${error}`);
             });

@@ -85,7 +85,9 @@ console.log("scanning...");
 
 (async () => {
     try {
-        const device = await bluetooth.requestDevice();
+        const device = await bluetooth.requestDevice({
+			acceptAllDevices: true
+        });
         console.log("connecting...");
 
         const server = await device.gatt.connect();
