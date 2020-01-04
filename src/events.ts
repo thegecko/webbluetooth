@@ -23,12 +23,10 @@
 * SOFTWARE.
 */
 
-import { DOMEvent } from "./interfaces";
-
 /**
  * @hidden
  */
-export class Event implements DOMEvent {
+export class DOMEvent implements Event {
 
     /**
      * Type of the event

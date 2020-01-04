@@ -28,7 +28,7 @@ import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
 import { getServiceUUID } from "./helpers";
 import { adapter, NobleAdapter } from "./adapter";
 import { W3CBluetooth } from "./interfaces";
-import { Event } from "./events";
+import { DOMEvent } from "./events";
 
 /**
  * Bluetooth Options interface
@@ -156,7 +156,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
         adapter.on(NobleAdapter.EVENT_ENABLED, _value => {
-            this.dispatchEvent(new Event(this, "availabilitychanged"));
+            this.dispatchEvent(new DOMEvent(this, "availabilitychanged"));
         });
     }
 

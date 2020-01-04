@@ -26,11 +26,6 @@
 /**
  * @hidden
  */
-export interface DOMEvent extends Event {}
-
-/**
- * @hidden
- */
 export interface W3CBluetooth extends Bluetooth {}
 
 /**

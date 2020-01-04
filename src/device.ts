@@ -28,7 +28,6 @@ import { Bluetooth } from "./bluetooth";
 import { BluetoothRemoteGATTServer } from "./server";
 import { BluetoothRemoteGATTServiceEvents } from "./service";
 import { W3CBluetoothDevice } from "./interfaces";
-import { Event } from "./events";
 
 /**
  * @hidden
