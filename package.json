@@ -40,6 +40,6 @@
   "dependencies": {
     "@types/node": "^8.0.54",
     "@types/web-bluetooth": "^0.0.5",
-    "@abandonware/noble": "thegecko/noble"
+    "@abandonware/noble": "abandonware/noble"
   }
 }
