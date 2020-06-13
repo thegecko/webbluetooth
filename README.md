@@ -80,8 +80,8 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] getDescriptors()
 - [x] readValue()
 - [x] writeValue()
-- [ ] writeValueWithResponse()
-- [ ] writeValueWithoutResponse()
+- [x] writeValueWithResponse()
+- [x] writeValueWithoutResponse()
 - [x] startNotifications()
 - [x] stopNotifications()
 

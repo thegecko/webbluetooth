@@ -206,6 +206,54 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     }
 
     /**
+     * Updates the value of the characteristic and waits for a response
+     * @param value The value to write
+     */
+    public writeValueWithResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
+
+            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
+                return (source as ArrayBufferView).buffer !== undefined;
+            }
+
+            const arrayBuffer = isView(value) ? value.buffer : value;
+            const dataView = new DataView(arrayBuffer);
+
+            adapter.writeCharacteristic(this.handle, dataView, () => {
+                this.setValue (dataView);
+                resolve();
+            }, error => {
+                reject(`writeValue error: ${error}`);
+            }, false);
+        });
+    }
+
+    /**
+     * Updates the value of the characteristic without waiting for a response
+     * @param value The value to write
+     */
+    public writeValueWithoutResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
+
+            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
+                return (source as ArrayBufferView).buffer !== undefined;
+            }
+
+            const arrayBuffer = isView(value) ? value.buffer : value;
+            const dataView = new DataView(arrayBuffer);
+
+            adapter.writeCharacteristic(this.handle, dataView, () => {
+                this.setValue (dataView);
+                resolve();
+            }, error => {
+                reject(`writeValue error: ${error}`);
+            }, true);
+        });
+    }
+
+    /**
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
