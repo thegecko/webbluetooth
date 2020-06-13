@@ -45,7 +45,7 @@ export interface Adapter extends EventEmitter {
     discoverCharacteristics: (handle: string, characteristicUUIDs: Array<string>, completeFn: (characteristics: Array<Partial<BluetoothRemoteGATTCharacteristic>>) => void, errorFn?: (errorMsg: string) => void) => void;
     discoverDescriptors: (handle: string, descriptorUUIDs: Array<string>, completeFn: (descriptors: Array<Partial<BluetoothRemoteGATTDescriptor>>) => void, errorFn?: (errorMsg: string) => void) => void;
     readCharacteristic: (handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void) => void;
-    writeCharacteristic: (handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
+    writeCharacteristic: (handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void, withoutResponse?: boolean) => void;
     enableNotify: (handle: string, notifyFn: () => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
     disableNotify: (handle: string, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
     readDescriptor: (handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void) => void;
@@ -361,13 +361,15 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         }));
     }
 
-    public writeCharacteristic(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
+    public writeCharacteristic(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void, withoutResponse?: boolean): void {
         const buffer = this.dataViewToBuffer(value);
         const characteristic = this.characteristicHandles[handle];
 
-        // writeWithoutResponse and authenticatedSignedWrites don't require a response
-        const withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
-                             || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
+        if (withoutResponse === undefined) {
+            // writeWithoutResponse and authenticatedSignedWrites don't require a response
+            withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
+                           || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
+        }
 
         // Add a small delay for writing without response when not on MacOS
         const delay = (this.os !== "darwin" && withoutResponse) ? 25 : null;
