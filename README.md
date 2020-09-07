@@ -34,6 +34,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] referringDevice - specification unstable
 - [x] getAvailability() - specification unstable
 - [x] requestDevice()
+- [ ] getDevices()
 - [x] RequestDeviceOptions.name
 - [x] RequestDeviceOptions.namePrefix
 - [x] RequestDeviceOptions.services
