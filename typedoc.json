@@ -1,11 +1,8 @@
 {
     "name": "Node Web Bluetooth",
-    "readme": "./documentation.md",
-    "theme": "./docs-theme",
-    "module": "commonjs",
-    "target": "es6",
-    "mode": "file",
-    "out": "docs",
+    "entryPoints": [
+        "src"
+    ],
     "excludeExternals": true,
     "excludePrivate": true,
     "hideGenerator": true

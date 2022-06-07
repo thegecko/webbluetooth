@@ -6,7 +6,6 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "sourceMap": true,
-        "declaration": true,
-        "declarationDir": "types"
+        "declaration": true
     }
 }
