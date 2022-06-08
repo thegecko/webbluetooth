@@ -160,7 +160,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         });
     }
 
-    private filterDevice(filters: Array<BluetoothRequestDeviceFilter>, deviceInfo, validServices) {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo, validServices) {
         let valid = false;
 
         filters.forEach(filter => {
@@ -210,7 +210,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         }
 
         interface Filtered {
-            filters: Array<BluetoothRequestDeviceFilter>;
+            filters: Array<BluetoothLEScanFilter>;
             optionalServices?: Array<BluetoothServiceUUID>;
         }
 
@@ -307,11 +307,39 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                 }
             });
 
-            this.scanner = setTimeout(() => {
-                this.cancelRequest();
+            this.scanner = setTimeout(async () => {
+                await this.cancelRequest();
                 if (!found) {
                     reject('requestDevice error: no devices found');
                 }
+            }, this.scanTime);
+        });
+    }
+
+    /**
+     * Get all bluetooth devices
+     */
+    public getDevices(): Promise<BluetoothDevice[]> {
+        if (this.scanner !== undefined) {
+            throw new Error('getDevices error: request in progress');
+        }
+
+        return new Promise(resolve => {
+            const devices: BluetoothDevice[] = [];
+
+            adapter.startScan([], deviceInfo => {
+                Object.assign(deviceInfo, {
+                    _bluetooth: this,
+                    _allowedServices: []
+                });
+
+                const bluetoothDevice = new BluetoothDevice(deviceInfo);
+                devices.push(bluetoothDevice);
+            });
+
+            this.scanner = setTimeout(async () => {
+                await this.cancelRequest();
+                resolve(devices);
             }, this.scanTime);
         });
     }
@@ -325,5 +353,13 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
             this.scanner = undefined;
             adapter.stopScan();
         }
+    }
+
+    /**
+     * @hidden
+     * Request LE scan (not implemented)
+     */
+    public requestLEScan(_options?: BluetoothLEScanOptions): Promise<BluetoothLEScan> {
+        throw new Error('requestLEScan error: method not implemented.');
     }
 }

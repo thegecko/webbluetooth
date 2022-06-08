@@ -132,7 +132,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      * @param characteristic characteristic UUID
      * @returns Promise containing the characteristic
      */
-    public async getCharacteristic(characteristic: string | number): Promise<BluetoothRemoteGATTCharacteristic> {
+    public async getCharacteristic(characteristic: BluetoothCharacteristicUUID): Promise<BluetoothRemoteGATTCharacteristic> {
         if (!this.device.gatt.connected) {
             throw new Error('getCharacteristic error: device not connected');
         }
@@ -154,7 +154,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      * @param characteristic characteristic UUID
      * @returns Promise containing an array of characteristics
      */
-    public async getCharacteristics(characteristic?: string | number): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
+    public async getCharacteristics(characteristic?: BluetoothCharacteristicUUID): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
         if (!this.device.gatt.connected) {
             throw new Error('getCharacteristics error: device not connected');
         }
@@ -190,7 +190,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      * @param service service UUID
      * @returns Promise containing the service
      */
-    public async getIncludedService(service: string | number): Promise<BluetoothRemoteGATTService> {
+    public async getIncludedService(service: BluetoothServiceUUID): Promise<BluetoothRemoteGATTService> {
         if (!this.device.gatt.connected) {
             throw new Error('getIncludedService error: device not connected');
         }
@@ -212,7 +212,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      * @param service service UUID
      * @returns Promise containing an array of services
      */
-    public async getIncludedServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
+    public async getIncludedServices(service?: BluetoothServiceUUID): Promise<Array<BluetoothRemoteGATTService>> {
         if (!this.device.gatt.connected) {
             throw new Error('getIncludedServices error: device not connected');
         }

@@ -93,7 +93,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      * @param service service UUID
      * @returns Promise containing the service
      */
-    public async getPrimaryService(service: string | number): Promise<BluetoothRemoteGATTService> {
+    public async getPrimaryService(service: BluetoothServiceUUID): Promise<BluetoothRemoteGATTService> {
         if (!this.connected) {
             throw new Error('getPrimaryService error: device not connected');
         }
@@ -115,7 +115,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      * @param service service UUID
      * @returns Promise containing an array of services
      */
-    public async getPrimaryServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
+    public async getPrimaryServices(service?: BluetoothServiceUUID): Promise<Array<BluetoothRemoteGATTService>> {
         if (!this.connected) {
             throw new Error('getPrimaryServices error: device not connected');
         }

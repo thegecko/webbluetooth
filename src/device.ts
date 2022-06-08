@@ -181,4 +181,11 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     public unwatchAdvertisements(): Promise<void> {
         throw new Error('unwatchAdvertisements error: method not implemented');
     }
+
+    /**
+     * Forget this device (not implemented)
+     */
+    public forget(): Promise<void> {
+        throw new Error('forget error: method not implemented');
+    }
 }
