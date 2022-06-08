@@ -23,13 +23,13 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from "./dispatcher";
-import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from "./characteristic";
-import { getCharacteristicUUID, getServiceUUID } from "./helpers";
-import { adapter } from "./adapter";
-import { W3CBluetoothRemoteGATTService } from "./interfaces";
-import { DOMEvent } from "./events";
+import { EventDispatcher, TypedDispatcher } from './dispatcher';
+import { BluetoothDevice } from './device';
+import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from './characteristic';
+import { getCharacteristicUUID, getServiceUUID } from './helpers';
+import { adapter } from './adapter';
+import { W3CBluetoothRemoteGATTService } from './interfaces';
+import { DOMEvent } from './events';
 
 /**
  * @hidden
@@ -76,37 +76,37 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
-            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
         }
         this._oncharacteristicvaluechanged = fn;
-        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
     private _onserviceadded: (ev: Event) => void;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
-            this.removeEventListener("serviceadded", this._onserviceadded);
+            this.removeEventListener('serviceadded', this._onserviceadded);
         }
         this._onserviceadded = fn;
-        this.addEventListener("serviceadded", this._onserviceadded);
+        this.addEventListener('serviceadded', this._onserviceadded);
     }
 
     private _onservicechanged: (ev: Event) => void;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
-            this.removeEventListener("servicechanged", this._onservicechanged);
+            this.removeEventListener('servicechanged', this._onservicechanged);
         }
         this._onservicechanged = fn;
-        this.addEventListener("servicechanged", this._onservicechanged);
+        this.addEventListener('servicechanged', this._onservicechanged);
     }
 
     private _onserviceremoved: (ev: Event) => void;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
-            this.removeEventListener("serviceremoved", this._onserviceremoved);
+            this.removeEventListener('serviceremoved', this._onserviceremoved);
         }
         this._onserviceremoved = fn;
-        this.addEventListener("serviceremoved", this._onserviceremoved);
+        this.addEventListener('serviceremoved', this._onserviceremoved);
     }
 
     /**
@@ -122,9 +122,9 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
 
         this.handle = this.uuid;
 
-        this.dispatchEvent(new DOMEvent(this, "serviceadded"));
-        this.device.dispatchEvent(new DOMEvent(this, "serviceadded"));
-        this.device._bluetooth.dispatchEvent(new DOMEvent(this, "serviceadded"));
+        this.dispatchEvent(new DOMEvent(this, 'serviceadded'));
+        this.device.dispatchEvent(new DOMEvent(this, 'serviceadded'));
+        this.device._bluetooth.dispatchEvent(new DOMEvent(this, 'serviceadded'));
     }
 
     /**
@@ -134,17 +134,17 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      */
     public getCharacteristic(characteristic: string | number): Promise<BluetoothRemoteGATTCharacteristic> {
         return new Promise((resolve, reject) => {
-            if (!this.device.gatt.connected) return reject("getCharacteristic error: device not connected");
-            if (!characteristic) return reject("getCharacteristic error: no characteristic specified");
+            if (!this.device.gatt.connected) return reject('getCharacteristic error: device not connected');
+            if (!characteristic) return reject('getCharacteristic error: no characteristic specified');
 
             this.getCharacteristics(characteristic)
-            .then(characteristics => {
-                if (characteristics.length !== 1) return reject("getCharacteristic error: characteristic not found");
-                resolve(characteristics[0]);
-            })
-            .catch(error => {
-                reject(`getCharacteristic error: ${error}`);
-            });
+                .then(characteristics => {
+                    if (characteristics.length !== 1) return reject('getCharacteristic error: characteristic not found');
+                    resolve(characteristics[0]);
+                })
+                .catch(error => {
+                    reject(`getCharacteristic error: ${error}`);
+                });
         });
     }
 
@@ -155,7 +155,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      */
     public getCharacteristics(characteristic?: string | number): Promise<Array<BluetoothRemoteGATTCharacteristic>> {
         return new Promise((resolve, reject) => {
-            if (!this.device.gatt.connected) return reject("getCharacteristics error: device not connected");
+            if (!this.device.gatt.connected) return reject('getCharacteristics error: device not connected');
 
             function complete() {
                 if (!characteristic) return resolve(this.characteristics);
@@ -167,7 +167,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
                     return (characteristicObject.uuid === characteristic);
                 });
 
-                if (filtered.length !== 1) return reject("getCharacteristics error: characteristic not found");
+                if (filtered.length !== 1) return reject('getCharacteristics error: characteristic not found');
                 resolve(filtered);
             }
 
@@ -195,17 +195,17 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      */
     public getIncludedService(service: string | number): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
-            if (!this.device.gatt.connected) return reject("getIncludedService error: device not connected");
-            if (!service) return reject("getIncludedService error: no service specified");
+            if (!this.device.gatt.connected) return reject('getIncludedService error: device not connected');
+            if (!service) return reject('getIncludedService error: no service specified');
 
             this.getIncludedServices(service)
-            .then(services => {
-                if (services.length !== 1) return reject("getIncludedService error: service not found");
-                resolve(services[0]);
-            })
-            .catch(error => {
-                reject(`getIncludedService error: ${error}`);
-            });
+                .then(services => {
+                    if (services.length !== 1) return reject('getIncludedService error: service not found');
+                    resolve(services[0]);
+                })
+                .catch(error => {
+                    reject(`getIncludedService error: ${error}`);
+                });
         });
     }
 
@@ -216,7 +216,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
      */
     public getIncludedServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
-            if (!this.device.gatt.connected) return reject("getIncludedServices error: device not connected");
+            if (!this.device.gatt.connected) return reject('getIncludedServices error: device not connected');
 
             function complete() {
                 if (!service) return resolve(this.services);
@@ -225,7 +225,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
                     return (serviceObject.uuid === getServiceUUID(service));
                 });
 
-                if (filtered.length !== 1) return reject("getIncludedServices error: service not found");
+                if (filtered.length !== 1) return reject('getIncludedServices error: service not found');
                 resolve(filtered);
             }
 

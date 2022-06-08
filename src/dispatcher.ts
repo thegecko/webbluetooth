@@ -23,9 +23,7 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from "events";
-
-// tslint:disable:ban-types
+import { EventEmitter } from 'events';
 
 /**
  * @hidden
@@ -56,7 +54,9 @@ export interface TypedDispatcher<T> {
     removeListener<E extends keyof EventListeners<T>>(event: E, listener: (data: EventListeners<T>[E]) => void): this;
     removeAllListeners<K extends keyof T>(event?: K): this;
     removeAllListeners<E extends keyof EventListeners<T>>(event?: E): this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     listeners<K extends keyof T>(event: K): Array<Function>;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     listeners<E extends keyof EventListeners<T>>(event: EventListeners<T>[E]): Array<Function>;
     emit<K extends keyof T>(event: K, data: T[K]): boolean;
     eventNames<K extends keyof T, E extends keyof EventListeners<T>>(): Array<K | E>;
@@ -73,14 +73,14 @@ export class EventDispatcher extends EventEmitter implements EventTarget {
 
     private isEventListenerObject = (listener: EventListenerOrEventListenerObject): listener is EventListenerObject => (listener as EventListenerObject).handleEvent !== undefined;
 
-    public addEventListener(type: string, listener: EventListenerOrEventListenerObject | null) {
+    public addEventListener(type: string, listener: EventListenerOrEventListenerObject | null): void {
         if (listener) {
             const handler = this.isEventListenerObject(listener) ? listener.handleEvent : listener;
             super.addListener(type, handler);
         }
     }
 
-    public removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null) {
+    public removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null): void {
         if (callback) {
             const handler = this.isEventListenerObject(callback) ? callback.handleEvent : callback;
             super.removeListener(type, handler);

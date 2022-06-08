@@ -23,8 +23,8 @@
 * SOFTWARE.
 */
 
-import { adapter } from "./adapter";
-import { W3CBluetoothRemoteGATTDescriptor } from "./interfaces";
+import { adapter } from './adapter';
+import { W3CBluetoothRemoteGATTDescriptor } from './interfaces';
 
 /**
  * Bluetooth Remote GATT Descriptor class
@@ -69,7 +69,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
      */
     public readValue(): Promise<DataView> {
         return new Promise((resolve, reject) =>  {
-            if (!this.characteristic.service.device.gatt.connected) return reject("readValue error: device not connected");
+            if (!this.characteristic.service.device.gatt.connected) return reject('readValue error: device not connected');
 
             adapter.readDescriptor(this.handle, dataView => {
                 this._value = dataView;
@@ -86,7 +86,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
      */
     public writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (!this.characteristic.service.device.gatt.connected) return reject("writeValue error: device not connected");
+            if (!this.characteristic.service.device.gatt.connected) return reject('writeValue error: device not connected');
 
             function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
                 return (source as ArrayBufferView).buffer !== undefined;

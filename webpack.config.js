@@ -5,7 +5,7 @@ const path = require('path');
 
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 /** @type WebpackConfig */
-module.exports = {
+const common = {
     mode: 'development',
     devtool: 'inline-source-map',
     target: 'web',
@@ -19,20 +19,37 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js']
+        extensions: ['.tsx', '.ts', '.js'],
+        fallback: {
+            os: require.resolve('os-browserify/browser'),
+            util: require.resolve('util')
+        }
     },
     entry: {
-        web: './src/web.ts',
-    },
-    output: {
-        filename: '[name].js',
-        path: path.resolve(__dirname, 'example'),
-        iife: true
-    },
-    devServer: {
-        static: __dirname,
-        devMiddleware: {
-            writeToDisk: true
-        }
+        webbluetooth: './src/index.ts'
     }
 };
+
+/** @type WebpackConfig[] */
+module.exports = [
+    {
+        ...common,
+        output: {
+            filename: '[name].umd.js',
+            path: path.resolve(__dirname, 'dist'),
+            library: {
+                type: 'umd'
+            }
+        }
+    },
+    {
+        ...common,
+        output: {
+            filename: '[name].esm.js',
+            path: path.resolve(__dirname, 'dist'),
+            library: {
+                type: 'commonjs-static'
+            }
+        }
+    }
+];

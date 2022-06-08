@@ -23,13 +23,13 @@
 * SOFTWARE.
 */
 
-import { platform } from "os";
-import { EventEmitter } from "events";
-import { getCanonicalUUID } from "./helpers";
-import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTService } from "./service";
-import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
-import * as noble from "@abandonware/noble";
+import { platform } from 'os';
+import { EventEmitter } from 'events';
+import { getCanonicalUUID } from './helpers';
+import { BluetoothDevice } from './device';
+import { BluetoothRemoteGATTService } from './service';
+import { BluetoothRemoteGATTCharacteristic } from './characteristic';
+import * as noble from '@abandonware/noble';
 
 /**
  * @hidden
@@ -57,22 +57,22 @@ export interface Adapter extends EventEmitter {
  */
 export class NobleAdapter extends EventEmitter implements Adapter {
 
-    public static EVENT_ENABLED: string = "enabledchanged";
+    public static EVENT_ENABLED = 'enabledchanged';
 
-    private deviceHandles: {} = {};
-    private serviceHandles: {} = {};
-    private characteristicHandles: {} = {};
-    private descriptorHandles: {} = {};
-    private charNotifies: {} = {};
+    private deviceHandles = {};
+    private serviceHandles = {};
+    private characteristicHandles = {};
+    private descriptorHandles = {};
+    private charNotifies = {};
     private discoverFn: (device: noble.Peripheral) => void = null;
-    private initialised: boolean = false;
-    private enabled: boolean = false;
+    private initialised = false;
+    private enabled = false;
     private os: string = platform();
 
     constructor() {
         super();
         this.enabled = this.state;
-        noble.on("stateChange", () => {
+        noble.on('stateChange', () => {
             if (this.enabled !== this.state) {
                 this.enabled = this.state;
                 this.emit(NobleAdapter.EVENT_ENABLED, this.enabled);
@@ -81,12 +81,12 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private get state(): boolean {
-        return (noble.state === "poweredOn");
+        return (noble.state === 'poweredOn');
     }
 
-    private init(completeFn: () => any): void {
+    private init(completeFn: () => void): void {
         if (this.initialised) return completeFn();
-        noble.on("discover", deviceInfo => {
+        noble.on('discover', deviceInfo => {
             if (this.discoverFn) this.discoverFn(deviceInfo);
         });
         this.initialised = true;
@@ -94,10 +94,9 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private checkForError(errorFn, continueFn?, delay?: number) {
-        return function(error) {
+        return function(error, ...args) {
             if (error) errorFn(error);
-            else if (typeof continueFn === "function") {
-                const args = [].slice.call(arguments, 1);
+            else if (typeof continueFn === 'function') {
                 if (delay === null) continueFn.apply(this, args);
                 else setTimeout(() => continueFn.apply(this, args), delay);
             }
@@ -138,7 +137,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private deviceToBluetoothDevice(deviceInfo): Partial<BluetoothDevice> {
-        const deviceID = (deviceInfo.address && deviceInfo.address !== "unknown") ? deviceInfo.address : deviceInfo.id;
+        const deviceID = (deviceInfo.address && deviceInfo.address !== 'unknown') ? deviceInfo.address : deviceInfo.id;
 
         const serviceUUIDs = [];
         if (deviceInfo.advertisement.serviceUuids) {
@@ -154,7 +153,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
             // Remove company ID
             const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-            manufacturerData.set(("0000" + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
+            manufacturerData.set(('0000' + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
         }
 
         const serviceData = new Map();
@@ -177,14 +176,13 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         };
     }
 
-    public getEnabled(completeFn: (enabled: boolean) => void) {
+    public getEnabled(completeFn: (enabled: boolean) => void): void {
         function stateCB() {
             completeFn(this.state);
         }
 
-        if (noble.state === "unknown" || noble.state === "poweredOff") {
-            // tslint:disable-next-line:no-string-literal
-            noble["once"]("stateChange", stateCB.bind(this));
+        if (noble.state === 'unknown' || noble.state === 'poweredOff') {
+            noble['once']('stateChange', stateCB.bind(this));
         } else {
             stateCB.call(this);
         }
@@ -212,13 +210,12 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     // Continually scan to pick up all advertised UUIDs
                     noble.startScanning([], true, this.checkForError(errorFn, completeFn));
                 } else {
-                    errorFn("adapter not enabled");
+                    errorFn('adapter not enabled');
                 }
             }
 
-            if (noble.state === "unknown" || noble.state === "poweredOff") {
-                // tslint:disable-next-line:no-string-literal
-                noble["once"]("stateChange", stateCB.bind(this));
+            if (noble.state === 'unknown' || noble.state === 'poweredOff') {
+                noble['once']('stateChange', stateCB.bind(this));
             } else {
                 stateCB.call(this);
             }
@@ -232,10 +229,10 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     public connect(handle: string, connectFn: () => void, disconnectFn: () => void, errorFn?: (errorMsg: string) => void): void {
         const baseDevice = this.deviceHandles[handle];
-        baseDevice.removeAllListeners("connect");
-        baseDevice.removeAllListeners("disconnect");
-        baseDevice.once("connect", connectFn);
-        baseDevice.once("disconnect", () => {
+        baseDevice.removeAllListeners('connect');
+        baseDevice.removeAllListeners('disconnect');
+        baseDevice.once('connect', connectFn);
+        baseDevice.once('disconnect', () => {
             this.serviceHandles = {};
             this.characteristicHandles = {};
             this.descriptorHandles = {};
@@ -307,20 +304,20 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     discovered.push({
                         uuid: charUUID,
                         properties: {
-                            broadcast:                  (characteristicInfo.properties.indexOf("broadcast") >= 0),
-                            read:                       (characteristicInfo.properties.indexOf("read") >= 0),
-                            writeWithoutResponse:       (characteristicInfo.properties.indexOf("writeWithoutResponse") >= 0),
-                            write:                      (characteristicInfo.properties.indexOf("write") >= 0),
-                            notify:                     (characteristicInfo.properties.indexOf("notify") >= 0),
-                            indicate:                   (characteristicInfo.properties.indexOf("indicate") >= 0),
-                            authenticatedSignedWrites:  (characteristicInfo.properties.indexOf("authenticatedSignedWrites") >= 0),
-                            reliableWrite:              (characteristicInfo.properties.indexOf("reliableWrite") >= 0),
-                            writableAuxiliaries:        (characteristicInfo.properties.indexOf("writableAuxiliaries") >= 0)
+                            broadcast:                  (characteristicInfo.properties.indexOf('broadcast') >= 0),
+                            read:                       (characteristicInfo.properties.indexOf('read') >= 0),
+                            writeWithoutResponse:       (characteristicInfo.properties.indexOf('writeWithoutResponse') >= 0),
+                            write:                      (characteristicInfo.properties.indexOf('write') >= 0),
+                            notify:                     (characteristicInfo.properties.indexOf('notify') >= 0),
+                            indicate:                   (characteristicInfo.properties.indexOf('indicate') >= 0),
+                            authenticatedSignedWrites:  (characteristicInfo.properties.indexOf('authenticatedSignedWrites') >= 0),
+                            reliableWrite:              (characteristicInfo.properties.indexOf('reliableWrite') >= 0),
+                            writableAuxiliaries:        (characteristicInfo.properties.indexOf('writableAuxiliaries') >= 0)
                         }
                     });
 
-                    characteristicInfo.on("data", (data, isNotification) => {
-                        if (isNotification === true && typeof this.charNotifies[charUUID] === "function") {
+                    characteristicInfo.on('data', (data, isNotification) => {
+                        if (isNotification === true && typeof this.charNotifies[charUUID] === 'function') {
                             const dataView = this.bufferToDataView(data);
                             this.charNotifies[charUUID](dataView);
                         }
@@ -341,7 +338,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                 const descUUID = getCanonicalUUID(descriptorInfo.uuid);
 
                 if (descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
-                    const descHandle = characteristicInfo.uuid + "-" + descriptorInfo.uuid;
+                    const descHandle = characteristicInfo.uuid + '-' + descriptorInfo.uuid;
                     if (!this.descriptorHandles[descHandle]) this.descriptorHandles[descHandle] = descriptorInfo;
 
                     discovered.push({
@@ -367,12 +364,12 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
         if (withoutResponse === undefined) {
             // writeWithoutResponse and authenticatedSignedWrites don't require a response
-            withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
-                           || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
+            withoutResponse = characteristic.properties.indexOf('writeWithoutResponse') >= 0
+                           || characteristic.properties.indexOf('authenticatedSignedWrites') >= 0;
         }
 
         // Add a small delay for writing without response when not on MacOS
-        const delay = (this.os !== "darwin" && withoutResponse) ? 25 : null;
+        const delay = (this.os !== 'darwin' && withoutResponse) ? 25 : null;
 
         characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
     }
@@ -382,8 +379,8 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             this.charNotifies[handle] = notifyFn;
             return completeFn();
         }
-        this.characteristicHandles[handle].once("notify", state => {
-            if (state !== true) return errorFn("notify failed to enable");
+        this.characteristicHandles[handle].once('notify', state => {
+            if (state !== true) return errorFn('notify failed to enable');
             this.charNotifies[handle] = notifyFn;
             completeFn();
         });
@@ -394,8 +391,8 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         if (!this.charNotifies[handle]) {
             return completeFn();
         }
-        this.characteristicHandles[handle].once("notify", state => {
-            if (state !== false) return errorFn("notify failed to disable");
+        this.characteristicHandles[handle].once('notify', state => {
+            if (state !== false) return errorFn('notify failed to disable');
             if (this.charNotifies[handle]) delete this.charNotifies[handle];
             completeFn();
         });

@@ -23,12 +23,12 @@
 * SOFTWARE.
 */
 
-import { BluetoothDevice } from "./device";
-import { getServiceUUID } from "./helpers";
-import { adapter } from "./adapter";
-import { W3CBluetoothRemoteGATTServer } from "./interfaces";
-import { BluetoothRemoteGATTService } from "./service";
-import { DOMEvent } from "./events";
+import { BluetoothDevice } from './device';
+import { getServiceUUID } from './helpers';
+import { adapter } from './adapter';
+import { W3CBluetoothRemoteGATTServer } from './interfaces';
+import { BluetoothRemoteGATTService } from './service';
+import { DOMEvent } from './events';
 
 /**
  * Bluetooth Remote GATT Server class
@@ -40,7 +40,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      */
     public readonly device: BluetoothDevice = null;
 
-    private _connected: boolean = false;
+    private _connected = false;
     /**
      * Whether the gatt server is connected
      */
@@ -66,7 +66,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      */
     public connect(): Promise<BluetoothRemoteGATTServer> {
         return new Promise((resolve, reject) => {
-            if (this.connected) return reject("connect error: device already connected");
+            if (this.connected) return reject('connect error: device already connected');
 
             adapter.connect(this.handle, () => {
                 this._connected = true;
@@ -74,8 +74,8 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
             }, () => {
                 this.services = null;
                 this._connected = false;
-                this.device.dispatchEvent(new DOMEvent(this.device, "gattserverdisconnected"));
-                this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, "gattserverdisconnected"));
+                this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
+                this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
             }, error => {
                 reject(`connect Error: ${error}`);
             });
@@ -85,7 +85,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
     /**
      * Disconnect the gatt server
      */
-    public disconnect() {
+    public disconnect(): void {
         adapter.disconnect(this.handle);
         this._connected = false;
     }
@@ -97,17 +97,17 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      */
     public getPrimaryService(service: string | number): Promise<BluetoothRemoteGATTService> {
         return new Promise((resolve, reject) => {
-            if (!this.connected) return reject("getPrimaryService error: device not connected");
-            if (!service) return reject("getPrimaryService error: no service specified");
+            if (!this.connected) return reject('getPrimaryService error: device not connected');
+            if (!service) return reject('getPrimaryService error: no service specified');
 
             this.getPrimaryServices(service)
-            .then(services => {
-                if (services.length !== 1) return reject("getPrimaryService error: service not found");
-                resolve(services[0]);
-            })
-            .catch(error => {
-                reject(`getPrimaryService error: ${error}`);
-            });
+                .then(services => {
+                    if (services.length !== 1) return reject('getPrimaryService error: service not found');
+                    resolve(services[0]);
+                })
+                .catch(error => {
+                    reject(`getPrimaryService error: ${error}`);
+                });
         });
     }
 
@@ -118,7 +118,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      */
     public getPrimaryServices(service?: string | number): Promise<Array<BluetoothRemoteGATTService>> {
         return new Promise((resolve, reject) => {
-            if (!this.connected) return reject("getPrimaryServices error: device not connected");
+            if (!this.connected) return reject('getPrimaryServices error: device not connected');
 
             function complete() {
                 if (!service) return resolve(this.services);
@@ -127,7 +127,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
                     return (serviceObject.uuid === getServiceUUID(service));
                 });
 
-                if (filtered.length !== 1) return reject("getPrimaryServices error: service not found");
+                if (filtered.length !== 1) return reject('getPrimaryServices error: service not found');
                 resolve(filtered);
             }
 

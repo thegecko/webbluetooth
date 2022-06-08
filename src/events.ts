@@ -130,7 +130,7 @@ export class DOMEvent implements Event {
     /**
      * @hidden
      */
-    public initEvent(type: string, bubbles?: boolean, cancelable?: boolean) {
+    public initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void {
         this.type = type;
         this.bubbles = bubbles;
         this.cancelable = cancelable;
@@ -139,21 +139,21 @@ export class DOMEvent implements Event {
     /**
      * @hidden
      */
-    public preventDefault() {
+    public preventDefault(): void {
         this.defaultPrevented = true;
     }
 
     /**
      * @hidden
      */
-    public stopImmediatePropagation() {
+    public stopImmediatePropagation(): void {
         return;
     }
 
     /**
      * @hidden
      */
-    public stopPropagation() {
+    public stopPropagation(): void {
         return;
     }
 }
