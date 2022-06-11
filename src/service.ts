@@ -157,7 +157,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject('getCharacteristics error: device not connected');
 
-            function complete() {
+            const complete = () => {
                 if (!characteristic) return resolve(this.characteristics);
 
                 // Canonical-ize characteristic
@@ -169,7 +169,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
 
                 if (filtered.length !== 1) return reject('getCharacteristics error: characteristic not found');
                 resolve(filtered);
-            }
+            };
 
             if (this.characteristics) return complete.call(this);
 
@@ -218,7 +218,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
         return new Promise((resolve, reject) => {
             if (!this.device.gatt.connected) return reject('getIncludedServices error: device not connected');
 
-            function complete() {
+            const complete = () => {
                 if (!service) return resolve(this.services);
 
                 const filtered = this.services.filter(serviceObject => {
@@ -227,7 +227,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
 
                 if (filtered.length !== 1) return reject('getIncludedServices error: service not found');
                 resolve(filtered);
-            }
+            };
 
             if (this.services) return complete.call(this);
 

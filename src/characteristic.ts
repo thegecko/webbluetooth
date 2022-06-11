@@ -31,6 +31,8 @@ import { adapter } from './adapter';
 import { W3CBluetoothRemoteGATTCharacteristic } from './interfaces';
 import { DOMEvent } from './events';
 
+const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
+
 /**
  * @hidden
  */
@@ -136,7 +138,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject('getDescriptors error: device not connected');
 
-            function complete() {
+            const complete = () => {
                 if (!descriptor) return resolve(this.descriptors);
 
                 const filtered = this.descriptors.filter(descriptorObject => {
@@ -145,7 +147,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
 
                 if (filtered.length !== 1) return reject('getDescriptors error: descriptor not found');
                 resolve(filtered);
-            }
+            };
 
             if (this.descriptors) return complete.call(this);
 
@@ -189,10 +191,6 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject('writeValue error: device not connected');
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
-
             const arrayBuffer = isView(value) ? value.buffer : value;
             const dataView = new DataView(arrayBuffer);
 
@@ -213,10 +211,6 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject('writeValue error: device not connected');
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
-
             const arrayBuffer = isView(value) ? value.buffer : value;
             const dataView = new DataView(arrayBuffer);
 
@@ -236,10 +230,6 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     public writeValueWithoutResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.service.device.gatt.connected) return reject('writeValue error: device not connected');
-
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
 
             const arrayBuffer = isView(value) ? value.buffer : value;
             const dataView = new DataView(arrayBuffer);

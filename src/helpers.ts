@@ -254,52 +254,52 @@ export enum bluetoothDescriptors {
  * @param uuid The partial UUID
  * @returns canonical UUID
  */
-export function getCanonicalUUID(uuid: string | number): string {
+export const getCanonicalUUID = (uuid: string | number): string => {
     if (typeof uuid === 'number') uuid = uuid.toString(16);
     uuid = uuid.toLowerCase();
     if (uuid.length <= 8) uuid = ('00000000' + uuid).slice(-8) + '-0000-1000-8000-00805f9b34fb';
     if (uuid.length === 32) uuid = uuid.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/).splice(1).join('-');
     return uuid;
-}
+};
 
 /**
  * Gets a canonical service UUID from a known service name or partial UUID in string or hex format
  * @param service The known service name
  * @returns canonical UUID
  */
-export function getServiceUUID(service: string | number): string {
+export const getServiceUUID = (service: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof service === 'string' && bluetoothServices[service]) {
         service = bluetoothServices[service];
     }
 
     return getCanonicalUUID(service);
-}
+};
 
 /**
  * Gets a canonical characteristic UUID from a known characteristic name or partial UUID in string or hex format
  * @param characteristic The known characteristic name
  * @returns canonical UUID
  */
-export function getCharacteristicUUID(characteristic: string | number): string {
+export const getCharacteristicUUID = (characteristic: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof characteristic === 'string' && bluetoothCharacteristics[characteristic]) {
         characteristic = bluetoothCharacteristics[characteristic];
     }
 
     return getCanonicalUUID(characteristic);
-}
+};
 
 /**
  * Gets a canonical descriptor UUID from a known descriptor name or partial UUID in string or hex format
  * @param descriptor The known descriptor name
  * @returns canonical UUID
  */
-export function getDescriptorUUID(descriptor: string | number): string {
+export const getDescriptorUUID = (descriptor: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof descriptor === 'string' && bluetoothDescriptors[descriptor]) {
         descriptor = bluetoothDescriptors[descriptor];
     }
 
     return getCanonicalUUID(descriptor);
-}
+};

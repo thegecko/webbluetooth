@@ -88,10 +88,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
         return new Promise((resolve, reject) => {
             if (!this.characteristic.service.device.gatt.connected) return reject('writeValue error: device not connected');
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
-
+            const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
             const arrayBuffer = isView(value) ? value.buffer : value;
             const dataView = new DataView(arrayBuffer);
 

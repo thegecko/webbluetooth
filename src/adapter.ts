@@ -94,7 +94,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private checkForError(errorFn, continueFn?, delay?: number) {
-        return function(error, ...args) {
+        return (error, ...args) => {
             if (error) errorFn(error);
             else if (typeof continueFn === 'function') {
                 if (delay === null) continueFn.apply(this, args);
@@ -177,9 +177,9 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     public getEnabled(completeFn: (enabled: boolean) => void): void {
-        function stateCB() {
+        const stateCB = () => {
             completeFn(this.state);
-        }
+        };
 
         if (noble.state === 'unknown' || noble.state === 'poweredOff') {
             noble['once']('stateChange', stateCB.bind(this));
@@ -204,7 +204,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
         this.init(() => {
             this.deviceHandles = {};
-            function stateCB() {
+            const stateCB = () => {
                 if (this.state === true) {
                     // Noble doesn't correctly match short and canonical UUIDs on Linux, so we need to check ourselves
                     // Continually scan to pick up all advertised UUIDs
@@ -212,7 +212,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                 } else {
                     errorFn('adapter not enabled');
                 }
-            }
+            };
 
             if (noble.state === 'unknown' || noble.state === 'poweredOff') {
                 noble['once']('stateChange', stateCB.bind(this));

@@ -120,7 +120,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
         return new Promise((resolve, reject) => {
             if (!this.connected) return reject('getPrimaryServices error: device not connected');
 
-            function complete() {
+            const complete = () => {
                 if (!service) return resolve(this.services);
 
                 const filtered = this.services.filter(serviceObject => {
@@ -129,7 +129,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
 
                 if (filtered.length !== 1) return reject('getPrimaryServices error: service not found');
                 resolve(filtered);
-            }
+            };
 
             if (this.services) return complete.call(this);
 

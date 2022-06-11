@@ -269,12 +269,12 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
             adapter.startScan(searchUUIDs, deviceInfo => {
                 let validServices = [];
 
-                function complete(bluetoothDevice) {
+                const complete = bluetoothDevice => {
                     this.cancelRequest()
                         .then(() => {
                             resolve(bluetoothDevice);
                         });
-                }
+                };
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
