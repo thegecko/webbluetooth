@@ -1,13 +1,16 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "moduleResolution": "node",
+        "target": "es5",
         "alwaysStrict": true,
+        "noImplicitReturns": true,
         "noEmitOnError": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "sourceMap": true,
         "declaration": true,
         "outDir": "dist"
-    }
+    },
+    "include": [
+        "src"
+    ]
 }
