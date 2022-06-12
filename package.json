@@ -16,7 +16,7 @@
     "bluetooth"
   ],
   "engines": {
-    "node": ">=8.14.0"
+    "node": ">=10.16.0"
   },
   "scripts": {
     "prepare": "yarn build",
@@ -28,14 +28,14 @@
   },
   "dependencies": {
     "@abandonware/noble": "1.9.2-15",
-    "@types/node": "^8.10.60",
+    "@types/node": "^10.16.0",
     "@types/web-bluetooth": "^0.0.5"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",
-    "typedoc": "^0.22.17",
-    "typescript": "^4.2.4"
+    "typedoc": "^0.20",
+    "typescript": "~4.2.4"
   }
 }
