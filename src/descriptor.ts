@@ -34,14 +34,14 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
     /**
      * The characteristic the descriptor is related to
      */
-    public readonly characteristic: BluetoothRemoteGATTCharacteristic = null;
+    public readonly characteristic: BluetoothRemoteGATTCharacteristic = undefined;
 
     /**
      * The unique identifier of the descriptor
      */
-    public readonly uuid: string = null;
+    public readonly uuid: string = undefined;
 
-    private _value: DataView = null;
+    private _value: DataView = undefined;
     /**
      * The value of the descriptor
      */
@@ -49,7 +49,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
         return this._value;
     }
 
-    private handle: string = null;
+    private handle: string = undefined;
 
     /**
      * Descriptor constructor

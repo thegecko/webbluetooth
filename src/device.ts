@@ -51,17 +51,17 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     /**
      * The unique identifier of the device
      */
-    public readonly id: string = null;
+    public readonly id: string = undefined;
 
     /**
      * The name of the device
      */
-    public readonly name: string = null;
+    public readonly name: string = undefined;
 
     /**
      * The gatt server of the device
      */
-    public readonly gatt: BluetoothRemoteGATTServer = null;
+    public readonly gatt: BluetoothRemoteGATTServer = undefined;
 
     /**
      * Whether adverts are being watched (not implemented)
@@ -81,7 +81,7 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     /**
      * @hidden
      */
-    public readonly _bluetooth: Bluetooth = null;
+    public readonly _bluetooth: Bluetooth = undefined;
 
     /**
      * @hidden

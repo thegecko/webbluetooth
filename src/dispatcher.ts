@@ -73,14 +73,14 @@ export class EventDispatcher extends EventEmitter implements EventTarget {
 
     private isEventListenerObject = (listener: EventListenerOrEventListenerObject): listener is EventListenerObject => (listener as EventListenerObject).handleEvent !== undefined;
 
-    public addEventListener(type: string, listener: EventListenerOrEventListenerObject | null): void {
+    public addEventListener(type: string, listener: EventListenerOrEventListenerObject | undefined): void {
         if (listener) {
             const handler = this.isEventListenerObject(listener) ? listener.handleEvent : listener;
             super.addListener(type, handler);
         }
     }
 
-    public removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null): void {
+    public removeEventListener(type: string, callback: EventListenerOrEventListenerObject | undefined): void {
         if (callback) {
             const handler = this.isEventListenerObject(callback) ? callback.handleEvent : callback;
             super.removeListener(type, handler);

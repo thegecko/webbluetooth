@@ -51,19 +51,19 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTService = null;
+    public readonly service: BluetoothRemoteGATTService = undefined;
 
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid = null;
+    public readonly uuid = undefined;
 
     /**
      * The properties of the characteristic
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView = null;
+    private _value: DataView = undefined;
     /**
      * The value of the characteristic
      */
@@ -71,8 +71,8 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
         return this._value;
     }
 
-    private handle: string = null;
-    private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
+    private handle: string = undefined;
+    private descriptors: Array<BluetoothRemoteGATTDescriptor> = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
@@ -147,7 +147,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
                     characteristic: this
                 });
                 return new BluetoothRemoteGATTDescriptor(descriptorInfo);
-            });    
+            });
         }
 
         if (!descriptor) {

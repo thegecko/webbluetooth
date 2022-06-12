@@ -38,7 +38,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
     /**
      * The device the gatt server is related to
      */
-    public readonly device: BluetoothDevice = null;
+    public readonly device: BluetoothDevice = undefined;
 
     private _connected = false;
     /**
@@ -48,8 +48,8 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
         return this._connected;
     }
 
-    private handle: string = null;
-    private services: Array<BluetoothRemoteGATTService> = null;
+    private handle: string = undefined;
+    private services: Array<BluetoothRemoteGATTService> = undefined;
 
     /**
      * Server constructor
@@ -70,7 +70,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
         }
 
         await adapter.connect(this.handle, () => {
-            this.services = null;
+            this.services = undefined;
             this._connected = false;
             this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
             this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));

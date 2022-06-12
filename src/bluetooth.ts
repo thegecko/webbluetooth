@@ -76,9 +76,9 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      */
     public readonly referringDevice?: BluetoothDevice;
 
-    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = null;
+    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
     private scanTime: number = 10.24 * 1000;
-    private scanner = null;
+    private scanner = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
@@ -205,7 +205,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @returns Promise containing a device which matches the options
      */
     public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
-        if (this.scanner !== null) {
+        if (this.scanner !== undefined) {
             throw new Error('requestDevice error: request in progress');
         }
 

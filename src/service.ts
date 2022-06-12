@@ -57,21 +57,21 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
     /**
      * The device the service is related to
      */
-    public readonly device: BluetoothDevice = null;
+    public readonly device: BluetoothDevice = undefined;
 
     /**
      * The unique identifier of the service
      */
-    public readonly uuid: string = null;
+    public readonly uuid: string = undefined;
 
     /**
      * Whether the service is a primary one
      */
     public readonly isPrimary: boolean = false;
 
-    private handle: string = null;
-    private services: Array<BluetoothRemoteGATTService> = null;
-    private characteristics: Array<BluetoothRemoteGATTCharacteristic> = null;
+    private handle: string = undefined;
+    private services: Array<BluetoothRemoteGATTService> = undefined;
+    private characteristics: Array<BluetoothRemoteGATTCharacteristic> = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
