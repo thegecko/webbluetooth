@@ -23,33 +23,33 @@
 * SOFTWARE.
 */
 
-import { platform } from "os";
-import { EventEmitter } from "events";
-import { getCanonicalUUID } from "./helpers";
-import { BluetoothDevice } from "./device";
-import { BluetoothRemoteGATTService } from "./service";
-import { BluetoothRemoteGATTCharacteristic } from "./characteristic";
-import * as noble from "@abandonware/noble";
+import { platform } from 'os';
+import { EventEmitter } from 'events';
+import { getCanonicalUUID } from './helpers';
+import { BluetoothDevice } from './device';
+import { BluetoothRemoteGATTService } from './service';
+import { BluetoothRemoteGATTCharacteristic } from './characteristic';
+import * as noble from '@abandonware/noble';
 
 /**
  * @hidden
  */
 export interface Adapter extends EventEmitter {
-    getEnabled: (completeFn: (enabled: boolean) => void) => void;
-    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
-    stopScan: (errorFn?: (errorMsg: string) => void) => void;
-    connect: (handle: string, connectFn: () => void, disconnectFn: () => void,	errorFn?: (errorMsg: string) => void) => void;
-    disconnect: (handle: string, errorFn?: (errorMsg: string) => void) => void;
-    discoverServices: (handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void) => void;
-    discoverIncludedServices: (handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void) => void;
-    discoverCharacteristics: (handle: string, characteristicUUIDs: Array<string>, completeFn: (characteristics: Array<Partial<BluetoothRemoteGATTCharacteristic>>) => void, errorFn?: (errorMsg: string) => void) => void;
-    discoverDescriptors: (handle: string, descriptorUUIDs: Array<string>, completeFn: (descriptors: Array<Partial<BluetoothRemoteGATTDescriptor>>) => void, errorFn?: (errorMsg: string) => void) => void;
-    readCharacteristic: (handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void) => void;
-    writeCharacteristic: (handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void, withoutResponse?: boolean) => void;
-    enableNotify: (handle: string, notifyFn: () => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
-    disableNotify: (handle: string, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
-    readDescriptor: (handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void) => void;
-    writeDescriptor: (handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void) => void;
+    getEnabled: () => Promise<boolean>;
+    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void) => Promise<void>;
+    stopScan: () => void;
+    connect: (handle: string, disconnectFn?: () => void) => Promise<void>;
+    disconnect: (handle: string) => Promise<void>;
+    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
+    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
+    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>>;
+    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>>;
+    readCharacteristic: (handle: string) => Promise<DataView>;
+    writeCharacteristic: (handle: string, value: DataView, withoutResponse?: boolean) => Promise<void>;
+    enableNotify: (handle: string, notifyFn: () => void) => Promise<void>;
+    disableNotify: (handle: string) => Promise<void>;
+    readDescriptor: (handle: string) => Promise<DataView>;
+    writeDescriptor: (handle: string, value: DataView) => Promise<void>;
 }
 
 /**
@@ -57,22 +57,22 @@ export interface Adapter extends EventEmitter {
  */
 export class NobleAdapter extends EventEmitter implements Adapter {
 
-    public static EVENT_ENABLED: string = "enabledchanged";
+    public static EVENT_ENABLED = 'enabledchanged';
 
-    private deviceHandles: {} = {};
-    private serviceHandles: {} = {};
-    private characteristicHandles: {} = {};
-    private descriptorHandles: {} = {};
-    private charNotifies: {} = {};
-    private discoverFn: (device: noble.Peripheral) => void = null;
-    private initialised: boolean = false;
-    private enabled: boolean = false;
+    private deviceHandles = new Map<string, noble.Peripheral>();
+    private serviceHandles = new Map<string, noble.Service>();
+    private characteristicHandles = new Map<string, noble.Characteristic>();
+    private descriptorHandles = new Map<string, noble.Descriptor>();
+    private charNotifies = new Map<string, (value: DataView) => void>();
+    private discoverFn: (device: noble.Peripheral) => void | undefined;
+    private initialised = false;
+    private enabled = false;
     private os: string = platform();
 
     constructor() {
         super();
         this.enabled = this.state;
-        noble.on("stateChange", () => {
+        noble.on('stateChange', () => {
             if (this.enabled !== this.state) {
                 this.enabled = this.state;
                 this.emit(NobleAdapter.EVENT_ENABLED, this.enabled);
@@ -81,27 +81,17 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private get state(): boolean {
-        return (noble.state === "poweredOn");
+        return (noble.state === 'poweredOn');
     }
 
-    private init(completeFn: () => any): void {
-        if (this.initialised) return completeFn();
-        noble.on("discover", deviceInfo => {
+    private init(): void {
+        if (this.initialised) {
+            return;
+        }
+        noble.on('discover', deviceInfo => {
             if (this.discoverFn) this.discoverFn(deviceInfo);
         });
         this.initialised = true;
-        completeFn();
-    }
-
-    private checkForError(errorFn, continueFn?, delay?: number) {
-        return function(error) {
-            if (error) errorFn(error);
-            else if (typeof continueFn === "function") {
-                const args = [].slice.call(arguments, 1);
-                if (delay === null) continueFn.apply(this, args);
-                else setTimeout(() => continueFn.apply(this, args), delay);
-            }
-        };
     }
 
     private bufferToDataView(buffer: Buffer): DataView {
@@ -138,14 +128,8 @@ export class NobleAdapter extends EventEmitter implements Adapter {
     }
 
     private deviceToBluetoothDevice(deviceInfo): Partial<BluetoothDevice> {
-        const deviceID = (deviceInfo.address && deviceInfo.address !== "unknown") ? deviceInfo.address : deviceInfo.id;
-
-        const serviceUUIDs = [];
-        if (deviceInfo.advertisement.serviceUuids) {
-            deviceInfo.advertisement.serviceUuids.forEach(serviceUUID => {
-                serviceUUIDs.push(getCanonicalUUID(serviceUUID));
-            });
-        }
+        const deviceID = (deviceInfo.address && deviceInfo.address !== 'unknown') ? deviceInfo.address : deviceInfo.id;
+        const serviceUUIDs = deviceInfo.advertisement.serviceUuids ? deviceInfo.advertisement.serviceUuids.map(serviceUUID => getCanonicalUUID(serviceUUID)) : [];
 
         const manufacturerData = new Map();
         if (deviceInfo.advertisement.manufacturerData) {
@@ -154,14 +138,14 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
             // Remove company ID
             const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-            manufacturerData.set(("0000" + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
+            manufacturerData.set(('0000' + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
         }
 
         const serviceData = new Map();
         if (deviceInfo.advertisement.serviceData) {
-            deviceInfo.advertisement.serviceData.forEach(serviceAdvert => {
+            for (const serviceAdvert of deviceInfo.advertisement.serviceData) {
                 serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
-            });
+            }
         }
 
         return {
@@ -177,241 +161,265 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         };
     }
 
-    public getEnabled(completeFn: (enabled: boolean) => void) {
-        function stateCB() {
-            completeFn(this.state);
+    public async getEnabled(): Promise<boolean> {
+        if (noble.state === 'unknown' || noble.state === 'poweredOff') {
+            return new Promise(resolve => noble.once('stateChange', () => resolve(this.state)));
         }
 
-        if (noble.state === "unknown" || noble.state === "poweredOff") {
-            // tslint:disable-next-line:no-string-literal
-            noble["once"]("stateChange", stateCB.bind(this));
-        } else {
-            stateCB.call(this);
-        }
+        return this.state;
     }
 
-    public startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
+    public async startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void): Promise<void> {
 
         this.discoverFn = deviceInfo => {
             if (this.validDevice(deviceInfo, serviceUUIDs)) {
                 const device = this.deviceToBluetoothDevice(deviceInfo);
 
-                if (!this.deviceHandles[device.id]) {
-                    this.deviceHandles[device.id] = deviceInfo;
+                if (!this.deviceHandles.has(device.id)) {
+                    this.deviceHandles.set(device.id, deviceInfo);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
                 }
             }
         };
 
-        this.init(() => {
-            this.deviceHandles = {};
-            function stateCB() {
-                if (this.state === true) {
-                    // Noble doesn't correctly match short and canonical UUIDs on Linux, so we need to check ourselves
-                    // Continually scan to pick up all advertised UUIDs
-                    noble.startScanning([], true, this.checkForError(errorFn, completeFn));
-                } else {
-                    errorFn("adapter not enabled");
-                }
-            }
+        this.init();
+        this.deviceHandles.clear();
+        if (noble.state === 'unknown' || noble.state === 'poweredOff') {
+            await new Promise(resolve => noble.once('stateChange', () => resolve(undefined)));
+        }
 
-            if (noble.state === "unknown" || noble.state === "poweredOff") {
-                // tslint:disable-next-line:no-string-literal
-                noble["once"]("stateChange", stateCB.bind(this));
-            } else {
-                stateCB.call(this);
-            }
-        });
+        if (this.state === false) {
+            throw new Error('adapter not enabled');
+        }
+        // Noble doesn't correctly match short and canonical UUIDs on Linux, so we need to check ourselves
+        // Continually scan to pick up all advertised UUIDs
+        await noble.startScanningAsync([], true);
     }
 
     public stopScan(_errorFn?: (errorMsg: string) => void): void {
-        this.discoverFn = null;
+        this.discoverFn = undefined;
         noble.stopScanning();
     }
 
-    public connect(handle: string, connectFn: () => void, disconnectFn: () => void, errorFn?: (errorMsg: string) => void): void {
-        const baseDevice = this.deviceHandles[handle];
-        baseDevice.removeAllListeners("connect");
-        baseDevice.removeAllListeners("disconnect");
-        baseDevice.once("connect", connectFn);
-        baseDevice.once("disconnect", () => {
-            this.serviceHandles = {};
-            this.characteristicHandles = {};
-            this.descriptorHandles = {};
-            this.charNotifies = {};
-            disconnectFn();
-        });
-        baseDevice.connect(this.checkForError(errorFn));
-    }
+    public connect(handle: string, disconnectFn?: () => void): Promise<void> {
+        const baseDevice = this.deviceHandles.get(handle);
+        baseDevice.removeAllListeners('connect');
+        baseDevice.removeAllListeners('disconnect');
 
-    public disconnect(handle: string, errorFn?: (errorMsg: string) => void): void {
-        const baseDevice = this.deviceHandles[handle];
-        baseDevice.disconnect(this.checkForError(errorFn));
-    }
-
-    public discoverServices(handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void): void {
-        const baseDevice = this.deviceHandles[handle];
-        baseDevice.discoverServices([], this.checkForError(errorFn, services => {
-            const discovered = [];
-            services.forEach(serviceInfo => {
-                const serviceUUID = getCanonicalUUID(serviceInfo.uuid);
-
-                if (serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                    if (!this.serviceHandles[serviceUUID]) this.serviceHandles[serviceUUID] = serviceInfo;
-
-                    discovered.push({
-                        uuid: serviceUUID,
-                        primary: true
-                    });
-                }
+        if (disconnectFn) {
+            baseDevice.once('disconnect', () => {
+                this.serviceHandles.clear();
+                this.characteristicHandles.clear();
+                this.descriptorHandles.clear();
+                this.charNotifies.clear();
+                disconnectFn();
             });
+        }
 
-            completeFn(discovered);
-        }));
+        return baseDevice.connectAsync();
     }
 
-    public discoverIncludedServices(handle: string, serviceUUIDs: Array<string>, completeFn: (services: Array<Partial<BluetoothRemoteGATTService>>) => void, errorFn?: (errorMsg: string) => void): void {
-        const serviceInfo = this.serviceHandles[handle];
-        serviceInfo.discoverIncludedServices([], this.checkForError(errorFn, services => {
+    public disconnect(handle: string): Promise<void> {
+        const baseDevice = this.deviceHandles.get(handle);
+        return baseDevice.disconnectAsync();
+    }
 
-            const discovered = [];
-            services.forEach(service => {
-                const serviceUUID = getCanonicalUUID(service.uuid);
+    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+        const baseDevice = this.deviceHandles.get(handle);
+        const services = await baseDevice.discoverServicesAsync();
+        const discovered = [];
 
-                if (serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                    if (!this.serviceHandles[serviceUUID]) this.serviceHandles[serviceUUID] = service;
+        for (const serviceInfo of services) {
+            const serviceUUID = getCanonicalUUID(serviceInfo.uuid);
 
-                    discovered.push({
-                        uuid: serviceUUID,
-                        primary: false
-                    });
+            if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
+                if (!this.serviceHandles.has(serviceUUID)) {
+                    this.serviceHandles.set(serviceUUID, serviceInfo);
                 }
-            }, this);
 
-            completeFn(discovered);
-        }));
+                discovered.push({
+                    uuid: serviceUUID,
+                    primary: true
+                });
+            }
+        }
+
+        return discovered;
     }
 
-    public discoverCharacteristics(handle: string, characteristicUUIDs: Array<string>, completeFn: (characteristics: Array<Partial<BluetoothRemoteGATTCharacteristic>>) => void, errorFn?: (errorMsg: string) => void): void {
-        const serviceInfo = this.serviceHandles[handle];
-        serviceInfo.discoverCharacteristics([], this.checkForError(errorFn, characteristics => {
+    public async discoverIncludedServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+        const serviceInfo = this.serviceHandles.get(handle);
+        const services = await serviceInfo.discoverIncludedServicesAsync();
+        const discovered = [];
 
-            const discovered = [];
-            characteristics.forEach(characteristicInfo => {
-                const charUUID = getCanonicalUUID(characteristicInfo.uuid);
+        // TODO: check retiurn here!
+        for (const service of services) {
+            const serviceUUID = getCanonicalUUID(service);
 
-                if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
-                    if (!this.characteristicHandles[charUUID]) this.characteristicHandles[charUUID] = characteristicInfo;
-
-                    discovered.push({
-                        uuid: charUUID,
-                        properties: {
-                            broadcast:                  (characteristicInfo.properties.indexOf("broadcast") >= 0),
-                            read:                       (characteristicInfo.properties.indexOf("read") >= 0),
-                            writeWithoutResponse:       (characteristicInfo.properties.indexOf("writeWithoutResponse") >= 0),
-                            write:                      (characteristicInfo.properties.indexOf("write") >= 0),
-                            notify:                     (characteristicInfo.properties.indexOf("notify") >= 0),
-                            indicate:                   (characteristicInfo.properties.indexOf("indicate") >= 0),
-                            authenticatedSignedWrites:  (characteristicInfo.properties.indexOf("authenticatedSignedWrites") >= 0),
-                            reliableWrite:              (characteristicInfo.properties.indexOf("reliableWrite") >= 0),
-                            writableAuxiliaries:        (characteristicInfo.properties.indexOf("writableAuxiliaries") >= 0)
-                        }
-                    });
-
-                    characteristicInfo.on("data", (data, isNotification) => {
-                        if (isNotification === true && typeof this.charNotifies[charUUID] === "function") {
-                            const dataView = this.bufferToDataView(data);
-                            this.charNotifies[charUUID](dataView);
-                        }
-                    });
+            if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
+                /*
+                if (!this.serviceHandles.has(serviceUUID)) {
+                    this.serviceHandles.set(serviceUUID, service);
                 }
-            }, this);
+                */
 
-            completeFn(discovered);
-        }));
+                discovered.push({
+                    uuid: serviceUUID,
+                    primary: false
+                });
+            }
+        }
+
+        return discovered;
     }
 
-    public discoverDescriptors(handle: string, descriptorUUIDs: Array<string>, completeFn: (descriptors: Array<Partial<BluetoothRemoteGATTDescriptor>>) => void, errorFn?: (errorMsg: string) => void): void {
-        const characteristicInfo = this.characteristicHandles[handle];
-        characteristicInfo.discoverDescriptors(this.checkForError(errorFn, descriptors => {
+    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
+        const serviceInfo = this.serviceHandles.get(handle);
+        const characteristics = await serviceInfo.discoverCharacteristicsAsync();
+        const discovered = [];
 
-            const discovered = [];
-            descriptors.forEach(descriptorInfo => {
-                const descUUID = getCanonicalUUID(descriptorInfo.uuid);
+        for (const characteristicInfo of characteristics) {
+            const charUUID = getCanonicalUUID(characteristicInfo.uuid);
 
-                if (descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
-                    const descHandle = characteristicInfo.uuid + "-" + descriptorInfo.uuid;
-                    if (!this.descriptorHandles[descHandle]) this.descriptorHandles[descHandle] = descriptorInfo;
-
-                    discovered.push({
-                        uuid: descUUID
-                    });
+            if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
+                if (!this.characteristicHandles.has(charUUID)) {
+                    this.characteristicHandles.set(charUUID, characteristicInfo);
                 }
-            }, this);
 
-            completeFn(discovered);
-        }));
+                discovered.push({
+                    uuid: charUUID,
+                    properties: {
+                        broadcast:                  (characteristicInfo.properties.indexOf('broadcast') >= 0),
+                        read:                       (characteristicInfo.properties.indexOf('read') >= 0),
+                        writeWithoutResponse:       (characteristicInfo.properties.indexOf('writeWithoutResponse') >= 0),
+                        write:                      (characteristicInfo.properties.indexOf('write') >= 0),
+                        notify:                     (characteristicInfo.properties.indexOf('notify') >= 0),
+                        indicate:                   (characteristicInfo.properties.indexOf('indicate') >= 0),
+                        authenticatedSignedWrites:  (characteristicInfo.properties.indexOf('authenticatedSignedWrites') >= 0),
+                        reliableWrite:              (characteristicInfo.properties.indexOf('reliableWrite') >= 0),
+                        writableAuxiliaries:        (characteristicInfo.properties.indexOf('writableAuxiliaries') >= 0)
+                    }
+                });
+
+                characteristicInfo.on('data', (data, isNotification) => {
+                    if (isNotification === true && this.charNotifies.has(charUUID)) {
+                        const dataView = this.bufferToDataView(data);
+                        this.charNotifies.get(charUUID)(dataView);
+                    }
+                });
+            }
+        }
+
+        return discovered;
     }
 
-    public readCharacteristic(handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void): void {
-        this.characteristicHandles[handle].read(this.checkForError(errorFn, data => {
-            const dataView = this.bufferToDataView(data);
-            completeFn(dataView);
-        }));
+    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
+        const characteristicInfo = this.characteristicHandles.get(handle);
+        const descriptors = await characteristicInfo.discoverDescriptorsAsync();
+        const discovered = [];
+
+        for (const descriptorInfo of descriptors) {
+            const descUUID = getCanonicalUUID(descriptorInfo.uuid);
+
+            if (!descriptorUUIDs || descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
+                const descHandle = characteristicInfo.uuid + '-' + descriptorInfo.uuid;
+                if (!this.descriptorHandles.has(descHandle)) {
+                    this.descriptorHandles.set(descHandle, descriptorInfo);
+                }
+
+                discovered.push({
+                    uuid: descUUID
+                });
+            }
+        }
+
+        return discovered;
     }
 
-    public writeCharacteristic(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void, withoutResponse?: boolean): void {
+    public async readCharacteristic(handle: string): Promise<DataView> {
+        const characteristic = this.characteristicHandles.get(handle);
+        const data = await characteristic.readAsync();
+        const dataView = this.bufferToDataView(data);
+        return dataView;
+    }
+
+    public async writeCharacteristic(handle: string, value: DataView, withoutResponse = false): Promise<void> {
         const buffer = this.dataViewToBuffer(value);
-        const characteristic = this.characteristicHandles[handle];
+        const characteristic = this.characteristicHandles.get(handle);
 
         if (withoutResponse === undefined) {
             // writeWithoutResponse and authenticatedSignedWrites don't require a response
-            withoutResponse = characteristic.properties.indexOf("writeWithoutResponse") >= 0
-                           || characteristic.properties.indexOf("authenticatedSignedWrites") >= 0;
+            withoutResponse = characteristic.properties.indexOf('writeWithoutResponse') >= 0
+                           || characteristic.properties.indexOf('authenticatedSignedWrites') >= 0;
         }
 
+        await characteristic.writeAsync(buffer, withoutResponse);
+
+        // TODO: check still needed
         // Add a small delay for writing without response when not on MacOS
-        const delay = (this.os !== "darwin" && withoutResponse) ? 25 : null;
-
-        characteristic.write(buffer, withoutResponse, this.checkForError(errorFn, completeFn, delay));
-    }
-
-    public enableNotify(handle: string, notifyFn: (value: DataView) => void, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
-        if (this.charNotifies[handle]) {
-            this.charNotifies[handle] = notifyFn;
-            return completeFn();
+        if (this.os !== 'darwin' && withoutResponse) {
+            await new Promise(resolve => setTimeout(resolve, 25));
         }
-        this.characteristicHandles[handle].once("notify", state => {
-            if (state !== true) return errorFn("notify failed to enable");
-            this.charNotifies[handle] = notifyFn;
-            completeFn();
-        });
-        this.characteristicHandles[handle].notify(true, this.checkForError(errorFn));
     }
 
-    public disableNotify(handle: string, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
-        if (!this.charNotifies[handle]) {
-            return completeFn();
+    public enableNotify(handle: string, notifyFn: (value: DataView) => void): Promise<void> {
+        if (this.charNotifies.has(handle)) {
+            this.charNotifies.set(handle, notifyFn);
+            return Promise.resolve();
         }
-        this.characteristicHandles[handle].once("notify", state => {
-            if (state !== false) return errorFn("notify failed to disable");
-            if (this.charNotifies[handle]) delete this.charNotifies[handle];
-            completeFn();
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const characteristic = this.characteristicHandles.get(handle);
+
+            // TODO: check type emitted
+            characteristic.once('notify', state => {
+                if (state !== 'true') {
+                    reject('notify failed to enable');
+                }
+                this.charNotifies.set(handle, notifyFn);
+                resolve(undefined);
+            });
+
+            await characteristic.notifyAsync(true);
         });
-        this.characteristicHandles[handle].notify(false, this.checkForError(errorFn));
     }
 
-    public readDescriptor(handle: string, completeFn: (value: DataView) => void, errorFn?: (errorMsg: string) => void): void {
-        this.descriptorHandles[handle].readValue(this.checkForError(errorFn, data => {
-            const dataView = this.bufferToDataView(data);
-            completeFn(dataView);
-        }));
+    public disableNotify(handle: string): Promise<void> {
+        if (!this.charNotifies.has(handle)) {
+            return Promise.resolve();
+        }
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const characteristic = this.characteristicHandles.get(handle);
+
+            // TODO: check type emitted
+            characteristic.once('notify', state => {
+                if (state !== 'false') {
+                    reject('notify failed to disable');
+                }
+
+                if (this.charNotifies.has(handle)) {
+                    this.charNotifies.delete(handle);
+                }
+                resolve(undefined);
+            });
+
+            await characteristic.notifyAsync(false);
+        });
     }
 
-    public writeDescriptor(handle: string, value: DataView, completeFn?: () => void, errorFn?: (errorMsg: string) => void): void {
+    public async readDescriptor(handle: string): Promise<DataView> {
+        const data = await this.descriptorHandles.get(handle).readValueAsync();
+        const dataView = this.bufferToDataView(data);
+        return dataView;
+    }
+
+    public writeDescriptor(handle: string, value: DataView): Promise<void> {
         const buffer = this.dataViewToBuffer(value);
-        this.descriptorHandles[handle].writeValue(buffer, this.checkForError(errorFn, completeFn));
+        return this.descriptorHandles.get(handle).writeValueAsync(buffer);
     }
 }
 

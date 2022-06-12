@@ -1,9 +1,5 @@
 .DS_Store
 .vscode
 .gitignore
-.rpt2_cache
 node_modules
-circle.yml
 index.html
-docs-theme
-npm-debug.log

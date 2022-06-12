@@ -23,11 +23,11 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from "./dispatcher";
-import { Bluetooth } from "./bluetooth";
-import { BluetoothRemoteGATTServer } from "./server";
-import { BluetoothRemoteGATTServiceEvents } from "./service";
-import { W3CBluetoothDevice } from "./interfaces";
+import { EventDispatcher, TypedDispatcher } from './dispatcher';
+import { Bluetooth } from './bluetooth';
+import { BluetoothRemoteGATTServer } from './server';
+import { BluetoothRemoteGATTServiceEvents } from './service';
+import { W3CBluetoothDevice } from './interfaces';
 
 /**
  * @hidden
@@ -51,17 +51,17 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     /**
      * The unique identifier of the device
      */
-    public readonly id: string = null;
+    public readonly id: string = undefined;
 
     /**
      * The name of the device
      */
-    public readonly name: string = null;
+    public readonly name: string = undefined;
 
     /**
      * The gatt server of the device
      */
-    public readonly gatt: BluetoothRemoteGATTServer = null;
+    public readonly gatt: BluetoothRemoteGATTServer = undefined;
 
     /**
      * Whether adverts are being watched (not implemented)
@@ -81,7 +81,7 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     /**
      * @hidden
      */
-    public readonly _bluetooth: Bluetooth = null;
+    public readonly _bluetooth: Bluetooth = undefined;
 
     /**
      * @hidden
@@ -96,55 +96,55 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
-            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
         }
         this._oncharacteristicvaluechanged = fn;
-        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
     private _onserviceadded: (ev: Event) => void;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
-            this.removeEventListener("serviceadded", this._onserviceadded);
+            this.removeEventListener('serviceadded', this._onserviceadded);
         }
         this._onserviceadded = fn;
-        this.addEventListener("serviceadded", this._onserviceadded);
+        this.addEventListener('serviceadded', this._onserviceadded);
     }
 
     private _onservicechanged: (ev: Event) => void;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
-            this.removeEventListener("servicechanged", this._onservicechanged);
+            this.removeEventListener('servicechanged', this._onservicechanged);
         }
         this._onservicechanged = fn;
-        this.addEventListener("servicechanged", this._onservicechanged);
+        this.addEventListener('servicechanged', this._onservicechanged);
     }
 
     private _onserviceremoved: (ev: Event) => void;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
-            this.removeEventListener("serviceremoved", this._onserviceremoved);
+            this.removeEventListener('serviceremoved', this._onserviceremoved);
         }
         this._onserviceremoved = fn;
-        this.addEventListener("serviceremoved", this._onserviceremoved);
+        this.addEventListener('serviceremoved', this._onserviceremoved);
     }
 
     private _ongattserverdisconnected: (ev: Event) => void;
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
-            this.removeEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+            this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
         }
         this._ongattserverdisconnected = fn;
-        this.addEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+        this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
     }
 
     private _onadvertisementreceived: (ev: Event) => void;
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
-            this.removeEventListener("advertisementreceived", this._onadvertisementreceived);
+            this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
         }
         this._onadvertisementreceived = fn;
-        this.addEventListener("advertisementreceived", this._onadvertisementreceived);
+        this.addEventListener('advertisementreceived', this._onadvertisementreceived);
     }
 
     /**
@@ -172,17 +172,13 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
      * Starts watching adverts from this device (not implemented)
      */
     public watchAdvertisements(): Promise<void> {
-        return new Promise((_resolve, reject) => {
-            reject("watchAdvertisements error: method not implemented");
-        });
+        throw new Error('watchAdvertisements error: method not implemented');
     }
 
     /**
      * Stops watching adverts from this device (not implemented)
      */
-    public unwatchAdvertisements() {
-        return new Promise((_resolve, reject) => {
-            reject("unwatchAdvertisements error: method not implemented");
-        });
+    public unwatchAdvertisements(): Promise<void> {
+        throw new Error('unwatchAdvertisements error: method not implemented');
     }
 }

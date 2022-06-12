@@ -23,13 +23,15 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from "./dispatcher";
-import { BluetoothRemoteGATTService } from "./service";
-import { BluetoothRemoteGATTDescriptor } from "./descriptor";
-import { getDescriptorUUID } from "./helpers";
-import { adapter } from "./adapter";
-import { W3CBluetoothRemoteGATTCharacteristic } from "./interfaces";
-import { DOMEvent } from "./events";
+import { EventDispatcher, TypedDispatcher } from './dispatcher';
+import { BluetoothRemoteGATTService } from './service';
+import { BluetoothRemoteGATTDescriptor } from './descriptor';
+import { getDescriptorUUID } from './helpers';
+import { adapter } from './adapter';
+import { W3CBluetoothRemoteGATTCharacteristic } from './interfaces';
+import { DOMEvent } from './events';
+
+const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
  * @hidden
@@ -49,19 +51,19 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTService = null;
+    public readonly service: BluetoothRemoteGATTService = undefined;
 
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid = null;
+    public readonly uuid = undefined;
 
     /**
      * The properties of the characteristic
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView = null;
+    private _value: DataView = undefined;
     /**
      * The value of the characteristic
      */
@@ -69,16 +71,16 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
         return this._value;
     }
 
-    private handle: string = null;
-    private descriptors: Array<BluetoothRemoteGATTDescriptor> = null;
+    private handle: string = undefined;
+    private descriptors: Array<BluetoothRemoteGATTDescriptor> = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
-            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
         }
         this._oncharacteristicvaluechanged = fn;
-        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
     /**
@@ -99,10 +101,10 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     private setValue(value?: DataView, emit?: boolean) {
         this._value = value;
         if (emit) {
-            this.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
-            this.service.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
-            this.service.device.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
-            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, "characteristicvaluechanged"));
+            this.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+            this.service.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+            this.service.device.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
         }
     }
 
@@ -111,20 +113,21 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
      * @param descriptor descriptor UUID
      * @returns Promise containing the descriptor
      */
-    public getDescriptor(descriptor: string | number): Promise<BluetoothRemoteGATTDescriptor> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("getDescriptor error: device not connected");
-            if (!descriptor) return reject("getDescriptor error: no descriptor specified");
+    public async getDescriptor(descriptor: string | number): Promise<BluetoothRemoteGATTDescriptor> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('getDescriptor error: device not connected');
+        }
 
-            this.getDescriptors(descriptor)
-            .then(descriptors => {
-                if (descriptors.length !== 1) return reject("getDescriptor error: descriptor not found");
-                resolve(descriptors[0]);
-            })
-            .catch(error =>  {
-                reject(`getDescriptor error: ${error}`);
-            });
-        });
+        if (!descriptor) {
+            throw new Error('getDescriptor error: no descriptor specified');
+        }
+
+        const descriptors = await this.getDescriptors(descriptor);
+        if (descriptors.length !== 1) {
+            throw new Error('getDescriptor error: descriptor not found');
+        }
+
+        return descriptors[0];
     }
 
     /**
@@ -132,158 +135,121 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
      * @param descriptor descriptor UUID
      * @returns Promise containing an array of descriptors
      */
-    public getDescriptors(descriptor?: string | number): Promise<Array<BluetoothRemoteGATTDescriptor>> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("getDescriptors error: device not connected");
+    public async getDescriptors(descriptor?: string | number): Promise<Array<BluetoothRemoteGATTDescriptor>> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('getDescriptors error: device not connected');
+        }
 
-            function complete() {
-                if (!descriptor) return resolve(this.descriptors);
-
-                const filtered = this.descriptors.filter(descriptorObject => {
-                    return (descriptorObject.uuid === getDescriptorUUID(descriptor));
+        if (!this.descriptors) {
+            const descriptors = await adapter.discoverDescriptors(this.handle);
+            this.descriptors = descriptors.map(descriptorInfo => {
+                Object.assign(descriptorInfo, {
+                    characteristic: this
                 });
-
-                if (filtered.length !== 1) return reject("getDescriptors error: descriptor not found");
-                resolve(filtered);
-            }
-
-            if (this.descriptors) return complete.call(this);
-
-            adapter.discoverDescriptors(this.handle, [], descriptors => {
-                this.descriptors = descriptors.map(descriptorInfo => {
-                    Object.assign(descriptorInfo, {
-                        characteristic: this
-                    });
-                    return new BluetoothRemoteGATTDescriptor(descriptorInfo);
-                });
-
-                complete.call(this);
-            }, error => {
-                reject(`getDescriptors error: ${error}`);
+                return new BluetoothRemoteGATTDescriptor(descriptorInfo);
             });
-        });
+        }
+
+        if (!descriptor) {
+            return this.descriptors;
+        }
+
+        const filtered = this.descriptors.filter(descriptorObject => descriptorObject.uuid === getDescriptorUUID(descriptor));
+
+        if (filtered.length !== 1) {
+            throw new Error('getDescriptors error: descriptor not found');
+        }
+        return filtered;
     }
 
     /**
      * Gets the value of the characteristic
      * @returns Promise containing the value
      */
-    public readValue(): Promise<DataView> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("readValue error: device not connected");
+    public async readValue(): Promise<DataView> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('readValue error: device not connected');
+        }
 
-            adapter.readCharacteristic(this.handle, dataView => {
-                this.setValue(dataView, true);
-                resolve(dataView);
-            }, error => {
-                reject(`readValue error: ${error}`);
-            });
-        });
+        const dataView = await adapter.readCharacteristic(this.handle);
+        this.setValue(dataView, true);
+        return dataView;
     }
 
     /**
      * Updates the value of the characteristic
      * @param value The value to write
      */
-    public writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
+    public async writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('writeValue error: device not connected');
+        }
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
+        const arrayBuffer = isView(value) ? value.buffer : value;
+        const dataView = new DataView(arrayBuffer);
 
-            const arrayBuffer = isView(value) ? value.buffer : value;
-            const dataView = new DataView(arrayBuffer);
-
-            adapter.writeCharacteristic(this.handle, dataView, () => {
-                this.setValue (dataView);
-                resolve();
-            }, error => {
-                reject(`writeValue error: ${error}`);
-            });
-        });
+        await adapter.writeCharacteristic(this.handle, dataView);
+        this.setValue(dataView);
     }
 
     /**
      * Updates the value of the characteristic and waits for a response
      * @param value The value to write
      */
-    public writeValueWithResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
+    public async writeValueWithResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('writeValue error: device not connected');
+        }
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
+        const arrayBuffer = isView(value) ? value.buffer : value;
+        const dataView = new DataView(arrayBuffer);
 
-            const arrayBuffer = isView(value) ? value.buffer : value;
-            const dataView = new DataView(arrayBuffer);
-
-            adapter.writeCharacteristic(this.handle, dataView, () => {
-                this.setValue (dataView);
-                resolve();
-            }, error => {
-                reject(`writeValue error: ${error}`);
-            }, false);
-        });
+        await adapter.writeCharacteristic(this.handle, dataView, false);
+        this.setValue(dataView);
     }
 
     /**
      * Updates the value of the characteristic without waiting for a response
      * @param value The value to write
      */
-    public writeValueWithoutResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("writeValue error: device not connected");
+    public async writeValueWithoutResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('writeValue error: device not connected');
+        }
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
+        const arrayBuffer = isView(value) ? value.buffer : value;
+        const dataView = new DataView(arrayBuffer);
 
-            const arrayBuffer = isView(value) ? value.buffer : value;
-            const dataView = new DataView(arrayBuffer);
-
-            adapter.writeCharacteristic(this.handle, dataView, () => {
-                this.setValue (dataView);
-                resolve();
-            }, error => {
-                reject(`writeValue error: ${error}`);
-            }, true);
-        });
+        await adapter.writeCharacteristic(this.handle, dataView, true);
+        this.setValue(dataView);
     }
 
     /**
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public startNotifications(): Promise<W3CBluetoothRemoteGATTCharacteristic> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("startNotifications error: device not connected");
+    public async startNotifications(): Promise<W3CBluetoothRemoteGATTCharacteristic> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('startNotifications error: device not connected');
+        }
 
-            adapter.enableNotify(this.handle, dataView => {
-                this.setValue(dataView, true);
-            }, () => {
-                resolve(this);
-            }, error => {
-                reject(`startNotifications error: ${error}`);
-            });
+        await adapter.enableNotify(this.handle, dataView => {
+            this.setValue(dataView, true);
         });
+
+        return this;
     }
 
     /**
      * Stop notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
-        return new Promise((resolve, reject) => {
-            if (!this.service.device.gatt.connected) return reject("stopNotifications error: device not connected");
+    public async stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+        if (!this.service.device.gatt.connected) {
+            throw new Error('stopNotifications error: device not connected');
+        }
 
-            adapter.disableNotify(this.handle, () => {
-                resolve(this);
-            }, error => {
-                reject(`stopNotifications error: ${error}`);
-            });
-        });
+        await adapter.disableNotify(this.handle);
+        return this;
     }
 }

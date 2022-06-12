@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { Bluetooth, BluetoothOptions } from "./bluetooth";
+import { Bluetooth, BluetoothOptions } from './bluetooth';
 
 /**
  * Default bluetooth instance synonymous with `navigator.bluetooth`
@@ -38,4 +38,4 @@ export { Bluetooth, BluetoothOptions };
 /**
  * Helper methods and enums
  */
-export * from "./helpers";
+export * from './helpers';

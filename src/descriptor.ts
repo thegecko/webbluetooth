@@ -23,8 +23,8 @@
 * SOFTWARE.
 */
 
-import { adapter } from "./adapter";
-import { W3CBluetoothRemoteGATTDescriptor } from "./interfaces";
+import { adapter } from './adapter';
+import { W3CBluetoothRemoteGATTDescriptor } from './interfaces';
 
 /**
  * Bluetooth Remote GATT Descriptor class
@@ -34,14 +34,14 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
     /**
      * The characteristic the descriptor is related to
      */
-    public readonly characteristic: BluetoothRemoteGATTCharacteristic = null;
+    public readonly characteristic: BluetoothRemoteGATTCharacteristic = undefined;
 
     /**
      * The unique identifier of the descriptor
      */
-    public readonly uuid: string = null;
+    public readonly uuid: string = undefined;
 
-    private _value: DataView = null;
+    private _value: DataView = undefined;
     /**
      * The value of the descriptor
      */
@@ -49,7 +49,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
         return this._value;
     }
 
-    private handle: string = null;
+    private handle: string = undefined;
 
     /**
      * Descriptor constructor
@@ -67,40 +67,30 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
      * Gets the value of the descriptor
      * @returns Promise containing the value
      */
-    public readValue(): Promise<DataView> {
-        return new Promise((resolve, reject) =>  {
-            if (!this.characteristic.service.device.gatt.connected) return reject("readValue error: device not connected");
+    public async readValue(): Promise<DataView> {
+        if (!this.characteristic.service.device.gatt.connected) {
+            throw new Error('readValue error: device not connected');
+        }
 
-            adapter.readDescriptor(this.handle, dataView => {
-                this._value = dataView;
-                resolve(dataView);
-            }, error => {
-                reject(`readValue error: ${error}`);
-            });
-        });
+        const dataView = await adapter.readDescriptor(this.handle);
+        this._value = dataView;
+        return dataView;
     }
 
     /**
      * Updates the value of the descriptor
      * @param value The value to write
      */
-    public writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.characteristic.service.device.gatt.connected) return reject("writeValue error: device not connected");
+    public async writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+        if (!this.characteristic.service.device.gatt.connected) {
+            throw new Error('writeValue error: device not connected');
+        }
 
-            function isView(source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView {
-                return (source as ArrayBufferView).buffer !== undefined;
-            }
+        const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
+        const arrayBuffer = isView(value) ? value.buffer : value;
+        const dataView = new DataView(arrayBuffer);
 
-            const arrayBuffer = isView(value) ? value.buffer : value;
-            const dataView = new DataView(arrayBuffer);
-
-            adapter.writeDescriptor(this.handle, dataView, () => {
-                this._value = dataView;
-                resolve();
-            }, error => {
-                reject(`writeValue error: ${error}`);
-            });
-        });
+        await adapter.writeDescriptor(this.handle, dataView);
+        this._value = dataView;
     }
 }

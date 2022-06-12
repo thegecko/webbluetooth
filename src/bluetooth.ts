@@ -23,12 +23,12 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from "./dispatcher";
-import { BluetoothDevice, BluetoothDeviceEvents } from "./device";
-import { getServiceUUID } from "./helpers";
-import { adapter, NobleAdapter } from "./adapter";
-import { W3CBluetooth } from "./interfaces";
-import { DOMEvent } from "./events";
+import { EventDispatcher, TypedDispatcher } from './dispatcher';
+import { BluetoothDevice, BluetoothDeviceEvents } from './device';
+import { getServiceUUID } from './helpers';
+import { adapter, NobleAdapter } from './adapter';
+import { W3CBluetooth } from './interfaces';
+import { DOMEvent } from './events';
 
 /**
  * Bluetooth Options interface
@@ -69,78 +69,78 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * Bluetooth Availability Changed event
      * @event
      */
-    public static EVENT_AVAILABILITY: string = "availabilitychanged";
+    public static EVENT_AVAILABILITY = 'availabilitychanged';
 
     /**
      * Referring device for the bluetooth instance
      */
     public readonly referringDevice?: BluetoothDevice;
 
-    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = null;
+    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
     private scanTime: number = 10.24 * 1000;
-    private scanner = null;
+    private scanner = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
-            this.removeEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
         }
         this._oncharacteristicvaluechanged = fn;
-        this.addEventListener("characteristicvaluechanged", this._oncharacteristicvaluechanged);
+        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
     private _onserviceadded: (ev: Event) => void;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
-            this.removeEventListener("serviceadded", this._onserviceadded);
+            this.removeEventListener('serviceadded', this._onserviceadded);
         }
         this._onserviceadded = fn;
-        this.addEventListener("serviceadded", this._onserviceadded);
+        this.addEventListener('serviceadded', this._onserviceadded);
     }
 
     private _onservicechanged: (ev: Event) => void;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
-            this.removeEventListener("servicechanged", this._onservicechanged);
+            this.removeEventListener('servicechanged', this._onservicechanged);
         }
         this._onservicechanged = fn;
-        this.addEventListener("servicechanged", this._onservicechanged);
+        this.addEventListener('servicechanged', this._onservicechanged);
     }
 
     private _onserviceremoved: (ev: Event) => void;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
-            this.removeEventListener("serviceremoved", this._onserviceremoved);
+            this.removeEventListener('serviceremoved', this._onserviceremoved);
         }
         this._onserviceremoved = fn;
-        this.addEventListener("serviceremoved", this._onserviceremoved);
+        this.addEventListener('serviceremoved', this._onserviceremoved);
     }
 
     private _ongattserverdisconnected: (ev: Event) => void;
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
-            this.removeEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+            this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
         }
         this._ongattserverdisconnected = fn;
-        this.addEventListener("gattserverdisconnected", this._ongattserverdisconnected);
+        this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
     }
 
     private _onadvertisementreceived: (ev: Event) => void;
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
-            this.removeEventListener("advertisementreceived", this._onadvertisementreceived);
+            this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
         }
         this._onadvertisementreceived = fn;
-        this.addEventListener("advertisementreceived", this._onadvertisementreceived);
+        this.addEventListener('advertisementreceived', this._onadvertisementreceived);
     }
 
     private _onavailabilitychanged: (ev: Event) => void;
     public set onavailabilitychanged(fn: (ev: Event) => void) {
         if (this._onavailabilitychanged) {
-            this.removeEventListener("availabilitychanged", this._onavailabilitychanged);
+            this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
         }
         this._onavailabilitychanged = fn;
-        this.addEventListener("availabilitychanged", this._onavailabilitychanged);
+        this.addEventListener('availabilitychanged', this._onavailabilitychanged);
     }
 
     /**
@@ -156,7 +156,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         if (options.scanTime) this.scanTime = options.scanTime * 1000;
 
         adapter.on(NobleAdapter.EVENT_ENABLED, _value => {
-            this.dispatchEvent(new DOMEvent(this, "availabilitychanged"));
+            this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
         });
     }
 
@@ -196,11 +196,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @returns Promise containing a flag indicating bluetooth availability
      */
     public getAvailability(): Promise<boolean> {
-        return new Promise((resolve, _reject) => {
-            adapter.getEnabled(enabled => {
-                resolve(enabled);
-            });
-        });
+        return adapter.getEnabled();
     }
 
     /**
@@ -209,72 +205,72 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @returns Promise containing a device which matches the options
      */
     public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
-        return new Promise((resolve, reject) => {
+        if (this.scanner !== undefined) {
+            throw new Error('requestDevice error: request in progress');
+        }
 
-            if (this.scanner !== null) return reject("requestDevice error: request in progress");
+        interface Filtered {
+            filters: Array<BluetoothRequestDeviceFilter>;
+            optionalServices?: Array<BluetoothServiceUUID>;
+        }
 
-            interface Filtered {
-                filters: Array<BluetoothRequestDeviceFilter>;
-                optionalServices?: Array<BluetoothServiceUUID>;
+        interface AcceptAll {
+            acceptAllDevices: boolean;
+            optionalServices?: Array<BluetoothServiceUUID>;
+        }
+
+        const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
+            (maybeFiltered as Filtered).filters !== undefined;
+
+        const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
+            (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+
+        let searchUUIDs = [];
+
+        if (isFiltered(options)) {
+            // Must have a filter
+            if (options.filters.length === 0) {
+                throw new TypeError('requestDevice error: no filters specified');
             }
 
-            interface AcceptAll {
-                acceptAllDevices: boolean;
-                optionalServices?: Array<BluetoothServiceUUID>;
+            // Don't allow empty filters
+            const emptyFilter = options.filters.some(filter => {
+                return (Object.keys(filter).length === 0);
+            });
+            if (emptyFilter) {
+                throw new TypeError('requestDevice error: empty filter specified');
             }
 
-            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
-                (maybeFiltered as Filtered).filters !== undefined;
-
-            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
-                (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
-
-            let searchUUIDs = [];
-
-            if (isFiltered(options)) {
-                // Must have a filter
-                if (options.filters.length === 0) {
-                    return reject(new TypeError("requestDevice error: no filters specified"));
-                }
-
-                // Don't allow empty filters
-                const emptyFilter = options.filters.some(filter => {
-                    return (Object.keys(filter).length === 0);
-                });
-                if (emptyFilter) {
-                    return reject(new TypeError("requestDevice error: empty filter specified"));
-                }
-
-                // Don't allow empty namePrefix
-                const emptyPrefix = options.filters.some(filter => {
-                    return (typeof filter.namePrefix !== "undefined" && filter.namePrefix === "");
-                });
-                if (emptyPrefix) {
-                    return reject(new TypeError("requestDevice error: empty namePrefix specified"));
-                }
-
-                options.filters.forEach(filter => {
-                    if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
-
-                    // Unique-ify
-                    searchUUIDs = searchUUIDs.filter((item, index, array) => {
-                        return array.indexOf(item) === index;
-                    });
-                });
-            } else if (!isAcceptAll(options)) {
-                return reject(new TypeError("requestDevice error: specify filters or acceptAllDevices"));
+            // Don't allow empty namePrefix
+            const emptyPrefix = options.filters.some(filter => {
+                return (typeof filter.namePrefix !== 'undefined' && filter.namePrefix === '');
+            });
+            if (emptyPrefix) {
+                throw new TypeError('requestDevice error: empty namePrefix specified');
             }
 
+            options.filters.forEach(filter => {
+                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
+
+                // Unique-ify
+                searchUUIDs = searchUUIDs.filter((item, index, array) => {
+                    return array.indexOf(item) === index;
+                });
+            });
+        } else if (!isAcceptAll(options)) {
+            throw new TypeError('requestDevice error: specify filters or acceptAllDevices');
+        }
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
             let found = false;
-            adapter.startScan(searchUUIDs, deviceInfo => {
+            await adapter.startScan(searchUUIDs, deviceInfo => {
                 let validServices = [];
 
-                function complete(bluetoothDevice) {
-                    this.cancelRequest()
-                    .then(() => {
-                        resolve(bluetoothDevice);
-                    });
-                }
+                const complete = async bluetoothDevice => {
+                    await this.cancelRequest();
+                    resolve(bluetoothDevice);
+                };
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
@@ -300,37 +296,34 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
 
                     const bluetoothDevice = new BluetoothDevice(deviceInfo);
 
-                    function selectFn() {
+                    const selectFn = () => {
                         complete.call(this, bluetoothDevice);
-                    }
+                    };
 
                     if (!this.deviceFound || this.deviceFound(bluetoothDevice, selectFn.bind(this)) === true) {
                         // If no deviceFound function, or deviceFound returns true, resolve with this device immediately
                         complete.call(this, bluetoothDevice);
                     }
                 }
-            }, () => {
-                this.scanner = setTimeout(() => {
-                    this.cancelRequest()
-                    .then(() => {
-                        if (!found) reject("requestDevice error: no devices found");
-                    });
-                }, this.scanTime);
-            }, error => reject(`requestDevice error: ${error}`));
+            });
+
+            this.scanner = setTimeout(() => {
+                this.cancelRequest();
+                if (!found) {
+                    reject('requestDevice error: no devices found');
+                }
+            }, this.scanTime);
         });
     }
 
     /**
      * Cancels the scan for devices
      */
-    public cancelRequest(): Promise<void> {
-        return new Promise((resolve, _reject) => {
-            if (this.scanner) {
-                clearTimeout(this.scanner);
-                this.scanner = null;
-                adapter.stopScan();
-            }
-            resolve();
-        });
+    public async cancelRequest(): Promise<void> {
+        if (this.scanner) {
+            clearTimeout(this.scanner);
+            this.scanner = undefined;
+            adapter.stopScan();
+        }
     }
 }
