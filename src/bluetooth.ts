@@ -196,11 +196,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @returns Promise containing a flag indicating bluetooth availability
      */
     public getAvailability(): Promise<boolean> {
-        return new Promise((resolve, _reject) => {
-            adapter.getEnabled(enabled => {
-                resolve(enabled);
-            });
-        });
+        return adapter.getEnabled();
     }
 
     /**
@@ -209,71 +205,71 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
      * @returns Promise containing a device which matches the options
      */
     public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
-        return new Promise((resolve, reject) => {
+        if (this.scanner !== null) {
+            throw new Error('requestDevice error: request in progress');
+        }
 
-            if (this.scanner !== null) return reject('requestDevice error: request in progress');
+        interface Filtered {
+            filters: Array<BluetoothRequestDeviceFilter>;
+            optionalServices?: Array<BluetoothServiceUUID>;
+        }
 
-            interface Filtered {
-                filters: Array<BluetoothRequestDeviceFilter>;
-                optionalServices?: Array<BluetoothServiceUUID>;
+        interface AcceptAll {
+            acceptAllDevices: boolean;
+            optionalServices?: Array<BluetoothServiceUUID>;
+        }
+
+        const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
+            (maybeFiltered as Filtered).filters !== undefined;
+
+        const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
+            (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+
+        let searchUUIDs = [];
+
+        if (isFiltered(options)) {
+            // Must have a filter
+            if (options.filters.length === 0) {
+                throw new TypeError('requestDevice error: no filters specified');
             }
 
-            interface AcceptAll {
-                acceptAllDevices: boolean;
-                optionalServices?: Array<BluetoothServiceUUID>;
+            // Don't allow empty filters
+            const emptyFilter = options.filters.some(filter => {
+                return (Object.keys(filter).length === 0);
+            });
+            if (emptyFilter) {
+                throw new TypeError('requestDevice error: empty filter specified');
             }
 
-            const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
-                (maybeFiltered as Filtered).filters !== undefined;
-
-            const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
-                (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
-
-            let searchUUIDs = [];
-
-            if (isFiltered(options)) {
-                // Must have a filter
-                if (options.filters.length === 0) {
-                    return reject(new TypeError('requestDevice error: no filters specified'));
-                }
-
-                // Don't allow empty filters
-                const emptyFilter = options.filters.some(filter => {
-                    return (Object.keys(filter).length === 0);
-                });
-                if (emptyFilter) {
-                    return reject(new TypeError('requestDevice error: empty filter specified'));
-                }
-
-                // Don't allow empty namePrefix
-                const emptyPrefix = options.filters.some(filter => {
-                    return (typeof filter.namePrefix !== 'undefined' && filter.namePrefix === '');
-                });
-                if (emptyPrefix) {
-                    return reject(new TypeError('requestDevice error: empty namePrefix specified'));
-                }
-
-                options.filters.forEach(filter => {
-                    if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
-
-                    // Unique-ify
-                    searchUUIDs = searchUUIDs.filter((item, index, array) => {
-                        return array.indexOf(item) === index;
-                    });
-                });
-            } else if (!isAcceptAll(options)) {
-                return reject(new TypeError('requestDevice error: specify filters or acceptAllDevices'));
+            // Don't allow empty namePrefix
+            const emptyPrefix = options.filters.some(filter => {
+                return (typeof filter.namePrefix !== 'undefined' && filter.namePrefix === '');
+            });
+            if (emptyPrefix) {
+                throw new TypeError('requestDevice error: empty namePrefix specified');
             }
 
+            options.filters.forEach(filter => {
+                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
+
+                // Unique-ify
+                searchUUIDs = searchUUIDs.filter((item, index, array) => {
+                    return array.indexOf(item) === index;
+                });
+            });
+        } else if (!isAcceptAll(options)) {
+            throw new TypeError('requestDevice error: specify filters or acceptAllDevices');
+        }
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
             let found = false;
-            adapter.startScan(searchUUIDs, deviceInfo => {
+            await adapter.startScan(searchUUIDs, deviceInfo => {
                 let validServices = [];
 
-                const complete = bluetoothDevice => {
-                    this.cancelRequest()
-                        .then(() => {
-                            resolve(bluetoothDevice);
-                        });
+                const complete = async bluetoothDevice => {
+                    await this.cancelRequest();
+                    resolve(bluetoothDevice);
                 };
 
                 // filter devices if filters specified
@@ -309,28 +305,25 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                         complete.call(this, bluetoothDevice);
                     }
                 }
-            }, () => {
-                this.scanner = setTimeout(() => {
-                    this.cancelRequest()
-                        .then(() => {
-                            if (!found) reject('requestDevice error: no devices found');
-                        });
-                }, this.scanTime);
-            }, error => reject(`requestDevice error: ${error}`));
+            });
+
+            this.scanner = setTimeout(() => {
+                this.cancelRequest();
+                if (!found) {
+                    reject('requestDevice error: no devices found');
+                }
+            }, this.scanTime);
         });
     }
 
     /**
      * Cancels the scan for devices
      */
-    public cancelRequest(): Promise<void> {
-        return new Promise((resolve, _reject) => {
-            if (this.scanner) {
-                clearTimeout(this.scanner);
-                this.scanner = null;
-                adapter.stopScan();
-            }
-            resolve();
-        });
+    public async cancelRequest(): Promise<void> {
+        if (this.scanner) {
+            clearTimeout(this.scanner);
+            this.scanner = undefined;
+            adapter.stopScan();
+        }
     }
 }
