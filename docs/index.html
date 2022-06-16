@@ -1,0 +1,330 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Node Web Bluetooth</title>
+	<meta name="description" content="Documentation for Node Web Bluetooth">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">Node Web Bluetooth</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>Node Web Bluetooth</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#node-web-bluetooth" id="node-web-bluetooth" style="color: inherit; text-decoration: none;">
+					<h1>Node Web Bluetooth</h1>
+				</a>
+				<p>Node.js implementation of the Web Bluetooth Specification</p>
+				<p><a href="https://github.com/thegecko/webbluetooth/actions"><img src="https://github.com/thegecko/webbluetooth/workflows/ci/badge.svg" alt="Build Status"></a>
+					<a href="https://www.npmjs.com/package/webbluetooth"><img src="https://img.shields.io/npm/dm/webbluetooth.svg" alt="npm"></a>
+				<a href="http://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/licence-MIT-blue.svg" alt="Licence MIT"></a></p>
+				<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
+					<h2>Prerequisites</h2>
+				</a>
+				<p><a href="https://nodejs.org">Node.js &gt; v10.16.0</a>, which includes <code>npm</code>.</p>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h2>Installation</h2>
+				</a>
+				<pre><code class="language-bash"><span style="color: #000000">$ npm install webbluetooth</span>
+</code></pre>
+				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+					<h2>Getting Started</h2>
+				</a>
+				<p>See the <a href="https://github.com/thegecko/webbluetooth/tree/master/examples/">examples</a> or view the API documentation at:</p>
+				<p><a href="https://thegecko.github.io/webbluetooth/">https://thegecko.github.io/webbluetooth/</a></p>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h2>Usage</h2>
+				</a>
+				<p>The module exports a default <code>navigator.bluetooth</code> instance, the <code>Bluetooth</code> class to allow you to instantiate your own bluetooth instances and some helper methods:</p>
+				<ul>
+					<li><a href="globals.html#bluetooth">bluetooth</a></li>
+					<li><a href="classes/bluetooth.html">Bluetooth()</a></li>
+					<li><a href="globals.html#getcanonicaluuid">getCanonicalUUID()</a></li>
+					<li><a href="globals.html#getserviceuuid">getServiceUUID()</a></li>
+					<li><a href="globals.html#getcharacteristicuuid">getCharacteristicUUID()</a></li>
+					<li><a href="globals.html#getdescriptoruuid">getDescriptorUUID()</a></li>
+				</ul>
+				<a href="#using-the-default-bluetooth-instance" id="using-the-default-bluetooth-instance" style="color: inherit; text-decoration: none;">
+					<h3>Using the default bluetooth instance</h3>
+				</a>
+				<p>To use existing Web Bluetooth scripts, you can simply use the default <code>bluetooth</code> instance in place of the <code>navigator.bluetooth</code> object:</p>
+				<pre><code class="language-JavaScript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">bluetooth</span><span style="color: #000000"> = </span><span style="color: #795E26">require</span><span style="color: #000000">(</span><span style="color: #A31515">&quot;webbluetooth&quot;</span><span style="color: #000000">).</span><span style="color: #001080">bluetooth</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">device</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">bluetooth</span><span style="color: #000000">.</span><span style="color: #795E26">requestDevice</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">filters:</span><span style="color: #000000">[{ </span><span style="color: #001080">services:</span><span style="color: #000000">[ </span><span style="color: #A31515">&quot;heart_rate&quot;</span><span style="color: #000000"> ] }]</span>
+<span style="color: #000000">});</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">server</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">device</span><span style="color: #000000">.</span><span style="color: #001080">gatt</span><span style="color: #000000">.</span><span style="color: #795E26">connect</span><span style="color: #000000">();</span>
+<span style="color: #000000">...</span>
+</code></pre>
+				<p>The first device matching the filters will be returned.</p>
+				<a href="#creating-your-own-bluetooth-instances" id="creating-your-own-bluetooth-instances" style="color: inherit; text-decoration: none;">
+					<h3>Creating your own bluetooth instances</h3>
+				</a>
+				<p>You may want to create your own instance of the <code>Bluetooth</code> class. For example, to inject a device chooser function or control the referring device:</p>
+				<pre><code class="language-JavaScript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">Bluetooth</span><span style="color: #000000"> = </span><span style="color: #795E26">require</span><span style="color: #000000">(</span><span style="color: #A31515">&quot;webbluetooth&quot;</span><span style="color: #000000">).</span><span style="color: #001080">Bluetooth</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #795E26">deviceFound</span><span style="color: #000000"> = (</span><span style="color: #001080">device</span><span style="color: #000000">, </span><span style="color: #001080">selectFn</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #008000">// If device can be automatically selected, do so by returning true</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (</span><span style="color: #001080">device</span><span style="color: #000000">.</span><span style="color: #001080">name</span><span style="color: #000000"> === </span><span style="color: #A31515">&quot;myName&quot;</span><span style="color: #000000">) </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #0000FF">true</span><span style="color: #000000">;</span>
+
+<span style="color: #000000">    </span><span style="color: #008000">// Otherwise store the selectFn somewhere and execute it later to select this device</span>
+<span style="color: #000000">};</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">bluetooth</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Bluetooth</span><span style="color: #000000">({ </span><span style="color: #001080">deviceFound</span><span style="color: #000000"> });</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">device</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">bluetooth</span><span style="color: #000000">.</span><span style="color: #795E26">requestDevice</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">filters:</span><span style="color: #000000">[{ </span><span style="color: #001080">services:</span><span style="color: #000000">[ </span><span style="color: #A31515">&quot;heart_rate&quot;</span><span style="color: #000000"> ] }]</span>
+<span style="color: #000000">});</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">server</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">device</span><span style="color: #000000">.</span><span style="color: #001080">gatt</span><span style="color: #000000">.</span><span style="color: #795E26">connect</span><span style="color: #000000">();</span>
+<span style="color: #000000">...</span>
+</code></pre>
+				<a href="#specification" id="specification" style="color: inherit; text-decoration: none;">
+					<h2>Specification</h2>
+				</a>
+				<p>The Web Bluetooth specification can be found here:</p>
+				<p><a href="https://webbluetoothcg.github.io/web-bluetooth/">https://webbluetoothcg.github.io/web-bluetooth/</a></p>
+				<a href="#implementation-status" id="implementation-status" style="color: inherit; text-decoration: none;">
+					<h2>Implementation Status</h2>
+				</a>
+				<a href="#bluetooth" id="bluetooth" style="color: inherit; text-decoration: none;">
+					<h3>bluetooth</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> referringDevice - specification unstable</li>
+					<li><input checked="" disabled="" type="checkbox"> getAvailability() - specification unstable</li>
+					<li><input checked="" disabled="" type="checkbox"> requestDevice()</li>
+					<li><input checked="" disabled="" type="checkbox"> getDevices()</li>
+					<li><input checked="" disabled="" type="checkbox"> RequestDeviceOptions.name</li>
+					<li><input checked="" disabled="" type="checkbox"> RequestDeviceOptions.namePrefix</li>
+					<li><input checked="" disabled="" type="checkbox"> RequestDeviceOptions.services</li>
+					<li><input checked="" disabled="" type="checkbox"> RequestDeviceOptions.optionalServices</li>
+					<li><input checked="" disabled="" type="checkbox"> RequestDeviceOptions.acceptAllDevices</li>
+					<li><input disabled="" type="checkbox"> RequestDeviceOptions.manufacturerData - specification unstable</li>
+					<li><input disabled="" type="checkbox"> RequestDeviceOptions.serviceData - specification unstable</li>
+				</ul>
+				<a href="#bluetoothdevice" id="bluetoothdevice" style="color: inherit; text-decoration: none;">
+					<h3>BluetoothDevice</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> id</li>
+					<li><input checked="" disabled="" type="checkbox"> name</li>
+					<li><input checked="" disabled="" type="checkbox"> gatt</li>
+					<li><input disabled="" type="checkbox"> forget</li>
+					<li><input disabled="" type="checkbox"> watchingAdvertisements - specification unstable</li>
+					<li><input disabled="" type="checkbox"> watchAdvertisements() - specification unstable</li>
+					<li><input disabled="" type="checkbox"> unwatchAdvertisements() - specification unstable</li>
+				</ul>
+				<a href="#bluetoothremotegattserver" id="bluetoothremotegattserver" style="color: inherit; text-decoration: none;">
+					<h3>BluetoothRemoteGATTServer</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> connected</li>
+					<li><input checked="" disabled="" type="checkbox"> device</li>
+					<li><input checked="" disabled="" type="checkbox"> connect()</li>
+					<li><input checked="" disabled="" type="checkbox"> disconnect()</li>
+					<li><input checked="" disabled="" type="checkbox"> getPrimaryService()</li>
+					<li><input checked="" disabled="" type="checkbox"> getPrimaryServices()</li>
+				</ul>
+				<a href="#bluetoothremotegattservice" id="bluetoothremotegattservice" style="color: inherit; text-decoration: none;">
+					<h3>BluetoothRemoteGATTService</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> device</li>
+					<li><input checked="" disabled="" type="checkbox"> uuid</li>
+					<li><input checked="" disabled="" type="checkbox"> isPrimary</li>
+					<li><input checked="" disabled="" type="checkbox"> getCharacteristic()</li>
+					<li><input checked="" disabled="" type="checkbox"> getCharacteristics()</li>
+					<li><input checked="" disabled="" type="checkbox"> getIncludedService()</li>
+					<li><input checked="" disabled="" type="checkbox"> getIncludedServices()</li>
+				</ul>
+				<a href="#bluetoothremotegattcharacteristic" id="bluetoothremotegattcharacteristic" style="color: inherit; text-decoration: none;">
+					<h3>BluetoothRemoteGATTCharacteristic</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> service</li>
+					<li><input checked="" disabled="" type="checkbox"> uuid</li>
+					<li><input checked="" disabled="" type="checkbox"> properties</li>
+					<li><input checked="" disabled="" type="checkbox"> value</li>
+					<li><input checked="" disabled="" type="checkbox"> getDescriptor()</li>
+					<li><input checked="" disabled="" type="checkbox"> getDescriptors()</li>
+					<li><input checked="" disabled="" type="checkbox"> readValue()</li>
+					<li><input checked="" disabled="" type="checkbox"> writeValue()</li>
+					<li><input checked="" disabled="" type="checkbox"> writeValueWithResponse()</li>
+					<li><input checked="" disabled="" type="checkbox"> writeValueWithoutResponse()</li>
+					<li><input checked="" disabled="" type="checkbox"> startNotifications()</li>
+					<li><input checked="" disabled="" type="checkbox"> stopNotifications()</li>
+				</ul>
+				<a href="#bluetoothremotegattdescriptor" id="bluetoothremotegattdescriptor" style="color: inherit; text-decoration: none;">
+					<h3>BluetoothRemoteGATTDescriptor</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> characteristic</li>
+					<li><input checked="" disabled="" type="checkbox"> uuid</li>
+					<li><input checked="" disabled="" type="checkbox"> value</li>
+					<li><input checked="" disabled="" type="checkbox"> readValue()</li>
+					<li><input checked="" disabled="" type="checkbox"> writeValue()</li>
+				</ul>
+				<a href="#events" id="events" style="color: inherit; text-decoration: none;">
+					<h3>Events</h3>
+				</a>
+				<a href="#bluetooth-1" id="bluetooth-1" style="color: inherit; text-decoration: none;">
+					<h4>Bluetooth</h4>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> availabilitychanged</li>
+				</ul>
+				<a href="#bluetooth-device" id="bluetooth-device" style="color: inherit; text-decoration: none;">
+					<h4>Bluetooth Device</h4>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> gattserverdisconnected</li>
+					<li><input disabled="" type="checkbox"> advertisementreceived - specification unstable</li>
+				</ul>
+				<a href="#bluetooth-service" id="bluetooth-service" style="color: inherit; text-decoration: none;">
+					<h4>Bluetooth Service</h4>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> serviceadded</li>
+					<li><input disabled="" type="checkbox"> servicechanged - unsupported in noble</li>
+					<li><input disabled="" type="checkbox"> serviceremoved - unsupported in noble</li>
+				</ul>
+				<a href="#bluetooth-characteristic" id="bluetooth-characteristic" style="color: inherit; text-decoration: none;">
+					<h4>Bluetooth Characteristic</h4>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> characteristicvaluechanged</li>
+				</ul>
+				<a href="#other" id="other" style="color: inherit; text-decoration: none;">
+					<h3>Other</h3>
+				</a>
+				<ul>
+					<li><input checked="" disabled="" type="checkbox"> Device selector hook</li>
+					<li><input checked="" disabled="" type="checkbox"> Lookups for known services, characteristics and descriptors</li>
+					<li><input checked="" disabled="" type="checkbox"> Canonical UUID helper</li>
+					<li><input checked="" disabled="" type="checkbox"> Examples</li>
+					<li><input checked="" disabled="" type="checkbox"> API Documentation</li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/adapter.html">adapter</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/bluetooth.html">bluetooth</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/characteristic.html">characteristic</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/descriptor.html">descriptor</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/device.html">device</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/dispatcher.html">dispatcher</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/events.html">events</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/helpers.html">helpers</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/index.html">index</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/interfaces.html">interfaces</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/server.html">server</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/service.html">service</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer>
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
