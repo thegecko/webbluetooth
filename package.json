@@ -29,7 +29,7 @@
   "dependencies": {
     "@abandonware/noble": "1.9.2-15",
     "@types/node": "^10.16.0",
-    "@types/web-bluetooth": "^0.0.5"
+    "@types/web-bluetooth": "^0.0.14"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.28.0",
