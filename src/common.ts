@@ -1,31 +1,84 @@
 /*
-* Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
-*
-* The MIT License (MIT)
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
-
-/**
- * Known services enum
+ * Node Web Bluetooth
+ * Copyright (c) 2019 Rob Moran
+ *
+ * The MIT License (MIT)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
+// Copied from the Deno standard library.
+// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+export function delay(ms: number): Promise<void> {
+    return new Promise((resolve): void => {
+        // No need to keep the return value.
+        setTimeout(resolve, ms);
+    });
+}
+
+function deferred<T>(): any {
+    let methods: any;
+    const promise = new Promise<T>((resolve, reject) => {
+        methods = {
+            async resolve(value: T | PromiseLike<T>) {
+                await value;
+                resolve(value);
+            },
+            reject(reason?: any) {
+                reject(reason);
+            },
+        };
+    });
+    return Object.assign(promise, methods) as Promise<T>;
+}
+
+function createAbortError(reason?: any): DOMException {
+    return new DOMException(
+        reason ? `Aborted: ${reason}` : "Aborted",
+        "AbortError",
+    );
+}
+
+export function abortable<T>(
+    p: Promise<T>,
+    signal: AbortSignal,
+): Promise<T> {
+    if (signal.aborted) {
+        return Promise.reject(createAbortError(signal.reason));
+    }
+    const waiter = deferred<never>();
+    const abort = () => waiter.reject(createAbortError(signal.reason));
+    signal.addEventListener("abort", abort, { once: true });
+    return Promise.race([
+        waiter,
+        p.finally(() => {
+            signal.removeEventListener("abort", abort);
+        }),
+    ]);
+}
+
+/** @hidden Type-safe event registrator. */
+export type CustomEventListener<T, E extends Event> =
+    | ((this: T, event: E) => void | Promise<void>)
+    | { handleEvent(event: E): void | Promise<void> };
+
+/** Known services. */
 export enum bluetoothServices {
     'alert_notification' = 0x1811,
     'automation_io' = 0x1815,
@@ -61,9 +114,7 @@ export enum bluetoothServices {
     'weight_scale' = 0x181D
 }
 
-/**
- * Known characteristics enum
- */
+/** Known characteristics. */
 export enum bluetoothCharacteristics {
     'aerobic_heart_rate_lower_limit' = 0x2A7E,
     'aerobic_heart_rate_upper_limit' = 0x2A84,
@@ -228,9 +279,7 @@ export enum bluetoothCharacteristics {
     'wind_chill' = 0x2A79
 }
 
-/**
- * Known descriptors enum
- */
+/** Known descriptors. */
 export enum bluetoothDescriptors {
     'gatt.characteristic_extended_properties' = 0x2900,
     'gatt.characteristic_user_description' = 0x2901,
@@ -254,11 +303,12 @@ export enum bluetoothDescriptors {
  * @param uuid The partial UUID
  * @returns canonical UUID
  */
-export const getCanonicalUUID = (uuid: string | number): string => {
+export const getCanonicalUUID = (uuid: string | number | undefined): string => {
+    if (!uuid) return "";
     if (typeof uuid === 'number') uuid = uuid.toString(16);
     uuid = uuid.toLowerCase();
     if (uuid.length <= 8) uuid = ('00000000' + uuid).slice(-8) + '-0000-1000-8000-00805f9b34fb';
-    if (uuid.length === 32) uuid = uuid.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/).splice(1).join('-');
+    if (uuid.length === 32) uuid = uuid.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/)!.splice(1).join('-');
     return uuid;
 };
 
@@ -267,7 +317,7 @@ export const getCanonicalUUID = (uuid: string | number): string => {
  * @param service The known service name
  * @returns canonical UUID
  */
-export const getServiceUUID = (service: string | number): string => {
+export const getServiceUUID = (service: string | number | undefined): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof service === 'string' && bluetoothServices[service]) {
         service = bluetoothServices[service];
@@ -281,7 +331,7 @@ export const getServiceUUID = (service: string | number): string => {
  * @param characteristic The known characteristic name
  * @returns canonical UUID
  */
-export const getCharacteristicUUID = (characteristic: string | number): string => {
+export const getCharacteristicUUID = (characteristic: string | number | undefined): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof characteristic === 'string' && bluetoothCharacteristics[characteristic]) {
         characteristic = bluetoothCharacteristics[characteristic];
@@ -295,7 +345,7 @@ export const getCharacteristicUUID = (characteristic: string | number): string =
  * @param descriptor The known descriptor name
  * @returns canonical UUID
  */
-export const getDescriptorUUID = (descriptor: string | number): string => {
+export const getDescriptorUUID = (descriptor: string | number | undefined): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
     if (typeof descriptor === 'string' && bluetoothDescriptors[descriptor]) {
         descriptor = bluetoothDescriptors[descriptor];
@@ -303,3 +353,6 @@ export const getDescriptorUUID = (descriptor: string | number): string => {
 
     return getCanonicalUUID(descriptor);
 };
+
+/** Determine if something is an ArrayBuffer or a ArrayBufferView. */
+export const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;

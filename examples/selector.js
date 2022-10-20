@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-const Bluetooth = require("../").Bluetooth;
+import { bluetooth } from "../";
 const bluetoothDevices = [];
 
 process.stdin.setEncoding("utf8");

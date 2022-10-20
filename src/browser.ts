@@ -25,26 +25,14 @@
  * SOFTWARE.
  */
 
-export * from "./interfaces";
-export * from "./gatt";
-export * from "./bluetooth";
-
-import { Bluetooth } from "./bluetooth";
-import { resolveBindings } from "simpleble";
-
 /**
  * Returns the available WebBluetooth instance.
  */
 export async function getWebBluetooth(): Promise<Bluetooth> {
-  if (navigator && navigator.bluetooth) {
-    // @ts-ignore
-    return navigator.bluetooth;
+  if (!navigator || !navigator.bluetooth) {
+    throw new DOMException("navigator.bluetooth is not defined");
   }
-  const bindings = await resolveBindings();
-  const bluetooth = new Bluetooth(bindings);
-  // @ts-ignore
-  navigator.bluetooth = bluetooth;
-  return bluetooth;
+  return navigator.bluetooth;
 }
 
-export const bluetooth = await getWebBluetooth();
+export const bluetooth = navigator.bluetooth;

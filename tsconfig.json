@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2020",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "lib": ["esnext", "dom"],
         "alwaysStrict": true,
         "noImplicitReturns": true,
         "noEmitOnError": true,
@@ -12,5 +15,12 @@
     },
     "include": [
         "src"
+    ],
+    "exclude": [
+        "deno_dist/",
+        "dist",
+        "node_modules",
+        "src/*.deno.ts",
+        "src/*.bun.ts"
     ]
 }

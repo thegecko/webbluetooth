@@ -1,87 +1,421 @@
 /*
-* Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
-*
-* The MIT License (MIT)
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
-
-import { EventDispatcher, TypedDispatcher } from './dispatcher';
-import { BluetoothDevice, BluetoothDeviceEvents } from './device';
-import { getServiceUUID } from './helpers';
-import { adapter, NobleAdapter } from './adapter';
-import { W3CBluetooth } from './interfaces';
-import { DOMEvent } from './events';
-
-/**
- * Bluetooth Options interface
+ * Node Web Bluetooth
+ * Copyright (c) 2019 Rob Moran
+ *
+ * The MIT License (MIT)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-export interface BluetoothOptions {
-    /**
-     * A `device found` callback function to allow the user to select a device
-     */
-    deviceFound?: (device: BluetoothDevice, selectFn: () => void) => boolean;
 
-    /**
-     * The amount of seconds to scan for the device (default is 10)
-     */
-    scanTime?: number;
+import { abortable, delay, isView } from "./common";
+import { Bindings, Adapter } from "simpleble";
+import { BluetoothDevice, BluetoothDeviceEventMap } from "./gatt";
 
-    /**
-     * An optional referring device
-     */
-    referringDevice?: BluetoothDevice;
-}
+import type {
+    BluetoothLEScanFilter,
+    RequestDeviceInfo,
+    RequestDeviceOptions,
+} from "./interfaces";
 
-/**
- * @hidden
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents {
-    /**
-     * Bluetooth Availability Changed event
-     */
+/** @hidden Events for {@link BluetoothDevice} */
+export interface BluetoothEventMap extends BluetoothDeviceEventMap {
+    /** Bluetooth Availability Changed event. */
     availabilitychanged: Event;
 }
 
 /**
- * Bluetooth class
+ * Bluetooth Options interface.
  */
-export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) implements W3CBluetooth {
+export interface BluetoothOptions {
+    /** A `device found` callback function to allow the user to select a device. */
+    deviceFound?: (device: BluetoothDevice, selectFn: () => void) => boolean;
+    /** The amount of seconds to scan for the device (default is 10). */
+    scanTime?: number;
+    /** An optional referring device. */
+    referringDevice?: BluetoothDevice;
+}
+
+function checkManufacturerData(
+    map: BluetoothManufacturerData,
+    filters: BluetoothManufacturerDataFilter[],
+): boolean {
+    for (const filter of filters) {
+        const { companyIdentifier, dataPrefix } = filter;
+        // Company ID not found; not a match.
+        if (!map.has(companyIdentifier)) {
+            continue;
+        }
+        // If no dataPrefix, then the match was successful.
+        if (!dataPrefix) {
+            return true;
+        }
+        const view = map.get(companyIdentifier);
+        if (!view) {
+            // Not sure if this is correct.
+            continue;
+        }
+        const buffer = isView(dataPrefix) ? dataPrefix.buffer : dataPrefix;
+        const bytes = new Uint8Array(buffer);
+        const values: boolean[] = [];
+        for (const [i, b] of bytes.entries()) {
+            const a = view.getUint8(i);
+            values[i] = a === b;
+        }
+        const valid = values.every((val) => val);
+        if (valid) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/** A Bluetooth adapter. */
+export interface BluetoothAdapter {
+    /** The name of this adapter. */
+    identifier: string;
+    /** The unique address of this adapter. */
+    address: string;
+}
+
+/** Interface for creating {@link BluetoothDevice} objects. */
+export class Bluetooth extends EventTarget {
+    private _bindings: Bindings;
+    private _adapter: Adapter;
+    private _devices: BluetoothDevice[];
+    private _adapters: BluetoothAdapter[] = [];
+    private _oncharacteristicvaluechanged: EventListenerOrEventListenerObject;
+    private _onserviceadded: EventListenerOrEventListenerObject;
+    private _onservicechanged: EventListenerOrEventListenerObject;
+    private _onserviceremoved: EventListenerOrEventListenerObject;
+    private _ongattserverdisconnected: EventListenerOrEventListenerObject;
+    private _onadvertisementreceived: EventListenerOrEventListenerObject;
+    private _onavailabilitychanged: EventListenerOrEventListenerObject;
+
+    /** Never defined on server scripts. */
+    readonly referringDevice?: BluetoothDevice = undefined;
+
+    /** @hidden */
+    constructor(bindings: Bindings) {
+        super();
+        this._bindings = bindings;
+        this._devices = [];
+
+        // NOTE: a global `bluetooth` variable cannot be exported while the
+        // constructor throws an error. Maybe move this.
+        const adaptersCount = this._bindings.simpleble_adapter_get_count();
+        if (adaptersCount === 0) {
+            throw new Error("requestDevice error: no adapters found");
+        }
+
+        for (let i = 0; i < adaptersCount; i++) {
+            const handle = this._bindings.simpleble_adapter_get_handle(i);
+            const identifier = this._bindings.simpleble_adapter_identifier(handle);
+            const address = this._bindings.simpleble_adapter_address(handle);
+            this._adapters.push({
+                identifier,
+                address,
+            });
+            if (i === 0) {
+                this._adapter = handle;
+            } else {
+                //this._bindings.simpleble_adapter_release_handle(handle);
+            }
+        }
+
+        this._adapter = this._bindings.simpleble_adapter_get_handle(0);
+
+        this.dispatchEvent(new Event("availabilitychanged"));
+    }
+
+    /** Set a Bluetooth adapter to use for scanning. */
+    setAdapter(index: number): void {
+        //this._bindings.simpleble_adapter_release_handle(this._adapter);
+        this._adapter = this._bindings.simpleble_adapter_get_handle(index);
+    }
+
+    /** Returns a list of valid Bluetooth adapters. */
+    getAdapters(): Promise<BluetoothAdapter[]> {
+        return Promise.resolve(this._adapters);
+    }
+
+    /** Determines if a working Bluetooth adapter is usable. */
+    getAvailability(): Promise<boolean> {
+        const count = this._bindings.simpleble_adapter_get_count();
+        return Promise.resolve(count > 0);
+    }
+
+    /** Returns a list of every device requested thus far. */
+    getDevices(): Promise<BluetoothDevice[]> {
+        return Promise.resolve(this._devices);
+    }
+
+    private _filterDevice(
+        filters: BluetoothLEScanFilter[],
+        info: RequestDeviceInfo,
+        _validServices: BluetoothServiceUUID[]
+    ): boolean {
+        for (const filter of filters) {
+            if (filter.name && filter.name !== info.name) {
+                continue;
+            }
+
+            if (filter.namePrefix) {
+                if (!info.name || filter.namePrefix.length > info.name.length) {
+                    continue;
+                }
+                if (!info.name.startsWith(filter.namePrefix)) {
+                    continue;
+                }
+            }
+            if (
+                filter.manufacturerData &&
+                !checkManufacturerData(info.manufacturerData, filter.manufacturerData)
+            ) {
+                continue;
+            }
+
+            if (filter.services) {
+                throw new Error("Filtering by services is not supported yet");
+                /*
+                const serviceUUIDs = filter.services.map(getServiceUUID);
+                const servicesValid = serviceUUIDs.every(serviceUUID => {
+                    return (info._serviceUUIDs.indexOf(serviceUUID) > -1);
+                });
+
+                if (!servicesValid) return;
+                validServices = validServices.concat(serviceUUIDs);
+                */
+            }
+            return true;
+        }
+        return false;
+    }
+
 
     /**
-     * Bluetooth Availability Changed event
-     * @event
+     * Scan for Bluetooth devices indefinitely.
+     *
+     * This function is not a part of the WebBluetooth standard. It was made as
+     * a convenience function for long-running programs.
      */
-    public static EVENT_AVAILABILITY = 'availabilitychanged';
+    async *scan(
+        options: RequestDeviceOptions,
+    ): AsyncIterableIterator<BluetoothDevice> {
+        const timeout = options.timeout ?? 200;
+        const signal = options.signal;
+        const ids: string[] = [];
+        const { filter, filters } = options as any;
+
+        if (!filters && !filter) {
+            throw new TypeError("filter or filters must be given");
+        } else if (signal?.aborted) {
+            throw new DOMException("Operation was canceled");
+        }
+
+        const filterCb = this._createFilter(options);
+
+        let done = false;
+
+        options.signal?.addEventListener("abort", () => {
+            done = false;
+        }, { once: true });
+
+        while (!done) {
+            this._bindings.simpleble_adapter_scan_start(this._adapter);
+            await delay(timeout);
+            this._bindings.simpleble_adapter_scan_stop(this._adapter);
+
+            const resultsCount = this._bindings.simpleble_adapter_scan_get_results_count(
+                this._adapter,
+            );
+
+            for (let i = 0; i < resultsCount; i++) {
+                const d = this._bindings.simpleble_adapter_scan_get_results_handle(this._adapter, i);
+                const id = this._bindings.simpleble_peripheral_identifier(d);
+                if (ids.includes(id)) {
+                    continue;
+                }
+                const address = this._bindings.simpleble_peripheral_address(d);
+                const count = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
+                const manufacturerData: BluetoothManufacturerData = new Map();
+                for (let j = 0; j < count; j++) {
+                    const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
+                    if (data) {
+                        manufacturerData.set(data.id, new DataView(data.data.buffer));
+                    }
+                }
+                const found = filterCb({
+                    name: id,
+                    address,
+                    manufacturerData,
+                });
+                if (found) {
+                    const device = new BluetoothDevice(
+                        this._bindings,
+                        d,
+                        address,
+                        id,
+                        (this as any),
+                        manufacturerData,
+                    );
+                    ids.push(id);
+                    yield device;
+                }
+                //this._bindings.simpleble_peripheral_release_handle(d);
+            }
+        }
+    }
+
+    private _createFilter(options: any): (info: RequestDeviceInfo) => boolean {
+        if (!options.filters && !options.filter) {
+            throw new TypeError("filter or filters must be given");
+        } else if (options.filter) {
+            return options.filter;
+        }
+
+        const cb = (info: RequestDeviceInfo): boolean => {
+            return this._filterDevice(options.filters, info, []);
+        };
+        return cb;
+    }
+
+    private async _request(
+        options: any,
+        singleDevice: boolean,
+    ): Promise<BluetoothDevice[]> {
+        const timeout = options.timeout ?? 5000;
+
+        if (!options.filters && !options.filter) {
+            throw new TypeError("filter or filters must be given");
+        }
+
+        const filterCb = this._createFilter(options);
+
+        this._bindings.simpleble_adapter_scan_start(this._adapter);
+        await delay(timeout);
+        this._bindings.simpleble_adapter_scan_stop(this._adapter);
+
+        const resultsCount = this._bindings.simpleble_adapter_scan_get_results_count(
+            this._adapter,
+        );
+
+        const devices: BluetoothDevice[] = [];
+
+        for (let i = 0; i < resultsCount; i++) {
+            const d = this._bindings.simpleble_adapter_scan_get_results_handle(this._adapter, i);
+            const id = this._bindings.simpleble_peripheral_identifier(d);
+            const address = this._bindings.simpleble_peripheral_address(d);
+            const count = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
+            const manufacturerData: BluetoothManufacturerData = new Map();
+            for (let j = 0; j < count; j++) {
+                const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
+                if (data) {
+                    manufacturerData.set(data.id, new DataView(data.data.buffer));
+                }
+            }
+            const found = filterCb({
+                name: id,
+                address,
+                manufacturerData,
+            });
+            if (found) {
+                const device = new BluetoothDevice(
+                    this._bindings,
+                    d,
+                    address,
+                    id,
+                    (this as any),
+                    manufacturerData,
+                );
+                devices.push(device);
+                if (singleDevice) {
+                    break;
+                }
+            }
+            //this._bindings.simpleble_peripheral_release_handle(d);
+        }
+
+        return devices;
+    }
 
     /**
-     * Referring device for the bluetooth instance
+     * Scans for a Bluetooth device.
+     *
+     * Because of limitations in the WebBluetooth standard, this does not comply
+     * with the standard `requestDevice` specification. In the W3C standard,
+     * users manually select a device via a popup, which is obviously not
+     * possible with Node/Deno/Bun.
      */
-    public readonly referringDevice?: BluetoothDevice;
+    async requestDevice(
+        options: RequestDeviceOptions,
+    ): Promise<BluetoothDevice> {
+        let devices: BluetoothDevice[];
+        const p = this._request(options, true);
+        if (options.signal) {
+            devices = await abortable(p, options.signal);
+        } else {
+            devices = await p;
+        }
 
-    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
-    private scanTime: number = 10.24 * 1000;
-    private scanner = undefined;
+        if (!devices.length) {
+            throw new DOMException("requestDevice error: no devices found");
+        }
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
-    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        this._devices.push(devices[0]);
+        return devices[0];
+    }
+
+    /**
+     * Scans for Bluetooth devices.
+     *
+     * This function is not a part of the WebBluetooth standard. It is made
+     * to allow programs to interact with multiple devices.
+     */
+    async requestDevices(
+        options: RequestDeviceOptions,
+    ): Promise<BluetoothDevice[]> {
+        let devices: BluetoothDevice[];
+        const p = this._request(options, true);
+        if (options.signal) {
+            devices = await abortable(p, options.signal);
+        } else {
+            devices = await p;
+        }
+
+        if (!devices.length) {
+            throw new DOMException("requestDevices error: no devices found");
+        }
+
+        this._devices.push(...devices);
+        return devices;
+    }
+
+    //cancelRequest
+
+    /** This unstable specification is not implemented yet. */
+    public requestLEScan(_options?: BluetoothLEScanOptions): Promise<BluetoothLEScan> {
+        throw new Error('requestLEScan is not implemented yet');
+    }
+
+    /** A listener for the `characteristicvaluechanged` event. */
+    set oncharacteristicvaluechanged(fn: EventListenerOrEventListenerObject) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
         }
@@ -89,8 +423,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
-    private _onserviceadded: (ev: Event) => void;
-    public set onserviceadded(fn: (ev: Event) => void) {
+    /** A listener for the `serviceadded` event. */
+    set onserviceadded(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
         }
@@ -98,8 +432,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('serviceadded', this._onserviceadded);
     }
 
-    private _onservicechanged: (ev: Event) => void;
-    public set onservicechanged(fn: (ev: Event) => void) {
+    /** A listener for the `servicechanged` event. */
+    set onservicechanged(fn: EventListenerOrEventListenerObject) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
         }
@@ -107,8 +441,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('servicechanged', this._onservicechanged);
     }
 
-    private _onserviceremoved: (ev: Event) => void;
-    public set onserviceremoved(fn: (ev: Event) => void) {
+    /** A listener for the `serviceremoved` event. */
+    set onserviceremoved(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
         }
@@ -116,8 +450,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('serviceremoved', this._onserviceremoved);
     }
 
-    private _ongattserverdisconnected: (ev: Event) => void;
-    public set ongattserverdisconnected(fn: (ev: Event) => void) {
+    /** A listener for the `gattserverdisconnected` event. */
+    set ongattserverdisconnected(fn: EventListenerOrEventListenerObject) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
         }
@@ -125,8 +459,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
     }
 
-    private _onadvertisementreceived: (ev: Event) => void;
-    public set onadvertisementreceived(fn: (ev: Event) => void) {
+    /** A listener for the `advertisementreceived` event. */
+    set onadvertisementreceived(fn: EventListenerOrEventListenerObject) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
         }
@@ -134,8 +468,8 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('advertisementreceived', this._onadvertisementreceived);
     }
 
-    private _onavailabilitychanged: (ev: Event) => void;
-    public set onavailabilitychanged(fn: (ev: Event) => void) {
+    /** A listener for the `availabilitychanged` event. */
+    set onavailabilitychanged(fn: EventListenerOrEventListenerObject) {
         if (this._onavailabilitychanged) {
             this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
         }
@@ -143,67 +477,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('availabilitychanged', this._onavailabilitychanged);
     }
 
-    /**
-     * Bluetooth constructor
-     * @param options Bluetooth initialisation options
-     */
-    constructor(options?: BluetoothOptions) {
-        super();
-
-        options = options || {};
-        this.referringDevice = options.referringDevice;
-        this.deviceFound = options.deviceFound;
-        if (options.scanTime) this.scanTime = options.scanTime * 1000;
-
-        adapter.on(NobleAdapter.EVENT_ENABLED, _value => {
-            this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
-        });
-    }
-
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo, validServices) {
-        let valid = false;
-
-        filters.forEach(filter => {
-            // Name
-            if (filter.name && filter.name !== deviceInfo.name) return;
-
-            // NamePrefix
-            if (filter.namePrefix) {
-                if (!deviceInfo.name || filter.namePrefix.length > deviceInfo.name.length) return;
-                if (filter.namePrefix !== deviceInfo.name.substr(0, filter.namePrefix.length)) return;
-            }
-
-            // Services
-            if (filter.services) {
-                const serviceUUIDs = filter.services.map(getServiceUUID);
-                const servicesValid = serviceUUIDs.every(serviceUUID => {
-                    return (deviceInfo._serviceUUIDs.indexOf(serviceUUID) > -1);
-                });
-
-                if (!servicesValid) return;
-                validServices = validServices.concat(serviceUUIDs);
-            }
-
-            valid = true;
-        });
-
-        if (!valid) return false;
-        return deviceInfo;
-    }
-
-    /**
-     * Gets the availability of a bluetooth adapter
-     * @returns Promise containing a flag indicating bluetooth availability
-     */
-    public getAvailability(): Promise<boolean> {
-        return adapter.getEnabled();
-    }
-
-    /**
-     * Scans for a device matching optional filters
-     * @param options The options to use when scanning
-     * @returns Promise containing a device which matches the options
-     */
+    /*
     public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
         if (this.scanner !== undefined) {
             throw new Error('requestDevice error: request in progress');
@@ -315,51 +589,5 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
             }, this.scanTime);
         });
     }
-
-    /**
-     * Get all bluetooth devices
-     */
-    public getDevices(): Promise<BluetoothDevice[]> {
-        if (this.scanner !== undefined) {
-            throw new Error('getDevices error: request in progress');
-        }
-
-        return new Promise(resolve => {
-            const devices: BluetoothDevice[] = [];
-
-            adapter.startScan([], deviceInfo => {
-                Object.assign(deviceInfo, {
-                    _bluetooth: this,
-                    _allowedServices: []
-                });
-
-                const bluetoothDevice = new BluetoothDevice(deviceInfo);
-                devices.push(bluetoothDevice);
-            });
-
-            this.scanner = setTimeout(async () => {
-                await this.cancelRequest();
-                resolve(devices);
-            }, this.scanTime);
-        });
-    }
-
-    /**
-     * Cancels the scan for devices
-     */
-    public async cancelRequest(): Promise<void> {
-        if (this.scanner) {
-            clearTimeout(this.scanner);
-            this.scanner = undefined;
-            adapter.stopScan();
-        }
-    }
-
-    /**
-     * @hidden
-     * Request LE scan (not implemented)
-     */
-    public requestLEScan(_options?: BluetoothLEScanOptions): Promise<BluetoothLEScan> {
-        throw new Error('requestLEScan error: method not implemented.');
-    }
+    */
 }

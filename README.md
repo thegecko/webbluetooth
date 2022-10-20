@@ -7,7 +7,7 @@ Node.js implementation of the Web Bluetooth Specification
 
 ## Prerequisites
 
-[Node.js > v10.16.0](https://nodejs.org), which includes `npm`.
+[Node.js 14](https://nodejs.org) or later, which includes `npm`.
 
 ## Installation
 
@@ -34,10 +34,10 @@ The module exports a default `navigator.bluetooth` instance, the `Bluetooth` cla
 
 ### Using the default bluetooth instance
 
-To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
+To use existing WebBluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
 
 ```JavaScript
-const bluetooth = require("webbluetooth").bluetooth;
+import { bluetooth } from "webbluetooth";
 
 const device = await bluetooth.requestDevice({
     filters:[{ services:[ "heart_rate" ] }]
@@ -48,30 +48,6 @@ const server = await device.gatt.connect();
 ```
 
 The first device matching the filters will be returned.
-
-### Creating your own bluetooth instances
-
-You may want to create your own instance of the `Bluetooth` class. For example, to inject a device chooser function or control the referring device:
-
-```JavaScript
-const Bluetooth = require("webbluetooth").Bluetooth;
-
-const deviceFound = (device, selectFn) => {
-    // If device can be automatically selected, do so by returning true
-    if (device.name === "myName") return true;
-
-    // Otherwise store the selectFn somewhere and execute it later to select this device
-};
-
-const bluetooth = new Bluetooth({ deviceFound });
-
-const device = await bluetooth.requestDevice({
-    filters:[{ services:[ "heart_rate" ] }]
-});
-
-const server = await device.gatt.connect();
-...
-```
 
 ## Specification
 

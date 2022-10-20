@@ -1,5 +1,3 @@
-// @denoify-ignore
-
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -13,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -25,11 +23,12 @@
  * SOFTWARE.
  */
 
-export * from "./interfaces";
-export * from "./gatt";
-export * from "./bluetooth";
+// @ts-nocheck
+export * from "./interfaces.ts";
+export * from "./gatt.ts";
+export * from "./bluetooth.ts";
 
-import { Bluetooth } from "./bluetooth";
+import { Bluetooth } from "./bluetooth.ts";
 import { resolveBindings } from "simpleble";
 
 /**
@@ -37,14 +36,13 @@ import { resolveBindings } from "simpleble";
  */
 export async function getWebBluetooth(): Promise<Bluetooth> {
   if (navigator && navigator.bluetooth) {
-    // @ts-ignore
     return navigator.bluetooth;
   }
   const bindings = await resolveBindings();
   const bluetooth = new Bluetooth(bindings);
-  // @ts-ignore
   navigator.bluetooth = bluetooth;
   return bluetooth;
 }
 
+/** The global `bluetooth` variable. */
 export const bluetooth = await getWebBluetooth();
