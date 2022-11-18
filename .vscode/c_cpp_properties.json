@@ -1,0 +1,61 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
+                "C:/Program Files (x86)/Windows Kits/8.1/Include/um",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/ucrt",
+                "C:/Program Files (x86)/Windows Kits/8.1/Include/shared",
+                "C:/Program Files (x86)/Windows Kits/8.1/Include/winrt",
+                "${env:USERPROFILE}/AppData/Local/node-gyp/Cache/16.14.0/include/node",
+                "${workspaceFolder}/node_modules/node-addon-api",
+                "${workspaceFolder}/build/SimpleBLE/simpleble/export",
+                "${workspaceFolder}/SimpleBLE/simpleble/include",
+                "/usr/include/node"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "8.1",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/node_modules/node-addon-api",
+                "/usr/local/include/node",
+                "${env:HOME}/.node-gyp/**",
+                "${workspaceFolder}/build/SimpleBLE/simpleble/export",
+                "${workspaceFolder}/SimpleBLE/simpleble/include"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${env:HOME}/.nvm/versions/node/v14.15.4/include/node",
+                "/usr/include/node",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/node_modules/node-addon-api",
+                "${workspaceFolder}/build/SimpleBLE/simpleble/export",
+                "${workspaceFolder}/SimpleBLE/simpleble/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

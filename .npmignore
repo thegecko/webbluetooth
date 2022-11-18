@@ -1,5 +1,10 @@
-.DS_Store
-.vscode
-.gitignore
-node_modules
-index.html
+/*
+
+!/.npmrc
+!/LICENSE
+!/README.md
+!/CHANGELOG.md
+!/package.json
+!/prebuilds
+!/src
+!/dist

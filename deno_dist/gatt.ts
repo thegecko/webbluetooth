@@ -27,20 +27,20 @@ import {
     getCharacteristicUUID,
     getServiceUUID,
     isView,
-} from "./common.js";
+} from "./common.ts";
 import {
     BluetoothRemoteGATTCharacteristicEventMap,
     BluetoothRemoteGATTCharacteristic,
-} from "./characteristic.js";
-import type { Bluetooth } from "./bluetooth.js";
-import type { Bindings, Peripheral, Service } from "./bindings.js";
-import type { CustomEventListener } from "./common.js";
+} from "./characteristic.ts";
+import type { Bluetooth } from "./bluetooth.ts";
+import type { Bindings, Peripheral, Service } from "./bindings.ts";
+import type { CustomEventListener } from "./common.ts";
 import type {
     BluetoothCharacteristicUUID,
     BluetoothServiceUUID,
     BluetoothManufacturerData,
     BluetoothServiceData,
-} from "./interfaces.js";
+} from "./interfaces.ts";
 
 /** Options for watching advertisements. */
 export interface WatchAdvertisementsOptions {

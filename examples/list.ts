@@ -1,4 +1,3 @@
-// @denoify-ignore
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -23,7 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { bluetooth } from "../dist/index.js";
 
-/** @hidden Browser WebBluetooth instance. */
-// @ts-ignore Browser-specific (obviously).
-export const bluetooth = navigator.bluetooth;
+(async () => {
+    const devices = await bluetooth.requestDevices({
+        filter: () => true
+    });
+    console.log(`Found ${devices.length} devices`);
+    for (const device of devices) {
+        console.log(`- ${device.name} [${device.id}]`);
+    }
+    process.exit(0);
+})();

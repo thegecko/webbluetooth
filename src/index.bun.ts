@@ -1,4 +1,4 @@
-// @denoify-ignore
+// @ts-nocheck
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -23,7 +23,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+export * from "./interfaces.ts";
+export * from "./common.ts";
+export * from "./gatt.ts";
+export * from "./characteristic.ts";
+export * from "./bluetooth.ts";
 
-/** @hidden Browser WebBluetooth instance. */
-// @ts-ignore Browser-specific (obviously).
-export const bluetooth = navigator.bluetooth;
+// Use NAPI for now.
+import { SimpleBLE } from "./node-bindings.ts";
+import { Bluetooth } from "./bluetooth.ts";
+
+const bindings = await SimpleBLE.load();
+
+/** @hidden The global `bluetooth` variable. */
+export const bluetooth = new Bluetooth(bindings);

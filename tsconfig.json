@@ -3,15 +3,24 @@
         "target": "es2020",
         "module": "esnext",
         "moduleResolution": "node",
-        "lib": ["esnext", "dom"],
-        "alwaysStrict": true,
+        "lib": [ "esnext", "dom" ],
+        "outDir": "./dist",
+        "strict": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "downlevelIteration": true,
         "noImplicitReturns": true,
         "noEmitOnError": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "sourceMap": true,
         "declaration": true,
-        "outDir": "dist"
+        "declarationMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "strictPropertyInitialization": true,
+        "strictNullChecks": true,
+        "useUnknownInCatchVariables": true
     },
     "include": [
         "src"
@@ -22,5 +31,20 @@
         "node_modules",
         "src/*.deno.ts",
         "src/*.bun.ts"
-    ]
+    ],
+    "typedocOptions": {
+        "name": "Node Web Bluetooth",
+        "entryPoints": [
+            "src"
+        ],
+        "exclude": [
+            "**/*+(.deno|.bun).ts",
+            "./src/bindings.ts",
+            "./src/browser.ts",
+            "./src/node-bindings.ts"
+        ],
+        "excludeExternals": true,
+        "excludePrivate": true,
+        "hideGenerator": true
+    }
 }

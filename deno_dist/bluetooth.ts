@@ -23,20 +23,20 @@
  * SOFTWARE.
  */
 
-import { abortable, delay, isView } from "./common.js";
-import { Bindings, Adapter } from "./bindings.js";
-import { BluetoothDevice, BluetoothDeviceEventMap } from "./gatt.js";
+import { abortable, delay, isView } from "./common.ts";
+import { Bindings, Adapter } from "./bindings.ts";
+import { BluetoothDevice, BluetoothDeviceEventMap } from "./gatt.ts";
 import {
     BluetoothManufacturerData,
     BluetoothManufacturerDataFilter,
     BluetoothServiceUUID,
-} from "./interfaces.js";
+} from "./interfaces.ts";
 
 import type {
     BluetoothLEScanFilter,
     RequestDeviceInfo,
     RequestDeviceOptions,
-} from "./interfaces";
+} from "./interfaces.ts";
 
 /** @hidden Events for {@link BluetoothDevice} */
 export interface BluetoothEventMap extends BluetoothDeviceEventMap {

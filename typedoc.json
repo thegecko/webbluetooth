@@ -1,9 +1,0 @@
-{
-    "name": "Node Web Bluetooth",
-    "entryPoints": [
-        "src"
-    ],
-    "excludeExternals": true,
-    "excludePrivate": true,
-    "hideGenerator": true
-}

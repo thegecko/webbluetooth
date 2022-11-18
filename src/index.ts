@@ -1,5 +1,4 @@
 // @denoify-ignore
-
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -13,8 +12,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -25,26 +24,16 @@
  * SOFTWARE.
  */
 
-export * from "./interfaces";
-export * from "./gatt";
-export * from "./bluetooth";
+export * from "./interfaces.js";
+export * from "./common.js";
+export * from "./gatt.js";
+export * from "./characteristic.js";
+export * from "./bluetooth.js";
 
-import { Bluetooth } from "./bluetooth";
-import { resolveBindings } from "simpleble";
+import { Bluetooth } from "./bluetooth.js";
+import { SimpleBLE } from "./node-bindings.js";
 
-/**
- * Returns the available WebBluetooth instance.
- */
-export async function getWebBluetooth(): Promise<Bluetooth> {
-  if (navigator && navigator.bluetooth) {
-    // @ts-ignore
-    return navigator.bluetooth;
-  }
-  const bindings = await resolveBindings();
-  const bluetooth = new Bluetooth(bindings);
-  // @ts-ignore
-  navigator.bluetooth = bluetooth;
-  return bluetooth;
-}
+const bindings = SimpleBLE.load();
 
-export const bluetooth = await getWebBluetooth();
+/** Default bluetooth instance synonymous with `navigator.bluetooth`. */
+export const bluetooth = new Bluetooth(bindings);
