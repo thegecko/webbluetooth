@@ -15,6 +15,10 @@
 extern "C" {
 #endif
 
+EXPORT bool simpleble_adapter_is_bluetooth_enabled_wrapper(void) {
+  return simpleble_adapter_is_bluetooth_enabled();
+}
+
 EXPORT size_t simpleble_adapter_get_count_wrapper(void) {
   return simpleble_adapter_get_count();
 }
@@ -97,6 +101,10 @@ EXPORT char* simpleble_peripheral_address_wrapper(simpleble_peripheral_t handle)
 
 EXPORT int16_t simpleble_peripheral_rssi_wrapper(simpleble_peripheral_t handle) {
   return simpleble_peripheral_rssi(handle);
+}
+
+EXPORT uint16_t simpleble_peripheral_mtu_wrapper(simpleble_peripheral_t handle) {
+  return simpleble_peripheral_mtu(handle);
 }
 
 EXPORT simpleble_err_t simpleble_peripheral_connect_wrapper(simpleble_peripheral_t handle) {

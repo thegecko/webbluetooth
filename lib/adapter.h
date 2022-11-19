@@ -7,6 +7,7 @@
 class AdapterWrapper {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  static Napi::Value IsEnabled(const Napi::CallbackInfo &info);
   static Napi::Value GetCount(const Napi::CallbackInfo &info);
   static Napi::Value GetHandle(const Napi::CallbackInfo &info);
   static Napi::Value ReleaseHandle(const Napi::CallbackInfo &info);

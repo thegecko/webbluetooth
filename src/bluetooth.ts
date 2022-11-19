@@ -101,10 +101,8 @@ export class Bluetooth extends EventTarget {
         this._bindings = bindings;
         this._devices = [];
 
-        // NOTE: a global `bluetooth` variable cannot be exported while the
-        // constructor throws an error. Maybe move this.
-        const adaptersCount = this._bindings.simpleble_adapter_get_count();
-        if (adaptersCount === 0) {
+        const enabled = this._bindings.simpleble_adapter_is_bluetooth_enabled();
+        if (!enabled) {
             throw new DOMException("No Bluetooth adapters found", "NotFoundError");
         }
 
@@ -179,7 +177,7 @@ export class Bluetooth extends EventTarget {
     ): AsyncIterableIterator<BluetoothDevice> {
         const timeout = options.timeout ?? 200;
         const signal = options.signal;
-        const ids: string[] = [];
+        const addrs: string[] = [];
         const { filter, filters } = options as any;
 
         if (!filters && !filter) {
@@ -193,12 +191,13 @@ export class Bluetooth extends EventTarget {
         let done = false;
 
         options.signal?.addEventListener("abort", () => {
+            console.log("ABORT CALLED");
             done = false;
         }, { once: true });
 
         while (!done) {
             this._bindings.simpleble_adapter_scan_start(this._adapter);
-            await delay(timeout);
+            await abortable(delay(timeout), signal);
             this._bindings.simpleble_adapter_scan_stop(this._adapter);
 
             const resultsCount = this._bindings.simpleble_adapter_scan_get_results_count(
@@ -208,23 +207,36 @@ export class Bluetooth extends EventTarget {
             for (let i = 0; i < resultsCount; i++) {
                 const d = this._bindings.simpleble_adapter_scan_get_results_handle(this._adapter, i);
                 const id = this._bindings.simpleble_peripheral_identifier(d);
-                if (ids.includes(id)) {
+                const address = this._bindings.simpleble_peripheral_address(d);
+                if (addrs.includes(address)) {
                     continue;
                 }
-                const address = this._bindings.simpleble_peripheral_address(d);
                 const count = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
+                const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
                 const manufacturerData: BluetoothManufacturerData = new Map();
+                const services: BluetoothServiceUUID[] = [];
+                for (let j = 0; j < serviceCount; j++) {
+                    const service = this._bindings.simpleble_peripheral_services_get(d, j);
+                    services.push(service.uuid);
+                }
                 for (let j = 0; j < count; j++) {
                     const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
                     if (data) {
                         manufacturerData.set(data.id, new DataView(data.data.buffer));
                     }
                 }
+                if (id === "HUB NO.4") {
+                    console.log(`Hub has ${this._bindings.simpleble_peripheral_services_count(d)} services`);
+                }
+                if (serviceCount > 0) {
+                    console.log("SERVICES");
+                    console.log(services);
+                }
                 const found = filterCb({
                     name: id,
                     address,
                     manufacturerData,
-                    services: [],
+                    services,
                 });
                 if (found) {
                     const device = new BluetoothDevice(
@@ -235,7 +247,7 @@ export class Bluetooth extends EventTarget {
                         (this as any),
                         manufacturerData,
                     );
-                    ids.push(id);
+                    addrs.push(id);
                     yield device;
                 }
                 //this._bindings.simpleble_peripheral_release_handle(d);
@@ -283,7 +295,13 @@ export class Bluetooth extends EventTarget {
             const id = this._bindings.simpleble_peripheral_identifier(d);
             const address = this._bindings.simpleble_peripheral_address(d);
             const dataCount = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
+            const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
             const manufacturerData: BluetoothManufacturerData = new Map();
+            const services: BluetoothServiceUUID[] = [];
+            for (let j = 0; j < serviceCount; j++) {
+                const service = this._bindings.simpleble_peripheral_services_get(d, j);
+                services.push(service.uuid);
+            }
             for (let j = 0; j < dataCount; j++) {
                 const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
                 if (data) {

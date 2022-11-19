@@ -276,7 +276,7 @@ export class BluetoothRemoteGATTService extends EventTarget {
         return this._device;
     }
 
-    /** Indicates if this is a primary or secondard service. */
+    /** Indicates if this is a primary or secondary service. */
     get isPrimary(): boolean {
         return true;
     }
@@ -383,6 +383,7 @@ export class BluetoothRemoteGATTService extends EventTarget {
         return filtered;
     }
 
+    /** A listener for the `characteristicvaluechanged` event. */
     set oncharacteristicvaluechanged(fn: EventListenerOrEventListenerObject) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -391,6 +392,7 @@ export class BluetoothRemoteGATTService extends EventTarget {
         this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
     }
 
+    /** A listener for the `serviceadded` event. */
     set onserviceadded(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
@@ -399,6 +401,7 @@ export class BluetoothRemoteGATTService extends EventTarget {
         this.addEventListener('serviceadded', this._onserviceadded);
     }
 
+    /** A listener for the `servicechanged` event. */
     set onservicechanged(fn: EventListenerOrEventListenerObject) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
@@ -407,6 +410,7 @@ export class BluetoothRemoteGATTService extends EventTarget {
         this.addEventListener('servicechanged', this._onservicechanged);
     }
 
+    /** A listener for the `serviceremoved` event. */
     set onserviceremoved(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
@@ -460,6 +464,10 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         if (this.connected) {
             throw new DOMException('Connection already in progress', "NetworkError");
         }
+        this._bindings.simpleble_peripheral_set_callback_on_connected(this._peripheral, () => {
+            console.log("CONNECTED");
+            //this._connected = false;
+        }, null);
         const ret = this._bindings.simpleble_peripheral_connect(this._peripheral);
         if (!ret) {
             throw new DOMException("Connection failed", "NetworkError");

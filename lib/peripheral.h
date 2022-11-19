@@ -13,6 +13,7 @@ public:
   static Napi::Value Identifier(const Napi::CallbackInfo &info);
   static Napi::Value Address(const Napi::CallbackInfo &info);
   static Napi::Value RSSI(const Napi::CallbackInfo &info);
+  static Napi::Value MTU(const Napi::CallbackInfo &info);
   static Napi::Value Connect(const Napi::CallbackInfo &info);
   static Napi::Value Disconnect(const Napi::CallbackInfo &info);
   static Napi::Value IsConnected(const Napi::CallbackInfo &info);

@@ -1,6 +1,7 @@
 #include "peripheral.h"
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 
 #define GET_AND_CHECK_HANDLE(env, info, handle)                                \
@@ -28,6 +29,21 @@
     return env.Null();                                                         \
   }
 
+struct PeripheralContext {
+  PeripheralContext() : done(false) {}
+  Napi::FunctionReference cb;
+  std::atomic<bool> done;
+};
+
+extern "C" void onPeripheralCallback(simpleble_peripheral_t peripheral, void* userdata) {
+  PeripheralContext* context = static_cast<PeripheralContext*>(userdata);
+  if (!context->done) {
+    context->done = true;
+    context->cb.Call({});
+    context->cb.Unref();
+  }
+}
+
 Napi::Object PeripheralWrapper::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
@@ -40,6 +56,8 @@ Napi::Object PeripheralWrapper::Init(Napi::Env env, Napi::Object exports) {
               Napi::Function::New(env, &PeripheralWrapper::Address));
   exports.Set("simpleble_peripheral_rssi",
               Napi::Function::New(env, &PeripheralWrapper::RSSI));
+  exports.Set("simpleble_peripheral_mtu",
+              Napi::Function::New(env, &PeripheralWrapper::MTU));
   exports.Set("simpleble_peripheral_connect",
               Napi::Function::New(env, &PeripheralWrapper::Connect));
   exports.Set("simpleble_peripheral_disconnect",
@@ -127,6 +145,16 @@ Napi::Value PeripheralWrapper::RSSI(const Napi::CallbackInfo &info) {
 
   const int16_t rssi = simpleble_peripheral_rssi(handle);
   return Napi::Number::New(env, rssi);
+}
+
+Napi::Value PeripheralWrapper::MTU(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  simpleble_peripheral_t handle;
+
+  GET_AND_CHECK_HANDLE(env, info, handle);
+
+  const uint16_t mtu = simpleble_peripheral_mtu(handle);
+  return Napi::Number::New(env, mtu);
 }
 
 Napi::Value PeripheralWrapper::Connect(const Napi::CallbackInfo &info) {
@@ -787,7 +815,7 @@ Napi::Value
 PeripheralWrapper::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   simpleble_peripheral_t handle;
-  Napi::Value userdata = env.Null();
+  Napi::Object global = env.Global();
 
   GET_AND_CHECK_HANDLE(env, info, handle);
 
@@ -801,33 +829,22 @@ PeripheralWrapper::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
+  auto cbData = new PeripheralContext();
+  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+
+  const auto ret = simpleble_peripheral_set_callback_on_connected(handle, onPeripheralCallback, cbData);
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
   }
 
-  const Napi::String cbService = info[1].As<Napi::String>();
-  const Napi::String cbChar = info[2].As<Napi::String>();
-  const std::string service = info[1].As<Napi::String>();
-  const std::string characteristic = info[2].As<Napi::String>();
-  Napi::Function cb = info[3].As<Napi::Function>();
-  Napi::BigInt cbPeripheral = info[0].As<Napi::BigInt>();
-  SimpleBLE::Safe::Peripheral *peripheral =
-      (SimpleBLE::Safe::Peripheral *)handle;
-
-  // clang-format off
-  bool success = peripheral->set_callback_on_connected([=]() {
-    cb.Call(env.Global(), {cbPeripheral, userdata});
-  });
-  // clang-format on
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, true);
 }
 
 Napi::Value
 PeripheralWrapper::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   simpleble_peripheral_t handle;
-  Napi::Value userdata = env.Null();
+  Napi::Object global = env.Global();
 
   GET_AND_CHECK_HANDLE(env, info, handle);
 
@@ -841,24 +858,13 @@ PeripheralWrapper::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
+  auto cbData = new PeripheralContext();
+  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+
+  const auto ret = simpleble_peripheral_set_callback_on_disconnected(handle, onPeripheralCallback, cbData);
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
   }
 
-  const Napi::String cbService = info[1].As<Napi::String>();
-  const Napi::String cbChar = info[2].As<Napi::String>();
-  const std::string service = info[1].As<Napi::String>();
-  const std::string characteristic = info[2].As<Napi::String>();
-  Napi::Function cb = info[3].As<Napi::Function>();
-  Napi::BigInt cbPeripheral = info[0].As<Napi::BigInt>();
-  SimpleBLE::Safe::Peripheral *peripheral =
-      (SimpleBLE::Safe::Peripheral *)handle;
-
-  // clang-format off
-  bool success = peripheral->set_callback_on_disconnected([=]() {
-    cb.Call(env.Global(), {cbPeripheral, userdata});
-  });
-  // clang-format on
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, true);
 }

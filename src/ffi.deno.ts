@@ -33,14 +33,17 @@ import pkg from "./package.json" assert { type: "json" };
 const LIBNAME = "simpleble";
 
 const UUID_STRUCT_SIZE = 37;
-const SERVICE_STRUCT_SIZE = 10288;
 const MANUFACTURER_SIZE = 40;
-const CHARACTERISTIC_STRUCT_SIZE = 640;
 const DESCRIPTOR_STRUCT_SIZE = 37;
+//const SERVICE_STRUCT_SIZE = 10288;
+const SERVICE_STRUCT_SIZE = 10416; // sizeof(simpleble_service_t)
 const SERVICE_CHAR_COUNT_OFFSET = 40;
 const SERVICE_CHARS_OFFSET = 48;
+// Was 640
+const CHARACTERISTIC_STRUCT_SIZE = 648; // sizeof(simpleble_characteristic_t)
 const CHAR_DESC_COUNT_OFFSET = 40; // simpleble_characteristic_t.descriptor_count
-const CHAR_DESCRIPTORS_OFFSET = 48; // simpleble_characteristic_t.descriptors
+// Was 48
+const CHAR_DESCRIPTORS_OFFSET = 56; // simpleble_characteristic_t.descriptors
 
 /** SimpleBLE Adapter. */
 export type Adapter = Deno.PointerValue;
@@ -199,6 +202,12 @@ export class SimpleBLE implements Bindings {
   #unbind(name: string): void {
     this.#callbacks.get(name)?.close();
     this.#callbacks.delete(name);
+  }
+
+  /** Returns if one or more Bluetooth adapters are enabled. */
+  simpleble_adapter_is_bluetooth_enabled(): boolean {
+    const ret = lib.symbols.simpleble_adapter_is_bluetooth_enabled_wrapper();
+    return ret > 0 ? false : true;
   }
 
   /** Returns the number of adapters found. */
@@ -427,6 +436,10 @@ export class SimpleBLE implements Bindings {
   /** Returns the RSSI (signal strength) of a peripheral. */
   simpleble_peripheral_rssi(handle: Peripheral): number {
     return lib.symbols.simpleble_peripheral_rssi_wrapper(handle);
+  }
+  /** Returns the MTU (Maximum Transmission Unit) of a peripheral. */
+  simpleble_peripheral_rssi(handle: Peripheral): number {
+    return lib.symbols.simpleble_peripheral_mtu_wrapper(handle);
   }
   /** Begins connecting to a peripheral. */
   simpleble_peripheral_connect(handle: Peripheral): boolean {

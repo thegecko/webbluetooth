@@ -1,4 +1,5 @@
 #include "adapter.h"
+#include <atomic>
 #include <functional>
 
 #define GET_AND_CHECK_HANDLE(env, info, handle)                                \
@@ -26,10 +27,36 @@
     return env.Null();                                                         \
   }
 
+struct AdapterContext {
+  AdapterContext() : done(false) {}
+  Napi::FunctionReference cb;
+  std::atomic<bool> done;
+};
+
+extern "C" void onAdapterCallback(simpleble_adapter_t adapter, void* userdata) {
+  AdapterContext* context = static_cast<AdapterContext*>(userdata);
+  if (!context->done) {
+    context->done = true;
+    context->cb.Call({});
+    context->cb.Unref();
+  }
+}
+
+extern "C" void onAdapterPeripheralCallback(simpleble_adapter_t adapter, simpleble_peripheral_t peripheral, void* userdata) {
+  AdapterContext* context = static_cast<AdapterContext*>(userdata);
+  if (!context->done) {
+    context->done = true;
+    context->cb.Call({});
+    context->cb.Unref();
+  }
+}
+
 Napi::Object AdapterWrapper::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   // clang-format off
+  exports.Set("simpleble_adapter_is_bluetooth_enabled",
+              Napi::Function::New(env, &AdapterWrapper::IsEnabled));
   exports.Set("simpleble_adapter_get_count",
               Napi::Function::New(env, &AdapterWrapper::GetCount));
   exports.Set("simpleble_adapter_get_handle",
@@ -67,6 +94,14 @@ Napi::Object AdapterWrapper::Init(Napi::Env env, Napi::Object exports) {
   // clang-format on
 
   return exports;
+}
+
+Napi::Value AdapterWrapper::IsEnabled(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  const bool enabled = simpleble_adapter_is_bluetooth_enabled();
+  Napi::Number ret = Napi::Number::New(env, enabled);
+
+  return ret;
 }
 
 Napi::Value AdapterWrapper::GetCount(const Napi::CallbackInfo &info) {
@@ -272,7 +307,7 @@ AdapterWrapper::GetPairedPeripheralsHandle(const Napi::CallbackInfo &info) {
 Napi::Value
 AdapterWrapper::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::Value userdata = env.Null();
+  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -288,26 +323,21 @@ AdapterWrapper::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
+  auto cbData = new AdapterContext();
+  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+
+  const auto ret = simpleble_adapter_set_callback_on_scan_start(handle, onAdapterCallback, cbData);
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
   }
 
-  Napi::Function cb = info[1].As<Napi::Function>();
-  Napi::BigInt cbAdapter = info[0].As<Napi::BigInt>();
-
-  SimpleBLE::Safe::Adapter *adapter = (SimpleBLE::Safe::Adapter *)handle;
-
-  bool success = adapter->set_callback_on_scan_start([=]() {
-    cb.Call(env.Global(), {cbAdapter, userdata});
-  });
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, true);
 }
 
 Napi::Value
 AdapterWrapper::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::Value userdata = env.Null();
+  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -323,26 +353,21 @@ AdapterWrapper::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
+  auto cbData = new AdapterContext();
+  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+
+  const auto ret = simpleble_adapter_set_callback_on_scan_stop(handle, onAdapterCallback, cbData);
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
   }
 
-  Napi::Function cb = info[1].As<Napi::Function>();
-  Napi::BigInt cbAdapter = info[0].As<Napi::BigInt>();
-
-  SimpleBLE::Safe::Adapter *adapter = (SimpleBLE::Safe::Adapter *)handle;
-
-  bool success = adapter->set_callback_on_scan_stop([=]() {
-    cb.Call(env.Global(), {cbAdapter, userdata});
-  });
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, true);
 }
 
 Napi::Value
 AdapterWrapper::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::Value userdata = env.Null();
+  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -358,30 +383,14 @@ AdapterWrapper::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
-  }
+  Napi::TypeError::New(env, "InternalError - simpleble_adapter_set_callback_on_scan_updated causes an exception").ThrowAsJavaScriptException();
 
-  Napi::Function cb = info[1].As<Napi::Function>();
-  Napi::BigInt cbAdapter = info[0].As<Napi::BigInt>();
-
-  SimpleBLE::Safe::Adapter *adapter = (SimpleBLE::Safe::Adapter *)handle;
-
-  // clang-format off
-  bool success = adapter->set_callback_on_scan_updated([=](SimpleBLE::Safe::Peripheral peripheral) {
-    SimpleBLE::Safe::Peripheral *peripheralHandle = new SimpleBLE::Safe::Peripheral(peripheral);
-    Napi::Value cbHandle = Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheralHandle));
-    cb.Call(env.Global(), {cbAdapter, cbHandle, userdata});
-  });
-  // clang-format on
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, false);
 }
 
 Napi::Value
 AdapterWrapper::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::Value userdata = env.Null();
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -397,22 +406,7 @@ AdapterWrapper::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  if (info.Length() >= 3) {
-    userdata = info[2].As<Napi::BigInt>();
-  }
+  Napi::TypeError::New(env, "InternalError - simpleble_adapter_set_callback_on_scan_found causes an exception").ThrowAsJavaScriptException();
 
-  Napi::Function cb = info[1].As<Napi::Function>();
-  Napi::BigInt cbAdapter = info[0].As<Napi::BigInt>();
-
-  SimpleBLE::Safe::Adapter *adapter = (SimpleBLE::Safe::Adapter *)handle;
-
-  // clang-format off
-  bool success = adapter->set_callback_on_scan_found([=](SimpleBLE::Safe::Peripheral peripheral) {
-    SimpleBLE::Safe::Peripheral *peripheralHandle = new SimpleBLE::Safe::Peripheral(peripheral);
-    Napi::Value cbHandle = Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheralHandle));
-    cb.Call(env.Global(), {cbAdapter, cbHandle, userdata});
-  });
-  // clang-format on
-
-  return Napi::Boolean::New(env, success);
+  return Napi::Boolean::New(env, false);
 }

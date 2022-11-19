@@ -60,7 +60,7 @@ The module exports a default `navigator.bluetooth` instance and some helper meth
 - [getCharacteristicUUID()](functions/getCharacteristicUUID.html)
 - [getDescriptorUUID()](functions/getDescriptorUUID.html)
 
-### Using the default bluetooth instance
+### Importing the bluetooth instance
 
 To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
 
@@ -76,6 +76,23 @@ const server = await device.gatt.connect();
 ```
 
 The first device matching the filters will be returned.
+
+### Running the examples
+
+    deno run -A --unstable https://deno.land/x/webbluetooth/examples/deno/list.ts
+    deno run -A --unstable ./deno_dist/examples/deno/list.ts
+    npx ts-node-esm ./examples/list.ts
+
+## Building
+
+Node-SimpleBLE depends on SimpleBLE, so make sure submodules are checked out first:
+
+    git submodule init
+    git submodule update
+
+To build Node-SimpleBLE:
+
+    npm run build
 
 ## Specification
 
@@ -179,3 +196,9 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] Canonical UUID helper
 - [x] Examples
 - [x] API Documentation
+
+## License
+
+Copyright © 2019-2022 Rob Moran
+
+Released under the [MIT License](LICENSE).

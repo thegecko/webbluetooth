@@ -59,8 +59,11 @@ function createAbortError(reason?: any): DOMException {
 /** @hidden */
 export function abortable<T>(
     p: Promise<T>,
-    signal: AbortSignal,
+    signal: AbortSignal | undefined,
 ): Promise<T> {
+    if (!signal) {
+        return p;
+    }
     if (signal.aborted) {
         return Promise.reject(createAbortError(signal.reason));
     }
