@@ -27,7 +27,7 @@ import { EventDispatcher, TypedDispatcher } from './dispatcher';
 import { BluetoothRemoteGATTService } from './service';
 import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { getDescriptorUUID } from './helpers';
-import { adapter } from './adapter';
+import { adapter } from './adapters';
 import { W3CBluetoothRemoteGATTCharacteristic } from './interfaces';
 import { DOMEvent } from './events';
 
@@ -56,7 +56,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid = undefined;
+    public readonly uuid: string | undefined = undefined;
 
     /**
      * The properties of the characteristic

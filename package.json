@@ -1,41 +1,41 @@
 {
   "name": "webbluetooth",
-  "version": "2.2.0",
   "description": "Node.js implementation of the Web Bluetooth Specification",
-  "homepage": "https://github.com/thegecko/webbluetooth",
-  "author": "Rob Moran <rob@thegecko.org>",
   "license": "MIT",
+  "version": "2.2.0",
   "main": "dist/index.js",
+  "author": "Rob Moran <rob@thegecko.org>",
+  "engines": {
+    "node": ">=10.16.0"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/thegecko/webbluetooth.git"
   },
   "keywords": [
     "web-bluetooth",
+    "webbluetooth",
     "ble",
     "bluetooth"
   ],
-  "engines": {
-    "node": ">=10.16.0"
-  },
   "scripts": {
     "prepare": "yarn build",
-    "clean": "git clean -f -x ./dist ./docs",
+    "clean": "git clean -fx ./dist ./docs",
     "build": "tsc && yarn lint && yarn docs",
     "watch": "tsc -w --preserveWatchOutput",
     "lint": "eslint . --ext .ts,.tsx",
     "docs": "typedoc"
   },
   "dependencies": {
-    "@abandonware/noble": "1.9.2-15",
-    "@types/node": "^10.16.0",
-    "@types/web-bluetooth": "^0.0.14"
+    "@abandonware/noble": "^1.9.2-15"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.28.0",
-    "@typescript-eslint/parser": "^4.28.0",
-    "eslint": "^7.29.0",
-    "typedoc": "^0.20",
-    "typescript": "~4.2.4"
+    "@types/node": "^10.16.0",
+    "@types/web-bluetooth": "^0.0.16",
+    "@typescript-eslint/eslint-plugin": "^5.46.1",
+    "@typescript-eslint/parser": "^5.46.1",
+    "eslint": "^8.29.0",
+    "typedoc": "^0.23.22",
+    "typescript": "^4.9.4"
   }
 }
