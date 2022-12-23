@@ -25,46 +25,22 @@
 
 import { platform } from 'os';
 import { EventEmitter } from 'events';
-import { getCanonicalUUID } from './helpers';
-import { BluetoothDevice } from './device';
-import { BluetoothRemoteGATTService } from './service';
-import { BluetoothRemoteGATTCharacteristic } from './characteristic';
+import { EVENT_ENABLED } from './';
+import { Adapter } from './adapter';
+import { getCanonicalUUID } from '../helpers';
+import { BluetoothDevice } from '../device';
+import { BluetoothRemoteGATTService } from '../service';
+import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
 import * as noble from '@abandonware/noble';
 
-/**
- * @hidden
- */
-export interface Adapter extends EventEmitter {
-    getEnabled: () => Promise<boolean>;
-    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void) => Promise<void>;
-    stopScan: () => void;
-    connect: (handle: string, disconnectFn?: () => void) => Promise<void>;
-    disconnect: (handle: string) => Promise<void>;
-    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
-    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
-    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>>;
-    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>>;
-    readCharacteristic: (handle: string) => Promise<DataView>;
-    writeCharacteristic: (handle: string, value: DataView, withoutResponse?: boolean) => Promise<void>;
-    enableNotify: (handle: string, notifyFn: () => void) => Promise<void>;
-    disableNotify: (handle: string) => Promise<void>;
-    readDescriptor: (handle: string) => Promise<DataView>;
-    writeDescriptor: (handle: string, value: DataView) => Promise<void>;
-}
-
-/**
- * @hidden
- */
 export class NobleAdapter extends EventEmitter implements Adapter {
-
-    public static EVENT_ENABLED = 'enabledchanged';
 
     private deviceHandles = new Map<string, noble.Peripheral>();
     private serviceHandles = new Map<string, noble.Service>();
     private characteristicHandles = new Map<string, noble.Characteristic>();
     private descriptorHandles = new Map<string, noble.Descriptor>();
     private charNotifies = new Map<string, (value: DataView) => void>();
-    private discoverFn: (device: noble.Peripheral) => void | undefined;
+    private discoverFn: ((device: noble.Peripheral) => void | undefined) | undefined;
     private initialised = false;
     private enabled = false;
     private os: string = platform();
@@ -75,7 +51,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         noble.on('stateChange', () => {
             if (this.enabled !== this.state) {
                 this.enabled = this.state;
-                this.emit(NobleAdapter.EVENT_ENABLED, this.enabled);
+                this.emit(EVENT_ENABLED, this.enabled);
             }
         });
     }
@@ -88,7 +64,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         if (this.initialised) {
             return;
         }
-        noble.on('discover', deviceInfo => {
+        noble.on('discover', (deviceInfo: noble.Peripheral) => {
             if (this.discoverFn) this.discoverFn(deviceInfo);
         });
         this.initialised = true;
@@ -117,7 +93,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             return false;
         }
 
-        const advertisedUUIDs = deviceInfo.advertisement.serviceUuids.map(serviceUUID => {
+        const advertisedUUIDs = deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => {
             return getCanonicalUUID(serviceUUID);
         });
 
@@ -127,9 +103,9 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         });
     }
 
-    private deviceToBluetoothDevice(deviceInfo): Partial<BluetoothDevice> {
+    private deviceToBluetoothDevice(deviceInfo: noble.Peripheral): Partial<BluetoothDevice> {
         const deviceID = (deviceInfo.address && deviceInfo.address !== 'unknown') ? deviceInfo.address : deviceInfo.id;
-        const serviceUUIDs = deviceInfo.advertisement.serviceUuids ? deviceInfo.advertisement.serviceUuids.map(serviceUUID => getCanonicalUUID(serviceUUID)) : [];
+        const serviceUUIDs = deviceInfo.advertisement.serviceUuids ? deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => getCanonicalUUID(serviceUUID)) : [];
 
         const manufacturerData = new Map();
         if (deviceInfo.advertisement.manufacturerData) {
@@ -175,8 +151,10 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             if (this.validDevice(deviceInfo, serviceUUIDs)) {
                 const device = this.deviceToBluetoothDevice(deviceInfo);
 
-                if (!this.deviceHandles.has(device.id)) {
-                    this.deviceHandles.set(device.id, deviceInfo);
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                if (!this.deviceHandles.has(device.id!)) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    this.deviceHandles.set(device.id!, deviceInfo);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
                 }
@@ -258,12 +236,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             const serviceUUID = getCanonicalUUID(service);
 
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                /*
-                if (!this.serviceHandles.has(serviceUUID)) {
-                    this.serviceHandles.set(serviceUUID, service);
-                }
-                */
-
                 discovered.push({
                     uuid: serviceUUID,
                     primary: false
@@ -302,10 +274,11 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                     }
                 });
 
-                characteristicInfo.on('data', (data, isNotification) => {
+                characteristicInfo.on('data', (data: Buffer, isNotification: boolean) => {
                     if (isNotification === true && this.charNotifies.has(charUUID)) {
                         const dataView = this.bufferToDataView(data);
-                        this.charNotifies.get(charUUID)(dataView);
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        this.charNotifies.get(charUUID)!(dataView);
                     }
                 });
             }
@@ -374,7 +347,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             const characteristic = this.characteristicHandles.get(handle);
 
             // TODO: check type emitted
-            characteristic.once('notify', state => {
+            characteristic.once('notify', (state: string) => {
                 if (state !== 'true') {
                     reject('notify failed to enable');
                 }
@@ -396,7 +369,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             const characteristic = this.characteristicHandles.get(handle);
 
             // TODO: check type emitted
-            characteristic.once('notify', state => {
+            characteristic.once('notify', (state: string) => {
                 if (state !== 'false') {
                     reject('notify failed to disable');
                 }
@@ -422,8 +395,3 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         return this.descriptorHandles.get(handle).writeValueAsync(buffer);
     }
 }
-
-/**
- * @hidden
- */
-export const adapter = new NobleAdapter();

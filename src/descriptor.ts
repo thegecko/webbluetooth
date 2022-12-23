@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { adapter } from './adapter';
+import { adapter } from './adapters';
 import { W3CBluetoothRemoteGATTDescriptor } from './interfaces';
 
 /**
