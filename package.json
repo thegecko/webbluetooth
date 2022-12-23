@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "author": "Rob Moran <rob@thegecko.org>",
   "engines": {
-    "node": ">=10.16.0"
+    "node": ">=10.20.0 <11.x || >=12.17.0 <13.0 || >=14.0.0"
   },
   "repository": {
     "type": "git",
@@ -19,15 +19,23 @@
     "bluetooth"
   ],
   "scripts": {
-    "prepare": "yarn build",
-    "clean": "git clean -fx ./dist ./docs",
-    "build": "tsc && yarn lint && yarn docs",
+    "install": "prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
+    "clean": "yarn clean:cpp && yarn clean:ts",
+    "clean:cpp": "cmake-js clean",
+    "clean:ts": "git clean -fx ./dist ./docs",
+    "build": "yarn build:cpp && yarn build:ts",
+    "build:cpp": "cmake-js compile",
+    "build:ts": "tsc && yarn lint && yarn docs",
     "watch": "tsc -w --preserveWatchOutput",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts",
+    "prebuild": "prebuild --backend cmake-js --runtime napi --all --strip --verbose",
     "docs": "typedoc"
   },
   "dependencies": {
-    "@abandonware/noble": "^1.9.2-15"
+    "bindings": "^1.5.0",
+    "cmake-js": "^7.0.0",
+    "node-addon-api": "^5.0.0",
+    "prebuild-install": "^7.1.1"
   },
   "devDependencies": {
     "@types/node": "^10.16.0",
@@ -35,7 +43,13 @@
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
     "eslint": "^8.29.0",
+    "prebuild": "^11.0.4",
     "typedoc": "^0.23.22",
     "typescript": "^4.9.4"
+  },
+  "binary": {
+    "napi_versions": [
+      6
+    ]
   }
 }

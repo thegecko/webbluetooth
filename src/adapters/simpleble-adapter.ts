@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2022 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,18 +23,20 @@
 * SOFTWARE.
 */
 
-/*
 import { platform } from 'os';
 import { EventEmitter } from 'events';
-import { EVENT_ENABLED } from './';
 import { Adapter } from './adapter';
 import { getCanonicalUUID } from '../helpers';
 import { BluetoothDevice } from '../device';
 import { BluetoothRemoteGATTService } from '../service';
 import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
-import * as noble from '@abandonware/noble';
 
-export class NobleAdapter extends EventEmitter implements Adapter {
+/**
+ * @hidden
+ */
+export class SimplebleAdapter extends EventEmitter implements Adapter {
+
+    public static EVENT_ENABLED = 'enabledchanged';
 
     private deviceHandles = new Map<string, noble.Peripheral>();
     private serviceHandles = new Map<string, noble.Service>();
@@ -52,7 +54,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         noble.on('stateChange', () => {
             if (this.enabled !== this.state) {
                 this.enabled = this.state;
-                this.emit(EVENT_ENABLED, this.enabled);
+                this.emit(NobleAdapter.EVENT_ENABLED, this.enabled);
             }
         });
     }
@@ -152,9 +154,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             if (this.validDevice(deviceInfo, serviceUUIDs)) {
                 const device = this.deviceToBluetoothDevice(deviceInfo);
 
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 if (!this.deviceHandles.has(device.id!)) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     this.deviceHandles.set(device.id!, deviceInfo);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
@@ -237,6 +237,12 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             const serviceUUID = getCanonicalUUID(service);
 
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
+                /*
+                if (!this.serviceHandles.has(serviceUUID)) {
+                    this.serviceHandles.set(serviceUUID, service);
+                }
+                */
+
                 discovered.push({
                     uuid: serviceUUID,
                     primary: false
@@ -278,7 +284,6 @@ export class NobleAdapter extends EventEmitter implements Adapter {
                 characteristicInfo.on('data', (data: Buffer, isNotification: boolean) => {
                     if (isNotification === true && this.charNotifies.has(charUUID)) {
                         const dataView = this.bufferToDataView(data);
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         this.charNotifies.get(charUUID)!(dataView);
                     }
                 });
@@ -396,4 +401,3 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         return this.descriptorHandles.get(handle).writeValueAsync(buffer);
     }
 }
-*/
