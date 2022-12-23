@@ -53,7 +53,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -79,7 +79,7 @@ exports.BluetoothRemoteGATTCharacteristic = void 0;
 var dispatcher_1 = require("./dispatcher");
 var descriptor_1 = require("./descriptor");
 var helpers_1 = require("./helpers");
-var adapter_1 = require("./adapter");
+var adapters_1 = require("./adapters");
 var events_1 = require("./events");
 var isView = function (source) { return source.buffer !== undefined; };
 /**
@@ -185,7 +185,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                             throw new Error('getDescriptors error: device not connected');
                         }
                         if (!!this.descriptors) return [3 /*break*/, 2];
-                        return [4 /*yield*/, adapter_1.adapter.discoverDescriptors(this.handle)];
+                        return [4 /*yield*/, adapters_1.adapter.discoverDescriptors(this.handle)];
                     case 1:
                         descriptors = _a.sent();
                         this.descriptors = descriptors.map(function (descriptorInfo) {
@@ -199,7 +199,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         if (!descriptor) {
                             return [2 /*return*/, this.descriptors];
                         }
-                        filtered = this.descriptors.filter(function (descriptorObject) { return descriptorObject.uuid === helpers_1.getDescriptorUUID(descriptor); });
+                        filtered = this.descriptors.filter(function (descriptorObject) { return descriptorObject.uuid === (0, helpers_1.getDescriptorUUID)(descriptor); });
                         if (filtered.length !== 1) {
                             throw new Error('getDescriptors error: descriptor not found');
                         }
@@ -221,7 +221,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         if (!this.service.device.gatt.connected) {
                             throw new Error('readValue error: device not connected');
                         }
-                        return [4 /*yield*/, adapter_1.adapter.readCharacteristic(this.handle)];
+                        return [4 /*yield*/, adapters_1.adapter.readCharacteristic(this.handle)];
                     case 1:
                         dataView = _a.sent();
                         this.setValue(dataView, true);
@@ -245,7 +245,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         }
                         arrayBuffer = isView(value) ? value.buffer : value;
                         dataView = new DataView(arrayBuffer);
-                        return [4 /*yield*/, adapter_1.adapter.writeCharacteristic(this.handle, dataView)];
+                        return [4 /*yield*/, adapters_1.adapter.writeCharacteristic(this.handle, dataView)];
                     case 1:
                         _a.sent();
                         this.setValue(dataView);
@@ -269,7 +269,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         }
                         arrayBuffer = isView(value) ? value.buffer : value;
                         dataView = new DataView(arrayBuffer);
-                        return [4 /*yield*/, adapter_1.adapter.writeCharacteristic(this.handle, dataView, false)];
+                        return [4 /*yield*/, adapters_1.adapter.writeCharacteristic(this.handle, dataView, false)];
                     case 1:
                         _a.sent();
                         this.setValue(dataView);
@@ -293,7 +293,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         }
                         arrayBuffer = isView(value) ? value.buffer : value;
                         dataView = new DataView(arrayBuffer);
-                        return [4 /*yield*/, adapter_1.adapter.writeCharacteristic(this.handle, dataView, true)];
+                        return [4 /*yield*/, adapters_1.adapter.writeCharacteristic(this.handle, dataView, true)];
                     case 1:
                         _a.sent();
                         this.setValue(dataView);
@@ -315,7 +315,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         if (!this.service.device.gatt.connected) {
                             throw new Error('startNotifications error: device not connected');
                         }
-                        return [4 /*yield*/, adapter_1.adapter.enableNotify(this.handle, function (dataView) {
+                        return [4 /*yield*/, adapters_1.adapter.enableNotify(this.handle, function (dataView) {
                                 _this.setValue(dataView, true);
                             })];
                     case 1:
@@ -337,7 +337,7 @@ var BluetoothRemoteGATTCharacteristic = /** @class */ (function (_super) {
                         if (!this.service.device.gatt.connected) {
                             throw new Error('stopNotifications error: device not connected');
                         }
-                        return [4 /*yield*/, adapter_1.adapter.disableNotify(this.handle)];
+                        return [4 /*yield*/, adapters_1.adapter.disableNotify(this.handle)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, this];

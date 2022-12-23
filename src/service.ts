@@ -27,7 +27,7 @@ import { EventDispatcher, TypedDispatcher } from './dispatcher';
 import { BluetoothDevice } from './device';
 import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from './characteristic';
 import { getCharacteristicUUID, getServiceUUID } from './helpers';
-import { adapter } from './adapter';
+import { adapter } from './adapters';
 import { W3CBluetoothRemoteGATTService } from './interfaces';
 import { DOMEvent } from './events';
 

@@ -277,7 +277,7 @@ var getServiceUUID = function (service) {
     if (typeof service === 'string' && bluetoothServices[service]) {
         service = bluetoothServices[service];
     }
-    return exports.getCanonicalUUID(service);
+    return (0, exports.getCanonicalUUID)(service);
 };
 exports.getServiceUUID = getServiceUUID;
 /**
@@ -290,7 +290,7 @@ var getCharacteristicUUID = function (characteristic) {
     if (typeof characteristic === 'string' && bluetoothCharacteristics[characteristic]) {
         characteristic = bluetoothCharacteristics[characteristic];
     }
-    return exports.getCanonicalUUID(characteristic);
+    return (0, exports.getCanonicalUUID)(characteristic);
 };
 exports.getCharacteristicUUID = getCharacteristicUUID;
 /**
@@ -303,7 +303,7 @@ var getDescriptorUUID = function (descriptor) {
     if (typeof descriptor === 'string' && bluetoothDescriptors[descriptor]) {
         descriptor = bluetoothDescriptors[descriptor];
     }
-    return exports.getCanonicalUUID(descriptor);
+    return (0, exports.getCanonicalUUID)(descriptor);
 };
 exports.getDescriptorUUID = getDescriptorUUID;
 //# sourceMappingURL=helpers.js.map

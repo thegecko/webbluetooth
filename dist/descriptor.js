@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -61,7 +61,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BluetoothRemoteGATTDescriptor = void 0;
-var adapter_1 = require("./adapter");
+var adapters_1 = require("./adapters");
 /**
  * Bluetooth Remote GATT Descriptor class
  */
@@ -84,7 +84,7 @@ var BluetoothRemoteGATTDescriptor = /** @class */ (function () {
         this.characteristic = init.characteristic;
         this.uuid = init.uuid;
         this._value = init.value;
-        this.handle = this.characteristic.uuid + "-" + this.uuid;
+        this.handle = "".concat(this.characteristic.uuid, "-").concat(this.uuid);
     }
     Object.defineProperty(BluetoothRemoteGATTDescriptor.prototype, "value", {
         /**
@@ -109,7 +109,7 @@ var BluetoothRemoteGATTDescriptor = /** @class */ (function () {
                         if (!this.characteristic.service.device.gatt.connected) {
                             throw new Error('readValue error: device not connected');
                         }
-                        return [4 /*yield*/, adapter_1.adapter.readDescriptor(this.handle)];
+                        return [4 /*yield*/, adapters_1.adapter.readDescriptor(this.handle)];
                     case 1:
                         dataView = _a.sent();
                         this._value = dataView;
@@ -134,7 +134,7 @@ var BluetoothRemoteGATTDescriptor = /** @class */ (function () {
                         isView = function (source) { return source.buffer !== undefined; };
                         arrayBuffer = isView(value) ? value.buffer : value;
                         dataView = new DataView(arrayBuffer);
-                        return [4 /*yield*/, adapter_1.adapter.writeDescriptor(this.handle, dataView)];
+                        return [4 /*yield*/, adapters_1.adapter.writeDescriptor(this.handle, dataView)];
                     case 1:
                         _a.sent();
                         this._value = dataView;

@@ -24,7 +24,7 @@ export declare class BluetoothRemoteGATTCharacteristic extends BluetoothRemoteGA
     /**
      * The unique identifier of the characteristic
      */
-    readonly uuid: any;
+    readonly uuid: string | undefined;
     /**
      * The properties of the characteristic
      */

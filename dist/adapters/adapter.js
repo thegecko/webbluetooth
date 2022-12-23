@@ -1,7 +1,7 @@
 "use strict";
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2022 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,30 +23,5 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Bluetooth = exports.bluetooth = void 0;
-var bluetooth_1 = require("./bluetooth");
-Object.defineProperty(exports, "Bluetooth", { enumerable: true, get: function () { return bluetooth_1.Bluetooth; } });
-/**
- * Default bluetooth instance synonymous with `navigator.bluetooth`
- */
-exports.bluetooth = new bluetooth_1.Bluetooth();
-/**
- * Helper methods and enums
- */
-__exportStar(require("./helpers"), exports);
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=adapter.js.map

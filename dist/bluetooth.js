@@ -53,7 +53,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -79,7 +79,7 @@ exports.Bluetooth = void 0;
 var dispatcher_1 = require("./dispatcher");
 var device_1 = require("./device");
 var helpers_1 = require("./helpers");
-var adapter_1 = require("./adapter");
+var adapters_1 = require("./adapters");
 var events_1 = require("./events");
 /**
  * Bluetooth class
@@ -100,7 +100,7 @@ var Bluetooth = /** @class */ (function (_super) {
         _this.deviceFound = options.deviceFound;
         if (options.scanTime)
             _this.scanTime = options.scanTime * 1000;
-        adapter_1.adapter.on(adapter_1.NobleAdapter.EVENT_ENABLED, function (_value) {
+        adapters_1.adapter.on(adapters_1.EVENT_ENABLED, function (_value) {
             _this.dispatchEvent(new events_1.DOMEvent(_this, 'availabilitychanged'));
         });
         return _this;
@@ -216,7 +216,7 @@ var Bluetooth = /** @class */ (function (_super) {
      * @returns Promise containing a flag indicating bluetooth availability
      */
     Bluetooth.prototype.getAvailability = function () {
-        return adapter_1.adapter.getEnabled();
+        return adapters_1.adapter.getEnabled();
     };
     /**
      * Scans for a device matching optional filters
@@ -275,7 +275,7 @@ var Bluetooth = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         found = false;
-                        return [4 /*yield*/, adapter_1.adapter.startScan(searchUUIDs, function (deviceInfo) {
+                        return [4 /*yield*/, adapters_1.adapter.startScan(searchUUIDs, function (deviceInfo) {
                                 var validServices = [];
                                 var complete = function (bluetoothDevice) { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
@@ -346,7 +346,7 @@ var Bluetooth = /** @class */ (function (_super) {
         }
         return new Promise(function (resolve) {
             var devices = [];
-            adapter_1.adapter.startScan([], function (deviceInfo) {
+            adapters_1.adapter.startScan([], function (deviceInfo) {
                 Object.assign(deviceInfo, {
                     _bluetooth: _this,
                     _allowedServices: []
@@ -376,7 +376,7 @@ var Bluetooth = /** @class */ (function (_super) {
                 if (this.scanner) {
                     clearTimeout(this.scanner);
                     this.scanner = undefined;
-                    adapter_1.adapter.stopScan();
+                    adapters_1.adapter.stopScan();
                 }
                 return [2 /*return*/];
             });

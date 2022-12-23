@@ -53,7 +53,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -79,7 +79,7 @@ exports.BluetoothRemoteGATTService = void 0;
 var dispatcher_1 = require("./dispatcher");
 var characteristic_1 = require("./characteristic");
 var helpers_1 = require("./helpers");
-var adapter_1 = require("./adapter");
+var adapters_1 = require("./adapters");
 var events_1 = require("./events");
 /**
  * Bluetooth Remote GATT Service class
@@ -204,7 +204,7 @@ var BluetoothRemoteGATTService = /** @class */ (function (_super) {
                             throw new Error('getCharacteristics error: device not connected');
                         }
                         if (!!this.characteristics) return [3 /*break*/, 2];
-                        return [4 /*yield*/, adapter_1.adapter.discoverCharacteristics(this.handle)];
+                        return [4 /*yield*/, adapters_1.adapter.discoverCharacteristics(this.handle)];
                     case 1:
                         characteristics = _a.sent();
                         this.characteristics = characteristics.map(function (characteristicInfo) {
@@ -219,7 +219,7 @@ var BluetoothRemoteGATTService = /** @class */ (function (_super) {
                             return [2 /*return*/, this.characteristics];
                         }
                         // Canonical-ize characteristic
-                        characteristic = helpers_1.getCharacteristicUUID(characteristic);
+                        characteristic = (0, helpers_1.getCharacteristicUUID)(characteristic);
                         filtered = this.characteristics.filter(function (characteristicObject) { return characteristicObject.uuid === characteristic; });
                         if (filtered.length !== 1) {
                             throw new Error('getCharacteristics error: characteristic not found');
@@ -273,7 +273,7 @@ var BluetoothRemoteGATTService = /** @class */ (function (_super) {
                             throw new Error('getIncludedServices error: device not connected');
                         }
                         if (!!this.services) return [3 /*break*/, 2];
-                        return [4 /*yield*/, adapter_1.adapter.discoverIncludedServices(this.handle, this.device._allowedServices)];
+                        return [4 /*yield*/, adapters_1.adapter.discoverIncludedServices(this.handle, this.device._allowedServices)];
                     case 1:
                         services = _a.sent();
                         this.services = services.map(function (serviceInfo) {
@@ -287,7 +287,7 @@ var BluetoothRemoteGATTService = /** @class */ (function (_super) {
                         if (!service) {
                             return [2 /*return*/, this.services];
                         }
-                        filtered = this.services.filter(function (serviceObject) { return serviceObject.uuid === helpers_1.getServiceUUID(service); });
+                        filtered = this.services.filter(function (serviceObject) { return serviceObject.uuid === (0, helpers_1.getServiceUUID)(service); });
                         if (filtered.length !== 1) {
                             throw new Error('getIncludedServices error: service not found');
                         }

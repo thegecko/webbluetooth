@@ -25,7 +25,7 @@
 
 import { BluetoothDevice } from './device';
 import { getServiceUUID } from './helpers';
-import { adapter } from './adapter';
+import { adapter } from './adapters';
 import { W3CBluetoothRemoteGATTServer } from './interfaces';
 import { BluetoothRemoteGATTService } from './service';
 import { DOMEvent } from './events';

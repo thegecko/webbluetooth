@@ -90,7 +90,7 @@ var BluetoothDevice = /** @class */ (function (_super) {
         _this._allowedServices = init._allowedServices;
         _this._serviceUUIDs = init._serviceUUIDs;
         if (!_this.name)
-            _this.name = "Unknown or Unsupported Device (" + _this.id + ")";
+            _this.name = "Unknown or Unsupported Device (".concat(_this.id, ")");
         if (!_this.gatt)
             _this.gatt = new server_1.BluetoothRemoteGATTServer(_this);
         return _this;

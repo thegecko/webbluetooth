@@ -2,24 +2,24 @@
 /**
  * @hidden
  */
-export declare type W3CBluetooth = Bluetooth;
+export type W3CBluetooth = Bluetooth;
 /**
  * @hidden
  */
-export declare type W3CBluetoothDevice = BluetoothDevice;
+export type W3CBluetoothDevice = BluetoothDevice;
 /**
  * @hidden
  */
-export declare type W3CBluetoothRemoteGATTServer = BluetoothRemoteGATTServer;
+export type W3CBluetoothRemoteGATTServer = BluetoothRemoteGATTServer;
 /**
  * @hidden
  */
-export declare type W3CBluetoothRemoteGATTService = BluetoothRemoteGATTService;
+export type W3CBluetoothRemoteGATTService = BluetoothRemoteGATTService;
 /**
  * @hidden
  */
-export declare type W3CBluetoothRemoteGATTCharacteristic = BluetoothRemoteGATTCharacteristic;
+export type W3CBluetoothRemoteGATTCharacteristic = BluetoothRemoteGATTCharacteristic;
 /**
  * @hidden
  */
-export declare type W3CBluetoothRemoteGATTDescriptor = BluetoothRemoteGATTDescriptor;
+export type W3CBluetoothRemoteGATTDescriptor = BluetoothRemoteGATTDescriptor;
