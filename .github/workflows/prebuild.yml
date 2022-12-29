@@ -20,19 +20,15 @@ jobs:
           - name: darwin
             os: macos-latest
             node: x64
-            command: prebuild --arch x64+arm64
           - name: win32-x86
             os: windows-latest
             node: x86
-            command: prebuild
           - name: win32-x64
             os: windows-latest
             node: x64
-            command: prebuild
           - name: linux-x64
             os: ubuntu-latest
             node: x64
-            command: prebuild
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -55,7 +51,7 @@ jobs:
       - if: contains(matrix.os, 'windows')
         uses: microsoft/setup-msbuild@v1.0.2
       - run: yarn install --ignore-scripts
-      - run: yarn ${{ matrix.command }}
+      - run: yarn prebuild
       - run: tar -zcvf ${{ matrix.name }}.tar.gz -C prebuilds .
       - uses: actions/upload-artifact@v3
         with:
