@@ -1,7 +1,7 @@
 # Node Web Bluetooth
 Node.js implementation of the Web Bluetooth Specification
 
-[![Build Status](https://github.com/thegecko/webbluetooth/workflows/ci/badge.svg)](https://github.com/thegecko/webbluetooth/actions)
+[![Build Status](https://github.com/thegecko/webbluetooth/workflows/prebuild/badge.svg)](https://github.com/thegecko/webbluetooth/actions)
 [![npm](https://img.shields.io/npm/dm/webbluetooth.svg)](https://www.npmjs.com/package/webbluetooth)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 

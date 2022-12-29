@@ -21,9 +21,9 @@
   "scripts": {
     "install": "prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
     "clean": "yarn clean:cpp && yarn clean:ts",
-    "clean:cpp": "cmake-js clean",
+    "clean:cpp": "cmake-js clean && git clean -fx ./prebuilds",
     "clean:ts": "git clean -fx ./dist ./docs",
-    "build": "yarn build:cpp && yarn build:ts",
+    "build:all": "yarn build:cpp && yarn build:ts",
     "build:cpp": "cmake-js compile",
     "build:ts": "tsc && yarn lint && yarn docs",
     "watch": "tsc -w --preserveWatchOutput",
