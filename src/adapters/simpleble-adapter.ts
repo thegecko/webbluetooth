@@ -23,7 +23,6 @@
 * SOFTWARE.
 */
 
-//import { platform } from 'os';
 import { EventEmitter } from 'events';
 import { Adapter } from './adapter';
 import { getCanonicalUUID } from '../helpers';
@@ -42,20 +41,12 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
     private adapter: bigint | undefined;
     private peripherals = new Map<string, bigint>();
-    private services = new Map<bigint, Service[]>();
-    private characteristics = new Map<string, string[]>();
+    private servicesByPeripheral = new Map<bigint, Service[]>();
+    private serviceByCharacteristic = new Map<string, string>();
+    private characteristicsByService = new Map<string, string[]>();
+    private characteristicByDescriptor = new Map<string, string>();
     private descriptors = new Map<string, string[]>();
-
-    /*
-    private deviceHandles = new Map<string, noble.Peripheral>();
-    private serviceHandles = new Map<string, noble.Service>();
-    private characteristicHandles = new Map<string, noble.Characteristic>();
-    private descriptorHandles = new Map<string, noble.Descriptor>();
-    private charNotifies = new Map<string, (value: DataView) => void>();
-    */
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
-    // private initialised = false;
-    // private os: string = platform();
 
     /*
     SimpleBle.simpleble_adapter_set_callback_on_updated
@@ -82,20 +73,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
         return SimpleBle.simpleble_adapter_scan_is_active(this.adapter);
     }
-
-    /*
-    private bufferToDataView(buffer: Buffer): DataView {
-        // Buffer to ArrayBuffer
-        const arrayBuffer = new Uint8Array(buffer).buffer;
-        return new DataView(arrayBuffer);
-    }
-
-    private dataViewToBuffer(dataView: DataView): Buffer {
-        // DataView to TypedArray
-        const typedArray = new Uint8Array(dataView.buffer);
-        return Buffer.from(typedArray);
-    }
-    */
 
     private validDevice(_handle: bigint, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
@@ -258,6 +235,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         baseDevice.removeAllListeners('connect');
         baseDevice.removeAllListeners('disconnect');
 
+        // TODo using simpleble_peripheral_set_callback_on_disconnected
         if (disconnectFn) {
             baseDevice.once('disconnect', () => {
                 this.serviceHandles.clear();
@@ -310,16 +288,21 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             }
 
             const chars = service.characteristics.map(char => char.uuid);
-            this.characteristics.set(serviceUUID, chars);
+            this.characteristicsByService.set(serviceUUID, chars);
 
             for (const char of service.characteristics) {
+                this.serviceByCharacteristic.set(char.uuid, serviceUUID);
                 this.descriptors.set(char.uuid, char.descriptors);
+
+                for (const desc of char.descriptors) {
+                    this.characteristicByDescriptor.set(desc, char.uuid);
+                }
             }
 
             services.push(service);
         }
 
-        this.services.set(handle, services);
+        this.servicesByPeripheral.set(handle, services);
         return discovered;
     }
 
@@ -329,7 +312,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     }
 
     public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
-        const characteristics = this.characteristics.get(serviceUuid);
+        const characteristics = this.characteristicsByService.get(serviceUuid);
         const discovered = [];
 
         for (const characteristic of characteristics) {
@@ -385,38 +368,25 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return discovered;
     }
 
-    public async readCharacteristic(_handle: string): Promise<DataView> {
-        throw new Error('not implemented');
-
-        /*
-        const characteristic = this.characteristicHandles.get(handle);
-        const data = await characteristic.readAsync();
-        const dataView = this.bufferToDataView(data);
-        return dataView;
-        */
+    public async readCharacteristic(charUuid: string): Promise<DataView> {
+        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
+        const data = SimpleBle.simpleble_peripheral_read(this.adapter, serviceUuid, charUuid);
+        return new DataView(data.buffer);
     }
 
-    public async writeCharacteristic(_handle: string, _value: DataView, _withoutResponse = false): Promise<void> {
-        throw new Error('not implemented');
+    public async writeCharacteristic(charUuid: string, value: DataView, withoutResponse = false): Promise<void> {
+        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
+        let success = false;
 
-        /*
-        const buffer = this.dataViewToBuffer(value);
-        const characteristic = this.characteristicHandles.get(handle);
-
-        if (withoutResponse === undefined) {
-            // writeWithoutResponse and authenticatedSignedWrites don't require a response
-            withoutResponse = characteristic.properties.indexOf('writeWithoutResponse') >= 0
-                || characteristic.properties.indexOf('authenticatedSignedWrites') >= 0;
+        if (withoutResponse) {
+            success = SimpleBle.simpleble_peripheral_write_request(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
+        } else {
+            success = SimpleBle.simpleble_peripheral_write_command(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
         }
 
-        await characteristic.writeAsync(buffer, withoutResponse);
-
-        // TODO: check still needed
-        // Add a small delay for writing without response when not on MacOS
-        if (this.os !== 'darwin' && withoutResponse) {
-            await new Promise(resolve => setTimeout(resolve, 25));
+        if (!success) {
+            throw new Error('Write failed');
         }
-        */
     }
 
     public enableNotify(_handle: string, _notifyFn: (value: DataView) => void): Promise<void> {
@@ -475,22 +445,20 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
     }
 
-    public async readDescriptor(_handle: string): Promise<DataView> {
-        throw new Error('not implemented');
-
-        /*
-        const data = await this.descriptorHandles.get(handle).readValueAsync();
-        const dataView = this.bufferToDataView(data);
-        return dataView;
-        */
+    public async readDescriptor(descUuid: string): Promise<DataView> {
+        const charUuid = this.characteristicByDescriptor.get(descUuid);
+        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
+        const data = SimpleBle.simpleble_peripheral_read_descriptor(this.adapter, serviceUuid, charUuid, descUuid);
+        return new DataView(data.buffer);
     }
 
-    public writeDescriptor(_handle: string, _value: DataView): Promise<void> {
-        throw new Error('not implemented');
+    public async writeDescriptor(descUuid: string, value: DataView): Promise<void> {
+        const charUuid = this.characteristicByDescriptor.get(descUuid);
+        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
+        const success = SimpleBle.simpleble_peripheral_write_descriptor(this.adapter, serviceUuid, charUuid, descUuid, new Uint8Array(value.buffer));
 
-        /*
-        const buffer = this.dataViewToBuffer(value);
-        return this.descriptorHandles.get(handle).writeValueAsync(buffer);
-        */
+        if (!success) {
+            throw new Error('Write failed');
+        }
     }
 }
