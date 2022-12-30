@@ -26,11 +26,12 @@
 //import { platform } from 'os';
 import { EventEmitter } from 'events';
 import { Adapter } from './adapter';
-// import { getCanonicalUUID } from '../helpers';
+import { getCanonicalUUID } from '../helpers';
 import { BluetoothDevice } from '../device';
 import { BluetoothRemoteGATTService } from '../service';
 import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
 import * as SimpleBle from './simpleble';
+import { Service } from './simpleble';
 
 const FIND_TIMEOUT = 500;
 
@@ -40,7 +41,10 @@ const FIND_TIMEOUT = 500;
 export class SimplebleAdapter extends EventEmitter implements Adapter {
 
     private adapter: bigint | undefined;
-    private peripherals = new Set<bigint>();
+    private peripherals = new Map<string, bigint>();
+    private services = new Map<bigint, Service[]>();
+    private characteristics = new Map<string, string[]>();
+    private descriptors = new Map<string, string[]>();
 
     /*
     private deviceHandles = new Map<string, noble.Peripheral>();
@@ -52,7 +56,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
     // private initialised = false;
     // private os: string = platform();
-    private scanning = false;
 
     /*
     constructor() {
@@ -70,6 +73,13 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private get state(): boolean {
         const adaptersEnabled = SimpleBle.simpleble_adapter_is_bluetooth_enabled();
         return adaptersEnabled.length && !!adaptersEnabled[0];
+    }
+
+    private get scanning(): boolean {
+        if (!this.adapter) { 
+            return false;
+        }
+        return SimpleBle.simpleble_adapter_scan_is_active(this.adapter);
     }
 
     /*
@@ -124,16 +134,16 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     }
 
     private buildBluetoothDevice(handle: bigint): Partial<BluetoothDevice> {
-        const id = SimpleBle.simpleble_peripheral_identifier(handle);
+        const name = SimpleBle.simpleble_peripheral_identifier(handle);
         const address = SimpleBle.simpleble_peripheral_address(handle);
         const rssi = SimpleBle.simpleble_peripheral_rssi(handle);
         const mtu = SimpleBle.simpleble_peripheral_mtu(handle);
+        const id = address || `${handle}`;
 
         const serviceUUIDs: string[] = [];
         const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
         for (let i = 0; i < serviceCount; i ++) {
             const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
-            // save service
             serviceUUIDs.push(service.uuid);
         }
 
@@ -144,7 +154,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             manufacturerData.set(manufacturer.id, new DataView(manufacturer.data.buffer));
         }
 
-        /*
+        /* TODO
         if (deviceInfo.advertisement.manufacturerData) {
             // First 2 bytes are 16-bit company identifier
             const company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
@@ -166,8 +176,8 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
 
         return {
-            id: address || id,
-            name: id,
+            id,
+            name,
             _serviceUUIDs: serviceUUIDs,
             adData: {
                 rssi,
@@ -208,15 +218,14 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             if (this.validDevice(handle, serviceUUIDs)) {
                 const device = this.buildBluetoothDevice(handle);
 
-                if (!this.peripherals.has(handle)) {
-                    this.peripherals.add(handle);
+                if (!this.peripherals.has(device.id)) {
+                    this.peripherals.set(device.id, handle);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
                 }
             }
         };
 
-        this.scanning = true;
         this.adapter = SimpleBle.simpleble_adapter_get_handle(0);
         SimpleBle.simpleble_adapter_scan_start(this.adapter);
 
@@ -226,14 +235,21 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
     public stopScan(_errorFn?: (errorMsg: string) => void): void {
         this.discoverFn = undefined;
-        this.scanning = false;
         if (this.adapter) {
             SimpleBle.simpleble_adapter_scan_stop(this.adapter);
         }
     }
 
-    public connect(_handle: string, _disconnectFn?: () => void): Promise<void> {
-        throw new Error('not implemented');
+    public async connect(id: string, _disconnectFn?: () => void): Promise<void> {
+        const handle = this.peripherals.get(id);
+        if (!handle) {
+            throw new Error('Peripheral not found');
+        }
+
+        const success = SimpleBle.simpleble_peripheral_connect(handle);
+        if (!success) {
+            throw new Error('Connect failed');
+        }
         /*
         const baseDevice = this.deviceHandles.get(handle);
         baseDevice.removeAllListeners('connect');
@@ -253,88 +269,75 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
     }
 
-    public disconnect(_handle: string): Promise<void> {
-        throw new Error('not implemented');
+    public async disconnect(id: string): Promise<void> {
+        const handle = this.peripherals.get(id);
+        if (!handle) {
+            throw new Error('Peripheral not found');
+        }
+
+        const success = SimpleBle.simpleble_peripheral_disconnect(handle);
+        if (!success) {
+            throw new Error('Connect failed');
+        }
         /*
         const baseDevice = this.deviceHandles.get(handle);
         return baseDevice.disconnectAsync();
         */
     }
 
-    public async discoverServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
-        throw new Error('not implemented');
+    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+        const handle = this.peripherals.get(id);
+        if (!handle) {
+            throw new Error('Peripheral not found');
+        }
 
-        /*
-        const baseDevice = this.deviceHandles.get(handle);
-        const services = await baseDevice.discoverServicesAsync();
         const discovered = [];
 
-        for (const serviceInfo of services) {
-            const serviceUUID = getCanonicalUUID(serviceInfo.uuid);
+        const services: Service[] = [];
+        const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
+        for (let i = 0; i < serviceCount; i ++) {
+            const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
+            const serviceUUID = getCanonicalUUID(service.uuid);
 
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                if (!this.serviceHandles.has(serviceUUID)) {
-                    this.serviceHandles.set(serviceUUID, serviceInfo);
-                }
-
                 discovered.push({
                     uuid: serviceUUID,
                     primary: true
                 });
             }
+
+            const chars = service.characteristics.map(char => char.uuid);
+            this.characteristics.set(serviceUUID, chars);
+
+            for (const char of service.characteristics) {
+                this.descriptors.set(char.uuid, char.descriptors);
+            }
+
+            services.push(service);
         }
 
+        this.services.set(handle, services);
         return discovered;
-        */
     }
 
     public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
-        throw new Error('not implemented');
-
-        /*
-        const serviceInfo = this.serviceHandles.get(handle);
-        const services = await serviceInfo.discoverIncludedServicesAsync();
-        const discovered = [];
-
-        // TODO: check retiurn here!
-        for (const service of services) {
-            const serviceUUID = getCanonicalUUID(service);
-
-            if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
-                if (!this.serviceHandles.has(serviceUUID)) {
-                    this.serviceHandles.set(serviceUUID, service);
-                }
-
-                discovered.push({
-                    uuid: serviceUUID,
-                    primary: false
-                });
-            }
-        }
-
-        return discovered;
-        */
+        // Currently not implemented
+        return [];
     }
 
-    public async discoverCharacteristics(_handle: string, _characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
-        throw new Error('not implemented');
-
-        /*
-        const serviceInfo = this.serviceHandles.get(handle);
-        const characteristics = await serviceInfo.discoverCharacteristicsAsync();
+    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
+        const characteristics = this.characteristics.get(serviceUuid);
         const discovered = [];
 
-        for (const characteristicInfo of characteristics) {
-            const charUUID = getCanonicalUUID(characteristicInfo.uuid);
+        for (const characteristic of characteristics) {
+            const charUUID = getCanonicalUUID(characteristic);
 
             if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
-                if (!this.characteristicHandles.has(charUUID)) {
-                    this.characteristicHandles.set(charUUID, characteristicInfo);
-                }
 
                 discovered.push({
                     uuid: charUUID,
                     properties: {
+                        /*
                         broadcast: (characteristicInfo.properties.indexOf('broadcast') >= 0),
                         read: (characteristicInfo.properties.indexOf('read') >= 0),
                         writeWithoutResponse: (characteristicInfo.properties.indexOf('writeWithoutResponse') >= 0),
@@ -344,39 +347,32 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                         authenticatedSignedWrites: (characteristicInfo.properties.indexOf('authenticatedSignedWrites') >= 0),
                         reliableWrite: (characteristicInfo.properties.indexOf('reliableWrite') >= 0),
                         writableAuxiliaries: (characteristicInfo.properties.indexOf('writableAuxiliaries') >= 0)
+                        */
                     }
                 });
 
+                /*
                 characteristicInfo.on('data', (data: Buffer, isNotification: boolean) => {
                     if (isNotification === true && this.charNotifies.has(charUUID)) {
                         const dataView = this.bufferToDataView(data);
                         this.charNotifies.get(charUUID)!(dataView);
                     }
                 });
+                */
             }
         }
 
         return discovered;
-        */
     }
 
-    public async discoverDescriptors(_handle: string, _descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
-        throw new Error('not implemented');
-
-        /*
-        const characteristicInfo = this.characteristicHandles.get(handle);
-        const descriptors = await characteristicInfo.discoverDescriptorsAsync();
+    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
+        const descriptors = this.descriptors.get(charUuid);
         const discovered = [];
 
-        for (const descriptorInfo of descriptors) {
-            const descUUID = getCanonicalUUID(descriptorInfo.uuid);
+        for (const descriptor of descriptors) {
+            const descUUID = getCanonicalUUID(descriptor);
 
             if (!descriptorUUIDs || descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
-                const descHandle = characteristicInfo.uuid + '-' + descriptorInfo.uuid;
-                if (!this.descriptorHandles.has(descHandle)) {
-                    this.descriptorHandles.set(descHandle, descriptorInfo);
-                }
-
                 discovered.push({
                     uuid: descUUID
                 });
@@ -384,7 +380,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
 
         return discovered;
-        */
     }
 
     public async readCharacteristic(_handle: string): Promise<DataView> {
