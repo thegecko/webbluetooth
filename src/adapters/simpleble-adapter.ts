@@ -58,6 +58,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     // private os: string = platform();
 
     /*
+    SimpleBle.simpleble_adapter_set_callback_on_updated
     constructor() {
         super();
         this.enabled = this.state;
@@ -76,23 +77,11 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     }
 
     private get scanning(): boolean {
-        if (!this.adapter) { 
+        if (!this.adapter) {
             return false;
         }
         return SimpleBle.simpleble_adapter_scan_is_active(this.adapter);
     }
-
-    /*
-    private init(): void {
-        if (this.initialised) {
-            return;
-        }
-        noble.on('discover', (deviceInfo: noble.Peripheral) => {
-            if (this.discoverFn) this.discoverFn(deviceInfo);
-        });
-        this.initialised = true;
-    }
-    */
 
     /*
     private bufferToDataView(buffer: Buffer): DataView {
@@ -226,7 +215,16 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             }
         };
 
-        this.adapter = SimpleBle.simpleble_adapter_get_handle(0);
+        if (!this.adapter) {
+            this.adapter = SimpleBle.simpleble_adapter_get_handle(0);
+            /* TODo - once implemented
+            SimpleBle.simpleble_adapter_set_callback_on_found(this.adapter, (_adapter: bigint, peripheral: bigint) => {
+                if (this.discoverFn) {
+                    this.discoverFn(peripheral);
+                }
+            }, undefined);
+            */
+        }
         SimpleBle.simpleble_adapter_scan_start(this.adapter);
 
         this.peripherals.clear();
@@ -244,6 +242,11 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         const handle = this.peripherals.get(id);
         if (!handle) {
             throw new Error('Peripheral not found');
+        }
+
+        const connectable = SimpleBle.simpleble_peripheral_is_connectable(handle);
+        if (!connectable) {
+            throw new Error('Connection not possible');
         }
 
         const success = SimpleBle.simpleble_peripheral_connect(handle);
