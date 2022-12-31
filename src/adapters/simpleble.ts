@@ -40,6 +40,7 @@ export type UserData = bigint | null;
 export interface Characteristic {
     uuid: string;
     descriptors: string[];
+    capabilities: string[];
 }
 
 /** A SimpleBLE service. */

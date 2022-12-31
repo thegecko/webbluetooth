@@ -292,6 +292,14 @@ Napi::Value PeripheralWrapper::ServicesGet(const Napi::CallbackInfo &info) {
         Napi::Array::New(env, characteristic.descriptors().size());
     charObj.Set("uuid", characteristic.uuid());
 
+    Napi::Array capabilitiesArray =
+        Napi::Array::New(env, characteristic.capabilities().size());
+
+    for (size_t j = 0; j < characteristic.capabilities().size(); j++) {
+      capabilitiesArray[j] = characteristic.capabilities()[j];
+    }
+    charObj.Set("capabilities", capabilitiesArray);
+
     for (size_t j = 0; j < characteristic.descriptors().size(); j++) {
       SimpleBLE::Descriptor descriptor = characteristic.descriptors()[j];
       descriptorsArray[j] = descriptor.uuid();

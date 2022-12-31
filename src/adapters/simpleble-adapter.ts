@@ -24,13 +24,12 @@
 */
 
 import { EventEmitter } from 'events';
+import * as SimpleBle from './simpleble';
 import { Adapter } from './adapter';
 import { getCanonicalUUID } from '../helpers';
 import { BluetoothDevice } from '../device';
 import { BluetoothRemoteGATTService } from '../service';
 import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
-import * as SimpleBle from './simpleble';
-import { Service } from './simpleble';
 
 const FIND_TIMEOUT = 500;
 
@@ -41,9 +40,9 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
     private adapter: bigint | undefined;
     private peripherals = new Map<string, bigint>();
-    private servicesByPeripheral = new Map<bigint, Service[]>();
+    private servicesByPeripheral = new Map<bigint, SimpleBle.Service[]>();
     private serviceByCharacteristic = new Map<string, string>();
-    private characteristicsByService = new Map<string, string[]>();
+    private characteristicsByService = new Map<string, SimpleBle.Characteristic[]>();
     private characteristicByDescriptor = new Map<string, string>();
     private descriptors = new Map<string, string[]>();
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
@@ -274,7 +273,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
         const discovered = [];
 
-        const services: Service[] = [];
+        const services: SimpleBle.Service[] = [];
         const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
         for (let i = 0; i < serviceCount; i ++) {
             const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
@@ -287,8 +286,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                 });
             }
 
-            const chars = service.characteristics.map(char => char.uuid);
-            this.characteristicsByService.set(serviceUUID, chars);
+            this.characteristicsByService.set(serviceUUID, service.characteristics);
 
             for (const char of service.characteristics) {
                 this.serviceByCharacteristic.set(char.uuid, serviceUUID);
@@ -316,24 +314,22 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         const discovered = [];
 
         for (const characteristic of characteristics) {
-            const charUUID = getCanonicalUUID(characteristic);
+            const charUUID = getCanonicalUUID(characteristic.uuid);
 
             if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
 
                 discovered.push({
                     uuid: charUUID,
                     properties: {
-                        /*
-                        broadcast: (characteristicInfo.properties.indexOf('broadcast') >= 0),
-                        read: (characteristicInfo.properties.indexOf('read') >= 0),
-                        writeWithoutResponse: (characteristicInfo.properties.indexOf('writeWithoutResponse') >= 0),
-                        write: (characteristicInfo.properties.indexOf('write') >= 0),
-                        notify: (characteristicInfo.properties.indexOf('notify') >= 0),
-                        indicate: (characteristicInfo.properties.indexOf('indicate') >= 0),
-                        authenticatedSignedWrites: (characteristicInfo.properties.indexOf('authenticatedSignedWrites') >= 0),
-                        reliableWrite: (characteristicInfo.properties.indexOf('reliableWrite') >= 0),
-                        writableAuxiliaries: (characteristicInfo.properties.indexOf('writableAuxiliaries') >= 0)
-                        */
+                        // broadcast: characteristic.capabilities.includes('???'),
+                        read: characteristic.capabilities.includes('read'),
+                        writeWithoutResponse: characteristic.capabilities.includes('write_request'),
+                        write: characteristic.capabilities.includes('write_command'),
+                        notify: characteristic.capabilities.includes('notify'),
+                        indicate: characteristic.capabilities.includes('indicate'),
+                        // authenticatedSignedWrites: characteristic.capabilities.includes('???'),
+                        // reliableWrite: characteristic.capabilities.includes('???'),
+                        // writableAuxiliaries: characteristic.capabilities.includes('???'),
                     }
                 });
 
