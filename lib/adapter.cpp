@@ -8,20 +8,13 @@
     return env.Null();                                                         \
   }                                                                            \
                                                                                \
-  if (!info[0].IsBigInt()) {                                                   \
+  if (!info[0].IsExternal()) {                                                 \
     Napi::TypeError::New(env, "Invalid handle given")                          \
         .ThrowAsJavaScriptException();                                         \
     return env.Null();                                                         \
   }                                                                            \
                                                                                \
-  bool lossless;                                                               \
-  const uint64_t addr = info[0].As<Napi::BigInt>().Uint64Value(&lossless);     \
-  if (!lossless) {                                                             \
-    Napi::TypeError::New(env, "Not lossless").ThrowAsJavaScriptException();    \
-    return env.Null();                                                         \
-  }                                                                            \
-                                                                               \
-  handle = reinterpret_cast<simpleble_adapter_t>(addr);                        \
+  handle = info[0].As<Napi::External<simpleble_adapter_t>>().Data();           \
   if (handle == nullptr) {                                                     \
     Napi::TypeError::New(env, "Invalid handle").ThrowAsJavaScriptException();  \
     return env.Null();                                                         \
@@ -130,7 +123,7 @@ Napi::Value AdapterWrapper::GetHandle(const Napi::CallbackInfo &info) {
   uint32_t index = info[0].As<Napi::Number>().Uint32Value();
   simpleble_adapter_t handle = simpleble_adapter_get_handle(index);
 
-  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(handle));
+  return Napi::External<simpleble_adapter_t>::New(env, &handle);
 }
 
 Napi::Value AdapterWrapper::ReleaseHandle(const Napi::CallbackInfo &info) {
@@ -264,7 +257,8 @@ AdapterWrapper::ScanGetResultsHandle(const Napi::CallbackInfo &info) {
   simpleble_peripheral_t peripheral =
       simpleble_adapter_scan_get_results_handle(handle, index);
 
-  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral));
+  //
+  return Napi::External<simpleble_peripheral_t>::New(env, &peripheral);
 }
 
 Napi::Value
@@ -301,7 +295,7 @@ AdapterWrapper::GetPairedPeripheralsHandle(const Napi::CallbackInfo &info) {
   simpleble_peripheral_t peripheral =
       simpleble_adapter_get_paired_peripherals_handle(handle, index);
 
-  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral));
+  return Napi::External<simpleble_peripheral_t>::New(env, &peripheral);
 }
 
 Napi::Value

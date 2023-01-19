@@ -78,6 +78,7 @@ export interface RequestDeviceInfo {
     address: string;
     name?: string | undefined;
     manufacturerData?: BluetoothManufacturerData | undefined;
+    serviceData?: BluetoothServiceData | undefined;
     services?: BluetoothServiceUUID[] | undefined;
 }
 

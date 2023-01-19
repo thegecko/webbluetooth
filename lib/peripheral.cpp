@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <functional>
+#include <map>
 
 #define GET_AND_CHECK_HANDLE(env, info, handle)                                \
   if (info.Length() < 1) {                                                     \
@@ -10,20 +11,13 @@
     return env.Null();                                                         \
   }                                                                            \
                                                                                \
-  if (!info[0].IsBigInt()) {                                                   \
+  if (!info[0].IsExternal()) {                                                 \
     Napi::TypeError::New(env, "Invalid handle given")                          \
         .ThrowAsJavaScriptException();                                         \
     return env.Null();                                                         \
   }                                                                            \
                                                                                \
-  bool lossless;                                                               \
-  const uint64_t addr = info[0].As<Napi::BigInt>().Uint64Value(&lossless);     \
-  if (!lossless) {                                                             \
-    Napi::TypeError::New(env, "Not lossless").ThrowAsJavaScriptException();    \
-    return env.Null();                                                         \
-  }                                                                            \
-                                                                               \
-  handle = reinterpret_cast<simpleble_peripheral_t>(addr);                     \
+  handle = info[0].As<Napi::External<simpleble_peripheral_t>>().Data();        \
   if (handle == nullptr) {                                                     \
     Napi::TypeError::New(env, "Invalid handle").ThrowAsJavaScriptException();  \
     return env.Null();                                                         \
@@ -35,12 +29,43 @@ struct PeripheralContext {
   std::atomic<bool> done;
 };
 
-extern "C" void onPeripheralCallback(simpleble_peripheral_t peripheral, void* userdata) {
-  PeripheralContext* context = static_cast<PeripheralContext*>(userdata);
+std::map<simpleble_peripheral_t, Napi::FunctionReference *> notifyCallbacks;
+std::map<simpleble_peripheral_t, Napi::FunctionReference *> indicateCallbacks;
+
+
+extern "C" void onPeripheralCallback(simpleble_peripheral_t peripheral,
+                                     void *userdata) {
+  PeripheralContext *context = static_cast<PeripheralContext *>(userdata);
   if (!context->done) {
     context->done = true;
     context->cb.Call({});
     context->cb.Unref();
+  }
+}
+
+extern "C" void onPeripheralNotifyCallback(simpleble_uuid_t service,
+                                           simpleble_uuid_t characteristic,
+                                           const uint8_t *data,
+                                           size_t data_length, void *userdata) {
+  simpleble_peripheral_t handle = static_cast<simpleble_peripheral_t>(userdata);
+  if (notifyCallbacks.find(handle) != notifyCallbacks.end()) {
+    Napi::FunctionReference *callback = notifyCallbacks[handle];
+    Napi::Env env = callback->Env();
+    Napi::HandleScope scope(env);
+
+    if (callback->IsEmpty()) {
+      return;
+    }
+
+    Napi::String cbService =
+        Napi::String::New(env, service.value, SIMPLEBLE_UUID_STR_LEN);
+    Napi::String cbChar =
+        Napi::String::New(env, characteristic.value, SIMPLEBLE_UUID_STR_LEN);
+    Napi::Uint8Array cbData = Napi::Uint8Array::New(env, data_length);
+    for (size_t i = 0; i < data_length; i++) {
+      cbData[i] = data[i];
+    }
+    callback->Call({cbService, cbChar, cbData});
   }
 }
 
@@ -513,6 +538,7 @@ Napi::Value PeripheralWrapper::WriteCommand(const Napi::CallbackInfo &info) {
 
 Napi::Value PeripheralWrapper::Notify(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
   simpleble_peripheral_t handle;
   Napi::Value userdata = env.Null();
 
@@ -529,11 +555,6 @@ Napi::Value PeripheralWrapper::Notify(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (info.Length() < 4) {
-    Napi::TypeError::New(env, "Missing callback").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
   if (!info[1].IsString()) {
     Napi::TypeError::New(env, "Service is not a string")
         .ThrowAsJavaScriptException();
@@ -546,38 +567,35 @@ Napi::Value PeripheralWrapper::Notify(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (!info[3].IsFunction()) {
-    Napi::TypeError::New(env, "Invalid callback").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  if (info.Length() >= 5) {
-    userdata = info[4].As<Napi::BigInt>();
+  if (info[3].IsFunction()) {
+    Napi::FunctionReference *ref = new Napi::FunctionReference();
+    *ref = Napi::Persistent(info[3].As<Napi::Function>());
+    notifyCallbacks[handle] = ref;
+  } else {
+    delete notifyCallbacks[handle];
   }
 
   const Napi::String cbService = info[1].As<Napi::String>();
   const Napi::String cbChar = info[2].As<Napi::String>();
-  const std::string service = info[1].As<Napi::String>();
-  const std::string characteristic = info[2].As<Napi::String>();
-  Napi::Function cb = info[3].As<Napi::Function>();
-  SimpleBLE::Safe::Peripheral *peripheral =
-      (SimpleBLE::Safe::Peripheral *)handle;
+  simpleble_uuid_t service;
+  simpleble_uuid_t characteristic;
 
-  // clang-format off
-  bool success = peripheral->notify(service, characteristic, [=](SimpleBLE::ByteArray data) {
-    Napi::Uint8Array cbData = Napi::Uint8Array::New(env, data.size());
-    for (size_t i = 0; i < data.size(); i++) {
-      cbData[i] = static_cast<uint8_t>(data.at(i));
-    }
-    cb.Call(env.Global(), {cbService, cbChar, cbData, userdata});
-  });
-  // clang-format on
+  memcpy(service.value, cbService.Utf8Value().c_str(), SIMPLEBLE_UUID_STR_LEN);
+  memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
+         SIMPLEBLE_UUID_STR_LEN);
 
-  return Napi::Boolean::New(env, success);
+  auto err = simpleble_peripheral_notify(handle, service, characteristic,
+                                         onPeripheralNotifyCallback, handle);
+
+  //free(service.value);
+  //free(characteristic.value);
+
+  return Napi::Boolean::New(env, err == SIMPLEBLE_SUCCESS);
 }
 
 Napi::Value PeripheralWrapper::Indicate(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
   simpleble_peripheral_t handle;
   Napi::Value userdata = env.Null();
 
@@ -594,11 +612,6 @@ Napi::Value PeripheralWrapper::Indicate(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (info.Length() < 4) {
-    Napi::TypeError::New(env, "Missing callback").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
   if (!info[1].IsString()) {
     Napi::TypeError::New(env, "Service is not a string")
         .ThrowAsJavaScriptException();
@@ -611,34 +624,30 @@ Napi::Value PeripheralWrapper::Indicate(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  if (!info[3].IsFunction()) {
-    Napi::TypeError::New(env, "Invalid callback").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  if (info.Length() >= 5) {
-    userdata = info[4].As<Napi::BigInt>();
+  if (info[3].IsFunction()) {
+    Napi::FunctionReference *ref = new Napi::FunctionReference();
+    *ref = Napi::Persistent(info[3].As<Napi::Function>());
+    indicateCallbacks[handle] = ref;
+  } else {
+    delete indicateCallbacks[handle];
   }
 
   const Napi::String cbService = info[1].As<Napi::String>();
   const Napi::String cbChar = info[2].As<Napi::String>();
-  const std::string service = info[1].As<Napi::String>();
-  const std::string characteristic = info[2].As<Napi::String>();
-  Napi::Function cb = info[3].As<Napi::Function>();
-  SimpleBLE::Safe::Peripheral *peripheral =
-      (SimpleBLE::Safe::Peripheral *)handle;
+  simpleble_uuid_t service;
+  simpleble_uuid_t characteristic;
 
-  // clang-format off
-  bool success = peripheral->indicate(service, characteristic, [=](SimpleBLE::ByteArray data) {
-    Napi::Uint8Array cbData = Napi::Uint8Array::New(env, data.size());
-    for (size_t i = 0; i < data.size(); i++) {
-      cbData[i] = static_cast<uint8_t>(data.at(i));
-    }
-    cb.Call(env.Global(), {cbService, cbChar, cbData, userdata});
-  });
-  // clang-format on
+  memcpy(service.value, cbService.Utf8Value().c_str(), SIMPLEBLE_UUID_STR_LEN);
+  memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
+         SIMPLEBLE_UUID_STR_LEN);
 
-  return Napi::Boolean::New(env, success);
+  auto err = simpleble_peripheral_indicate(handle, service, characteristic,
+                                         onPeripheralNotifyCallback, handle);
+
+  //free(service.value);
+  //free(characteristic.value);
+
+  return Napi::Boolean::New(env, err == SIMPLEBLE_SUCCESS);
 }
 
 Napi::Value PeripheralWrapper::Unsubscribe(const Napi::CallbackInfo &info) {
@@ -832,7 +841,8 @@ PeripheralWrapper::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
   auto cbData = new PeripheralContext();
   cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
 
-  const auto ret = simpleble_peripheral_set_callback_on_connected(handle, onPeripheralCallback, cbData);
+  const auto ret = simpleble_peripheral_set_callback_on_connected(
+      handle, onPeripheralCallback, cbData);
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }
@@ -861,7 +871,8 @@ PeripheralWrapper::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
   auto cbData = new PeripheralContext();
   cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
 
-  const auto ret = simpleble_peripheral_set_callback_on_disconnected(handle, onPeripheralCallback, cbData);
+  const auto ret = simpleble_peripheral_set_callback_on_disconnected(
+      handle, onPeripheralCallback, cbData);
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }

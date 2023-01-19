@@ -465,8 +465,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
             throw new DOMException('Connection already in progress', "NetworkError");
         }
         this._bindings.simpleble_peripheral_set_callback_on_connected(this._peripheral, () => {
-            console.log("CONNECTED");
-            //this._connected = false;
+            this._connected = true;
         }, null);
         const ret = this._bindings.simpleble_peripheral_connect(this._peripheral);
         if (!ret) {

@@ -29,6 +29,7 @@ import { BluetoothDevice, BluetoothDeviceEventMap } from "./gatt.ts";
 import {
     BluetoothManufacturerData,
     BluetoothManufacturerDataFilter,
+    BluetoothServiceData,
     BluetoothServiceUUID,
 } from "./interfaces.ts";
 
@@ -191,7 +192,6 @@ export class Bluetooth extends EventTarget {
         let done = false;
 
         options.signal?.addEventListener("abort", () => {
-            console.log("ABORT CALLED");
             done = false;
         }, { once: true });
 
@@ -214,6 +214,7 @@ export class Bluetooth extends EventTarget {
                 const count = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
                 const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
                 const manufacturerData: BluetoothManufacturerData = new Map();
+                const serviceData: BluetoothServiceData = new Map();
                 const services: BluetoothServiceUUID[] = [];
                 for (let j = 0; j < serviceCount; j++) {
                     const service = this._bindings.simpleble_peripheral_services_get(d, j);
@@ -225,17 +226,11 @@ export class Bluetooth extends EventTarget {
                         manufacturerData.set(data.id, new DataView(data.data.buffer));
                     }
                 }
-                if (id === "HUB NO.4") {
-                    console.log(`Hub has ${this._bindings.simpleble_peripheral_services_count(d)} services`);
-                }
-                if (serviceCount > 0) {
-                    console.log("SERVICES");
-                    console.log(services);
-                }
                 const found = filterCb({
                     name: id,
                     address,
                     manufacturerData,
+                    serviceData,
                     services,
                 });
                 if (found) {
@@ -256,10 +251,15 @@ export class Bluetooth extends EventTarget {
     }
 
     private _createFilter(options: any): (info: RequestDeviceInfo) => boolean {
-        if (!options.filters && !options.filter) {
-            throw new TypeError("filter or filters must be given");
+        if (!options.filters && !options.filter && !options.acceptAllDevices) {
+            throw new TypeError("filter, filters, or acceptAllDevices must be given");
         } else if (options.filter) {
             return options.filter;
+        } else if (options.acceptAllDevices) {
+            // Return true for all devices.
+            return () => {
+                return true;
+            };
         }
 
         const cb = (info: RequestDeviceInfo): boolean => {
@@ -274,8 +274,8 @@ export class Bluetooth extends EventTarget {
     ): Promise<BluetoothDevice[]> {
         const timeout = options.timeout ?? 10000;
 
-        if (!options.filters && !options.filter) {
-            throw new TypeError("filter or filters must be given");
+        if (!options.filters && !options.filter && !options.acceptAllDevices) {
+            throw new TypeError("filter, filters, or acceptAllDevices must be given");
         }
 
         const filterCb = this._createFilter(options);
@@ -297,6 +297,7 @@ export class Bluetooth extends EventTarget {
             const dataCount = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
             const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
             const manufacturerData: BluetoothManufacturerData = new Map();
+            const serviceData: BluetoothServiceData = new Map();
             const services: BluetoothServiceUUID[] = [];
             for (let j = 0; j < serviceCount; j++) {
                 const service = this._bindings.simpleble_peripheral_services_get(d, j);
@@ -308,11 +309,14 @@ export class Bluetooth extends EventTarget {
                     manufacturerData.set(data.id, new DataView(data.data.buffer));
                 }
             }
+            // TODO: serviceData
+
             const found = filterCb({
                 name: id,
                 address,
                 manufacturerData,
-                services: []
+                serviceData,
+                services
             });
             if (found) {
                 const device = new BluetoothDevice(
