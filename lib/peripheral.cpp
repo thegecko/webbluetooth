@@ -58,6 +58,8 @@ Napi::Object PeripheralWrapper::Init(Napi::Env env, Napi::Object exports) {
               Napi::Function::New(env, &PeripheralWrapper::RSSI));
   exports.Set("simpleble_peripheral_mtu",
               Napi::Function::New(env, &PeripheralWrapper::MTU));
+  exports.Set("simpleble_peripheral_tx_power",
+              Napi::Function::New(env, &PeripheralWrapper::TxPower));
   exports.Set("simpleble_peripheral_connect",
               Napi::Function::New(env, &PeripheralWrapper::Connect));
   exports.Set("simpleble_peripheral_disconnect",
@@ -155,6 +157,16 @@ Napi::Value PeripheralWrapper::MTU(const Napi::CallbackInfo &info) {
 
   const uint16_t mtu = simpleble_peripheral_mtu(handle);
   return Napi::Number::New(env, mtu);
+}
+
+Napi::Value PeripheralWrapper::TxPower(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  simpleble_peripheral_t handle;
+
+  GET_AND_CHECK_HANDLE(env, info, handle);
+
+  const int16_t tx_power = simpleble_peripheral_tx_power(handle);
+  return Napi::Number::New(env, tx_power);
 }
 
 Napi::Value PeripheralWrapper::Connect(const Napi::CallbackInfo &info) {

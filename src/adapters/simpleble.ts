@@ -140,6 +140,9 @@ export declare function simpleble_peripheral_rssi(handle: Peripheral): number;
 /** Bluetooth MTU (Maximum Transmission Unit). */
 export declare function simpleble_peripheral_mtu(handle: Peripheral): number;
 
+/** Bluetooth advertised transmit power in dBm. */
+export declare function simpleble_peripheral_tx_power(handle: Peripheral): number;
+
 /** Connect to the device. */
 export declare function simpleble_peripheral_connect(handle: Peripheral): boolean;
 

@@ -48,7 +48,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
 
     /*
-    SimpleBle.simpleble_adapter_set_callback_on_updated
+    // TODO: use SimpleBle.simpleble_adapter_set_callback_on_updated
     constructor() {
         super();
         this.enabled = this.state;
@@ -80,6 +80,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
 
         return true;
+        // TODO: check advertised serviceUUDs
         /*
 
         if (!deviceInfo.advertisement.serviceUuids) {
@@ -102,7 +103,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         const name = SimpleBle.simpleble_peripheral_identifier(handle);
         const address = SimpleBle.simpleble_peripheral_address(handle);
         const rssi = SimpleBle.simpleble_peripheral_rssi(handle);
-        const mtu = SimpleBle.simpleble_peripheral_mtu(handle);
+        const txPower = SimpleBle.simpleble_peripheral_tx_power(handle);
         const id = address || `${handle}`;
 
         const serviceUUIDs: string[] = [];
@@ -119,7 +120,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             manufacturerData.set(manufacturer.id, new DataView(manufacturer.data.buffer));
         }
 
-        /* TODO
+        /* TODO: check this
         if (deviceInfo.advertisement.manufacturerData) {
             // First 2 bytes are 16-bit company identifier
             const company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
@@ -131,7 +132,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
 
         const serviceData = new Map();
-        //Todo
+        //TODO: is this possible
         /*
         if (deviceInfo.advertisement.serviceData) {
             for (const serviceAdvert of deviceInfo.advertisement.serviceData) {
@@ -146,7 +147,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             _serviceUUIDs: serviceUUIDs,
             adData: {
                 rssi,
-                txPower: mtu,
+                txPower,
                 serviceData,
                 manufacturerData
             }
@@ -193,7 +194,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
         if (!this.adapter) {
             this.adapter = SimpleBle.simpleble_adapter_get_handle(0);
-            /* TODo - once implemented
+            /* TODO: - once implemented
             SimpleBle.simpleble_adapter_set_callback_on_found(this.adapter, (_adapter: bigint, peripheral: bigint) => {
                 if (this.discoverFn) {
                     this.discoverFn(peripheral);
@@ -229,12 +230,13 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!success) {
             throw new Error('Connect failed');
         }
+        // TODO: ckear listeners
         /*
         const baseDevice = this.deviceHandles.get(handle);
         baseDevice.removeAllListeners('connect');
         baseDevice.removeAllListeners('disconnect');
 
-        // TODo using simpleble_peripheral_set_callback_on_disconnected
+        // TODO: using simpleble_peripheral_set_callback_on_disconnected
         if (disconnectFn) {
             baseDevice.once('disconnect', () => {
                 this.serviceHandles.clear();
@@ -259,10 +261,8 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!success) {
             throw new Error('Connect failed');
         }
-        /*
-        const baseDevice = this.deviceHandles.get(handle);
-        return baseDevice.disconnectAsync();
-        */
+
+        // TODO: use disconnect event?
     }
 
     public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
@@ -305,6 +305,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     }
 
     public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+        // TODO: see how this works in noble
         // Currently not implemented
         return [];
     }
@@ -321,6 +322,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                 discovered.push({
                     uuid: charUUID,
                     properties: {
+                        // Not all of these are suppoertred in SimpleBle
                         // broadcast: characteristic.capabilities.includes('???'),
                         read: characteristic.capabilities.includes('read'),
                         writeWithoutResponse: characteristic.capabilities.includes('write_request'),
@@ -333,6 +335,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                     }
                 });
 
+                // TODO: notify/indicate events
                 /*
                 characteristicInfo.on('data', (data: Buffer, isNotification: boolean) => {
                     if (isNotification === true && this.charNotifies.has(charUUID)) {
@@ -388,6 +391,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     public enableNotify(_handle: string, _notifyFn: (value: DataView) => void): Promise<void> {
         throw new Error('not implemented');
 
+        // TODO: - emit notitifications
         /*
         if (this.charNotifies.has(handle)) {
             this.charNotifies.set(handle, notifyFn);
@@ -415,6 +419,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     public disableNotify(_handle: string): Promise<void> {
         throw new Error('not implemented');
 
+        // TODO: - stop emit notitifications
         /*
         if (!this.charNotifies.has(handle)) {
             return Promise.resolve();

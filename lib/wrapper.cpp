@@ -107,6 +107,10 @@ EXPORT uint16_t simpleble_peripheral_mtu_wrapper(simpleble_peripheral_t handle) 
   return simpleble_peripheral_mtu(handle);
 }
 
+EXPORT int16_t simpleble_peripheral_tx_power_wrapper(simpleble_peripheral_t handle) {
+  return simpleble_peripheral_tx_power(handle);
+}
+
 EXPORT simpleble_err_t simpleble_peripheral_connect_wrapper(simpleble_peripheral_t handle) {
   return simpleble_peripheral_connect(handle);
 }
