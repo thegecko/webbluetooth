@@ -23,6 +23,18 @@
 * SOFTWARE.
 */
 
+
+/*
+Missing functionality in SimpleBLE
+- event on adapter state change
+- discoverIncludedServices
+- advertised service data (see https://github.com/OpenBluetoothToolbox/SimpleBLE/pull/147)
+- characteristic props:
+                        // authenticatedSignedWrites: characteristic.capabilities.includes('???'),
+                        // reliableWrite: characteristic.capabilities.includes('???'),
+                        // writableAuxiliaries: characteristic.capabilities.includes('???'),
+
+*/
 import { EventEmitter } from 'events';
 import * as SimpleBle from './simpleble';
 import { Adapter } from './adapter';
@@ -38,7 +50,7 @@ const FIND_TIMEOUT = 500;
  */
 export class SimplebleAdapter extends EventEmitter implements Adapter {
 
-    private adapter: bigint | undefined;
+    private adapter: bigint;
     private peripherals = new Map<string, bigint>();
     private servicesByPeripheral = new Map<bigint, SimpleBle.Service[]>();
     private serviceByCharacteristic = new Map<string, string>();
@@ -46,20 +58,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private characteristicByDescriptor = new Map<string, string>();
     private descriptors = new Map<string, string[]>();
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
-
-    /*
-    // TODO: use SimpleBle.simpleble_adapter_set_callback_on_updated
-    constructor() {
-        super();
-        this.enabled = this.state;
-        SimpleBle.on('stateChange', () => {
-            if (this.enabled !== this.state) {
-                this.enabled = this.state;
-                this.emit(SimplebleAdapter.EVENT_ENABLED, this.enabled);
-            }
-        });
-    }
-    */
 
     private get state(): boolean {
         const adaptersEnabled = SimpleBle.simpleble_adapter_is_bluetooth_enabled();
@@ -73,30 +71,21 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return SimpleBle.simpleble_adapter_scan_is_active(this.adapter);
     }
 
-    private validDevice(_handle: bigint, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
         }
 
-        return true;
-        // TODO: check advertised serviceUUDs
-        /*
-
-        if (!deviceInfo.advertisement.serviceUuids) {
+        if (!device._serviceUUIDs) {
             // No advertised services, no match
             return false;
         }
 
-        const advertisedUUIDs = deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => {
-            return getCanonicalUUID(serviceUUID);
-        });
+        const advertisedUUIDs = device._serviceUUIDs.map((serviceUUID: string) => getCanonicalUUID(serviceUUID));
 
-        return serviceUUIDs.some(serviceUUID => {
-            // An advertised UUID matches our search UUIDs
-            return (advertisedUUIDs.indexOf(serviceUUID) >= 0);
-        });
-        */
+        // An advertised UUID matches our search UUIDs
+        return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
     private buildBluetoothDevice(handle: bigint): Partial<BluetoothDevice> {
@@ -181,9 +170,8 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
 
         this.discoverFn = handle => {
-            if (this.validDevice(handle, serviceUUIDs)) {
-                const device = this.buildBluetoothDevice(handle);
-
+            const device = this.buildBluetoothDevice(handle);
+            if (this.validDevice(device, serviceUUIDs)) {
                 if (!this.peripherals.has(device.id)) {
                     this.peripherals.set(device.id, handle);
                     // Only call the found function the first time we find a valid device
@@ -202,6 +190,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             }, undefined);
             */
         }
+
         SimpleBle.simpleble_adapter_scan_start(this.adapter);
 
         this.peripherals.clear();
@@ -215,7 +204,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
     }
 
-    public async connect(id: string, _disconnectFn?: () => void): Promise<void> {
+    public async connect(id: string, disconnectFn?: () => void): Promise<void> {
         const handle = this.peripherals.get(id);
         if (!handle) {
             throw new Error('Peripheral not found');
@@ -230,25 +219,14 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!success) {
             throw new Error('Connect failed');
         }
-        // TODO: ckear listeners
-        /*
-        const baseDevice = this.deviceHandles.get(handle);
-        baseDevice.removeAllListeners('connect');
-        baseDevice.removeAllListeners('disconnect');
 
-        // TODO: using simpleble_peripheral_set_callback_on_disconnected
         if (disconnectFn) {
-            baseDevice.once('disconnect', () => {
-                this.serviceHandles.clear();
-                this.characteristicHandles.clear();
-                this.descriptorHandles.clear();
-                this.charNotifies.clear();
-                disconnectFn();
-            });
+            SimpleBle.simpleble_peripheral_set_callback_on_disconnected(this.adapter, (peripheral: bigint) => {
+                if (peripheral === handle) {
+                    disconnectFn();
+                }
+            }, undefined);
         }
-
-        return baseDevice.connectAsync();
-        */
     }
 
     public async disconnect(id: string): Promise<void> {
@@ -261,8 +239,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!success) {
             throw new Error('Connect failed');
         }
-
-        // TODO: use disconnect event?
     }
 
     public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
