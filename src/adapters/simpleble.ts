@@ -47,6 +47,7 @@ export interface Characteristic {
 export interface Service {
     uuid: string;
     characteristics: Characteristic[];
+    data?: Uint8Array;
 }
 
 /** SimpleBLE manufacturer data. */

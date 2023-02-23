@@ -96,10 +96,15 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         const id = address || `${handle}`;
 
         const serviceUUIDs: string[] = [];
+        const serviceData = new Map();
+
         const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
         for (let i = 0; i < serviceCount; i ++) {
             const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
             serviceUUIDs.push(service.uuid);
+            if (service.data) {
+                serviceData.set(service.uuid, service.data);
+            }
         }
 
         const manufacturerData = new Map();
@@ -117,16 +122,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             // Remove company ID
             const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
             manufacturerData.set(('0000' + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
-        }
-        */
-
-        const serviceData = new Map();
-        //TODO: is this possible
-        /*
-        if (deviceInfo.advertisement.serviceData) {
-            for (const serviceAdvert of deviceInfo.advertisement.serviceData) {
-                serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
-            }
         }
         */
 

@@ -294,6 +294,17 @@ Napi::Value PeripheralWrapper::ServicesGet(const Napi::CallbackInfo &info) {
   Napi::Object serviceObj = Napi::Object::New(env);
   serviceObj.Set("uuid", service.uuid());
 
+  std::optional<SimpleBLE::ByteArray> data = service.data();
+
+  if (data.has_value()) {
+      const std::string value = data.value();
+      Napi::Uint8Array sData = Napi::Uint8Array::New(env, value.size());
+      for (size_t i = 0; i < value.size(); i++) {
+        sData[i] = static_cast<uint8_t>(value.at(i));
+      }
+      serviceObj.Set("data", sData);
+  }
+
   Napi::Array charArray =
       Napi::Array::New(env, service.characteristics().size());
 
