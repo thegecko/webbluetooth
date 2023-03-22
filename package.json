@@ -28,6 +28,7 @@
     "build:ts": "tsc && yarn lint && yarn docs",
     "watch": "tsc -w --preserveWatchOutput",
     "lint": "eslint . --ext .ts",
+    "test": "mocha test/*.test.js",
     "prebuild": "prebuild --backend cmake-js --runtime napi --all --strip --verbose",
     "docs": "typedoc"
   },
@@ -43,6 +44,7 @@
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
     "eslint": "^8.29.0",
+    "mocha": "^10.2.0",
     "prebuild": "^11.0.4",
     "typedoc": "^0.23.22",
     "typescript": "^4.9.4"
