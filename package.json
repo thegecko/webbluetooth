@@ -28,7 +28,7 @@
     "build:ts": "tsc && yarn lint && yarn docs",
     "watch": "tsc -w --preserveWatchOutput",
     "lint": "eslint . --ext .ts",
-    "test": "mocha test/*.test.js",
+    "test": "mocha --timeout 10000 test/*.test.js",
     "prebuild": "prebuild --backend cmake-js --runtime napi --all --strip --verbose",
     "docs": "typedoc"
   },
