@@ -13,7 +13,6 @@ describe('requestDevice', () => {
             filters: [{ namePrefix: 'BBC micro:bit' }]
         });
         assert.notEqual(device, undefined);
-        // await new Promise(resolve => setTimeout(resolve, 5000));
     });
 });
 
@@ -57,5 +56,27 @@ describe('device', () => {
         assert.equal(device.gatt.connected, true);
         await device.gatt.disconnect();
         assert.equal(device.gatt.connected, false);
+    });
+
+    it('should get services', async () => {
+        await device.gatt.connect();
+        const services = await device.gatt.getPrimaryServices();
+        assert.notEqual(services.length, 0);
+        const uuids = services.map(service => service.uuid);
+        // Device Info Service
+        assert.equal(uuids.includes('0000180a-0000-1000-8000-00805f9b34fb'), true);
+        // LED Service
+        assert.equal(uuids.includes('e95dd91d-251d-470a-a062-fa1922dfa9a8'), true);
+        // Button Service
+        assert.equal(uuids.includes('e95d9882-251d-470a-a062-fa1922dfa9a8'), true);
+    });
+
+    it('should get primary service', async () => {
+        const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
+        const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
+        assert.notEqual(service, undefined);
+        // assert.equal(service.isPrimary, true);
+        assert.equal(service.uuid, deviceInfoServiceUuid);
+        assert.deepEqual(service.device, device);
     });
 });
