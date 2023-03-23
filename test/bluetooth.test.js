@@ -79,4 +79,45 @@ describe('device', () => {
         assert.equal(service.uuid, deviceInfoServiceUuid);
         assert.deepEqual(service.device, device);
     });
+
+    it('should get characteristics', async () => {
+        const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
+        const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
+        const chars = await service.getCharacteristics();
+        const uuids = chars.map(service => service.uuid);
+        // modelNumber Characteristic
+        assert.equal(uuids.includes('00002a24-0000-1000-8000-00805f9b34fb'), true);
+        // serialNumber Characteristic
+        assert.equal(uuids.includes('00002a25-0000-1000-8000-00805f9b34fb'), true);
+        // firmwareRevision Characteristic
+        assert.equal(uuids.includes('00002a26-0000-1000-8000-00805f9b34fb'), true);
+    });
+
+    it('should get characteristic', async () => {
+        const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
+        const modelNumberCharUuid = '00002a24-0000-1000-8000-00805f9b34fb';
+        const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
+        const char = await service.getCharacteristic(modelNumberCharUuid);
+        assert.notEqual(char, undefined);
+        assert.equal(char.uuid, modelNumberCharUuid);
+        assert.equal(char.value, undefined);
+        assert.deepEqual(char.service, service);
+        assert.equal(char.properties.read, true);
+        assert.equal(char.properties.writeWithoutResponse, false);
+        assert.equal(char.properties.write, false);
+        assert.equal(char.properties.notify, false);
+        assert.equal(char.properties.indicate, false);
+    });
+
+    /*
+    it('should read characteristic value', async () => {
+        const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
+        const modelNumberCharUuid = '00002a24-0000-1000-8000-00805f9b34fb';
+        const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
+        const char = await service.getCharacteristic(modelNumberCharUuid);
+        const value = await char.readValue();
+        console.log(value);
+        assert.notEqual(value, undefined);
+    });
+    */
 });
