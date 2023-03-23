@@ -109,15 +109,13 @@ describe('device', () => {
         assert.equal(char.properties.indicate, false);
     });
 
-    /*
     it('should read characteristic value', async () => {
         const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
         const modelNumberCharUuid = '00002a24-0000-1000-8000-00805f9b34fb';
         const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
         const char = await service.getCharacteristic(modelNumberCharUuid);
         const value = await char.readValue();
-        console.log(value);
         assert.notEqual(value, undefined);
+        assert.equal(value.starsWith('BBC micro:bit'), true);
     });
-    */
 });
