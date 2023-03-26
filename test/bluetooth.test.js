@@ -167,7 +167,8 @@ describe('characteristics', () => {
         const char = await service.getCharacteristic(modelNumberCharUuid);
         const value = await char.readValue();
         assert.notEqual(value, undefined);
-        assert.equal(value.starsWith('BBC micro:bit'), true);
+        const decoder = new TextDecoder();
+        assert.equal(decoder.decode(value).startsWith('BBC micro:bit'), true);
     });
 
     it('should write characteristic value', async () => {
@@ -175,13 +176,10 @@ describe('characteristics', () => {
         const ledTextCharUuid = 'e95d93ee-251d-470a-a062-fa1922dfa9a8';
         const date = new Date();
         const time = `${date.getHours()}:${date.getMinutes()}`;
-        const buffer = new ArrayBuffer(time.length);
-        const view = new Uint8Array(buffer);
-        for (let i = 0; i < time.length; i++) {
-            view[i] = time.charCodeAt(i);
-        }
+        const encoder = new TextEncoder();
+        const array = encoder.encode(time);
         const service = await device.gatt.getPrimaryService(ledServiceUuid);
         const char = await service.getCharacteristic(ledTextCharUuid);
-        await char.writeValue(buffer);
+        await char.writeValue(new DataView(array.buffer));
     });
 });

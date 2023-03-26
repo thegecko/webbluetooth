@@ -53,6 +53,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private adapter: bigint;
     private peripherals = new Map<string, bigint>();
     private servicesByPeripheral = new Map<bigint, SimpleBle.Service[]>();
+    private peripheralByService = new Map<string, bigint>();
     private serviceByCharacteristic = new Map<string, string>();
     private characteristicsByService = new Map<string, SimpleBle.Characteristic[]>();
     private characteristicByDescriptor = new Map<string, string>();
@@ -232,7 +233,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
         const success = SimpleBle.simpleble_peripheral_disconnect(handle);
         if (!success) {
-            throw new Error('Connect failed');
+            throw new Error('Disconnect failed');
         }
     }
 
@@ -268,6 +269,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                 }
             }
 
+            this.peripheralByService.set(service.uuid, handle);
             services.push(service);
         }
 
@@ -340,18 +342,20 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
     public async readCharacteristic(charUuid: string): Promise<DataView> {
         const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const data = SimpleBle.simpleble_peripheral_read(this.adapter, serviceUuid, charUuid);
+        const handle = this.peripheralByService.get(serviceUuid);
+        const data = SimpleBle.simpleble_peripheral_read(handle, serviceUuid, charUuid);
         return new DataView(data.buffer);
     }
 
     public async writeCharacteristic(charUuid: string, value: DataView, withoutResponse = false): Promise<void> {
         const serviceUuid = this.serviceByCharacteristic.get(charUuid);
+        const handle = this.peripheralByService.get(serviceUuid);
         let success = false;
 
         if (withoutResponse) {
-            success = SimpleBle.simpleble_peripheral_write_command(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
+            success = SimpleBle.simpleble_peripheral_write_command(handle, serviceUuid, charUuid, new Uint8Array(value.buffer));
         } else {
-            success = SimpleBle.simpleble_peripheral_write_request(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
+            success = SimpleBle.simpleble_peripheral_write_request(handle, serviceUuid, charUuid, new Uint8Array(value.buffer));
         }
 
         if (!success) {
