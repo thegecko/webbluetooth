@@ -100,7 +100,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] id
 - [x] name
 - [x] gatt
-- [ ] forget
+- [x] forget
 - [ ] watchingAdvertisements - specification unstable
 - [ ] watchAdvertisements() - specification unstable
 - [ ] unwatchAdvertisements() - specification unstable
@@ -161,8 +161,8 @@ https://webbluetoothcg.github.io/web-bluetooth/
 #### Bluetooth Service
 
 - [x] serviceadded
-- [ ] servicechanged - unsupported in noble
-- [ ] serviceremoved - unsupported in noble
+- [ ] servicechanged - unsupported in adapter
+- [ ] serviceremoved - unsupported in adapter
 
 #### Bluetooth Characteristic
 

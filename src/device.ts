@@ -151,7 +151,7 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
      * Device constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothDevice>) {
+    constructor(init: Partial<BluetoothDevice>, private forgetFn: () => void) {
         super();
 
         this.id = init.id;
@@ -183,9 +183,9 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     }
 
     /**
-     * Forget this device (not implemented)
+     * Forget this device
      */
-    public forget(): Promise<void> {
-        throw new Error('forget error: method not implemented');
+    public async forget(): Promise<void> {
+        this.forgetFn();
     }
 }

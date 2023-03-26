@@ -156,6 +156,38 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
     }
 
+    private enumerate(handle: bigint): void {
+        this.servicesByPeripheral.clear();
+        this.peripheralByService.clear();
+        this.serviceByCharacteristic.clear();
+        this.characteristicsByService.clear();
+        this.characteristicByDescriptor.clear();
+        this.descriptors.clear();
+
+        const services: SimpleBle.Service[] = [];
+        const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
+        for (let i = 0; i < serviceCount; i ++) {
+            const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
+            const serviceUUID = getCanonicalUUID(service.uuid);
+
+            this.characteristicsByService.set(serviceUUID, service.characteristics);
+
+            for (const char of service.characteristics) {
+                this.serviceByCharacteristic.set(char.uuid, serviceUUID);
+                this.descriptors.set(char.uuid, char.descriptors);
+
+                for (const desc of char.descriptors) {
+                    this.characteristicByDescriptor.set(desc, char.uuid);
+                }
+            }
+
+            this.peripheralByService.set(service.uuid, handle);
+            services.push(service);
+        }
+
+        this.servicesByPeripheral.set(handle, services);
+    }
+
     public async getEnabled(): Promise<boolean> {
         return this.state;
     }
@@ -216,6 +248,8 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             throw new Error('Connect failed');
         }
 
+        this.enumerate(handle);
+
         if (disconnectFn) {
             SimpleBle.simpleble_peripheral_set_callback_on_disconnected(this.adapter, (peripheral: bigint) => {
                 if (peripheral === handle) {
@@ -230,7 +264,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!handle) {
             throw new Error('Peripheral not found');
         }
-
+    
         const success = SimpleBle.simpleble_peripheral_disconnect(handle);
         if (!success) {
             throw new Error('Disconnect failed');
@@ -245,35 +279,17 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
         const discovered = [];
 
-        const services: SimpleBle.Service[] = [];
-        const serviceCount = SimpleBle.simpleble_peripheral_services_count(handle);
-        for (let i = 0; i < serviceCount; i ++) {
-            const service = SimpleBle.simpleble_peripheral_services_get(handle, i);
-            const serviceUUID = getCanonicalUUID(service.uuid);
+        const services = this.servicesByPeripheral.get(handle);
 
-            if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
+        for (const service of services) {
+            if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(service.uuid) >= 0) {
                 discovered.push({
-                    uuid: serviceUUID,
-                    primary: true
+                    uuid: service.uuid,
+                    isPrimary: true
                 });
             }
-
-            this.characteristicsByService.set(serviceUUID, service.characteristics);
-
-            for (const char of service.characteristics) {
-                this.serviceByCharacteristic.set(char.uuid, serviceUUID);
-                this.descriptors.set(char.uuid, char.descriptors);
-
-                for (const desc of char.descriptors) {
-                    this.characteristicByDescriptor.set(desc, char.uuid);
-                }
-            }
-
-            this.peripheralByService.set(service.uuid, handle);
-            services.push(service);
         }
 
-        this.servicesByPeripheral.set(handle, services);
         return discovered;
     }
 
@@ -424,14 +440,18 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     public async readDescriptor(descUuid: string): Promise<DataView> {
         const charUuid = this.characteristicByDescriptor.get(descUuid);
         const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const data = SimpleBle.simpleble_peripheral_read_descriptor(this.adapter, serviceUuid, charUuid, descUuid);
+        const handle = this.peripheralByService.get(serviceUuid);
+
+        const data = SimpleBle.simpleble_peripheral_read_descriptor(handle, serviceUuid, charUuid, descUuid);
         return new DataView(data.buffer);
     }
 
     public async writeDescriptor(descUuid: string, value: DataView): Promise<void> {
         const charUuid = this.characteristicByDescriptor.get(descUuid);
         const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const success = SimpleBle.simpleble_peripheral_write_descriptor(this.adapter, serviceUuid, charUuid, descUuid, new Uint8Array(value.buffer));
+        const handle = this.peripheralByService.get(serviceUuid);
+
+        const success = SimpleBle.simpleble_peripheral_write_descriptor(handle, serviceUuid, charUuid, descUuid, new Uint8Array(value.buffer));
 
         if (!success) {
             throw new Error('Write failed');

@@ -198,6 +198,10 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         return deviceInfo;
     }
 
+    private forgetDevice(uuid: string): void {
+        this.allowedDevices.delete(uuid);
+    }
+
     /**
      * Gets the availability of a bluetooth adapter
      * @returns Promise containing a flag indicating bluetooth availability
@@ -308,7 +312,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo);
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -346,7 +350,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo);
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });

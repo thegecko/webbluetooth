@@ -63,6 +63,19 @@ describe('devices', () => {
         assert.equal(devices.length, 1);
         assert.notEqual(devices[0], undefined);
     });
+
+    it('should forget devices', async () => {
+        const device = await customBluetooth.requestDevice({
+            filters: [{ namePrefix: 'BBC micro:bit' }]
+        });
+        let devices = await customBluetooth.getDevices();
+        assert.equal(devices.length, 1);
+        assert.notEqual(devices[0], undefined);
+
+        await device.forget();
+        devices = await customBluetooth.getDevices();
+        assert.equal(devices.length, 0);
+    });
 });
 
 describe('all devices', () => {
@@ -111,7 +124,7 @@ describe('services', () => {
         const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
         const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
         assert.notEqual(service, undefined);
-        // assert.equal(service.isPrimary, true);
+        assert.equal(service.isPrimary, true);
         assert.equal(service.uuid, deviceInfoServiceUuid);
         assert.deepEqual(service.device, device);
     });
@@ -181,5 +194,58 @@ describe('characteristics', () => {
         const service = await device.gatt.getPrimaryService(ledServiceUuid);
         const char = await service.getCharacteristic(ledTextCharUuid);
         await char.writeValue(new DataView(array.buffer));
+    });
+});
+
+describe('descriptors', () => {
+    const buttonServiceUuid = 'e95d9882-251d-470a-a062-fa1922dfa9a8';
+    const buttonCharUuid = 'e95dda90-251d-470a-a062-fa1922dfa9a8';
+    const buttonDescriptorUuid = '00002902-0000-1000-8000-00805f9b34fb';
+
+    let device;
+    let service;
+    let char;
+
+    beforeEach(async () => {
+        device = await bluetooth.requestDevice({
+            filters: [{ namePrefix: 'BBC micro:bit' }]
+        });
+        await device.gatt.connect();
+        service = await device.gatt.getPrimaryService(buttonServiceUuid);
+        char = await service.getCharacteristic(buttonCharUuid);
+    });
+
+    afterEach(async () => {
+        await device.gatt.disconnect();
+    });
+
+    it('should get descriptors', async () => {
+        const descriptors = await char.getDescriptors();
+        const uuids = descriptors.map(descriptor => descriptor.uuid);
+        assert.equal(uuids.includes(buttonDescriptorUuid), true);
+    });
+
+    it('should get descriptor', async () => {
+        const descriptor = await char.getDescriptor(buttonDescriptorUuid);
+        assert.notEqual(descriptor, undefined);
+        assert.equal(descriptor.uuid, buttonDescriptorUuid);
+        assert.equal(descriptor.value, undefined);
+        assert.deepEqual(descriptor.characteristic, char);
+    });
+
+    it('should read descriptor value', async () => {
+        const descriptor = await char.getDescriptor(buttonDescriptorUuid);
+        const value = await descriptor.readValue();
+        assert.notEqual(value, undefined);
+        const decoder = new TextDecoder();
+        assert.equal(decoder.decode(value).startsWith('BBC micro:bit'), true);
+    });
+
+    it('should write descriptor value', async () => {
+        const descriptor = await char.getDescriptor(buttonDescriptorUuid);
+        const time = 'asd';
+        const encoder = new TextEncoder();
+        const array = encoder.encode(time);
+        await descriptor.writeValue(new DataView(array.buffer));
     });
 });

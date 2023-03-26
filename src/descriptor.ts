@@ -60,7 +60,7 @@ export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDesc
         this.uuid = init.uuid;
         this._value = init.value;
 
-        this.handle = `${this.characteristic.uuid}-${this.uuid}`;
+        this.handle = this.uuid;
     }
 
     /**
