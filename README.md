@@ -83,32 +83,32 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### bluetooth
 
-- [x] referringDevice - specification unstable
-- [x] getAvailability() - specification unstable
+- [ ] getAvailability() - unsupported in adapter
+- [x] referringDevice
 - [x] requestDevice()
 - [x] getDevices()
-- [x] RequestDeviceOptions.name
-- [x] RequestDeviceOptions.namePrefix
-- [x] RequestDeviceOptions.services
-- [x] RequestDeviceOptions.optionalServices
+- [x] RequestDeviceOptions.filter.name
+- [x] RequestDeviceOptions.filter.namePrefix
+- [x] RequestDeviceOptions.filter.services
+- [ ] RequestDeviceOptions.filter.manufacturerData
+- [ ] RequestDeviceOptions.filter.serviceData
 - [x] RequestDeviceOptions.acceptAllDevices
-- [ ] RequestDeviceOptions.manufacturerData - specification unstable
-- [ ] RequestDeviceOptions.serviceData - specification unstable
+- [x] RequestDeviceOptions.optionalServices
+- [ ] RequestDeviceOptions.optionalManufacturerData
 
 ### BluetoothDevice
 
 - [x] id
 - [x] name
 - [x] gatt
-- [x] forget
-- [ ] watchingAdvertisements - specification unstable
-- [ ] watchAdvertisements() - specification unstable
-- [ ] unwatchAdvertisements() - specification unstable
+- [x] forget()
+- [ ] watchAdvertisements()
+- [ ] watchingAdvertisements
 
 ### BluetoothRemoteGATTServer
 
-- [x] connected
 - [x] device
+- [x] connected
 - [x] connect()
 - [x] disconnect()
 - [x] getPrimaryService()
@@ -116,33 +116,41 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### BluetoothRemoteGATTService
 
-- [x] device
 - [x] uuid
+- [x] device
 - [x] isPrimary
 - [x] getCharacteristic()
 - [x] getCharacteristics()
-- [x] getIncludedService()
-- [x] getIncludedServices()
+- [ ] getIncludedService() - unsupported in adapter
+- [ ] getIncludedServices() - unsupported in adapter
 
 ### BluetoothRemoteGATTCharacteristic
 
-- [x] service
 - [x] uuid
-- [x] properties
+- [x] service
 - [x] value
+- [ ] properties.broadcast - unsupported in adapter
+- [x] properties.read
+- [x] properties.writeWithoutResponse
+- [x] properties.write
+- [x] properties.notify
+- [x] properties.indicate
+- [ ] properties.authenticatedSignedWrites - unsupported in adapter
+- [ ] properties.reliableWrite - unsupported in adapter
+- [ ] properties.writableAuxiliaries - unsupported in adapter
 - [x] getDescriptor()
 - [x] getDescriptors()
 - [x] readValue()
 - [x] writeValue()
 - [x] writeValueWithResponse()
 - [x] writeValueWithoutResponse()
-- [x] startNotifications()
-- [x] stopNotifications()
+- [ ] startNotifications()
+- [ ] stopNotifications()
 
 ### BluetoothRemoteGATTDescriptor
 
-- [x] characteristic
 - [x] uuid
+- [x] characteristic
 - [x] value
 - [x] readValue()
 - [x] writeValue()
@@ -151,12 +159,12 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 #### Bluetooth
 
-- [x] availabilitychanged
+- [ ] availabilitychanged - unsupported in adapter
 
 #### Bluetooth Device
 
 - [x] gattserverdisconnected
-- [ ] advertisementreceived - specification unstable
+- [ ] advertisementreceived
 
 #### Bluetooth Service
 
@@ -166,7 +174,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 #### Bluetooth Characteristic
 
-- [x] characteristicvaluechanged
+- [ ] characteristicvaluechanged
 
 ### Other
 

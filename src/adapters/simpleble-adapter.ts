@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2022 Rob Moran
+* Copyright (c) 2023 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,16 +23,17 @@
 * SOFTWARE.
 */
 
-
 /*
+
+Missing Implementation
+- notify/indicate events (start/stop/char changed)
+- watching advertisements + advertisementreceived
+- request manufacturerData + serviceData
+
 Missing functionality in SimpleBLE
 - event on adapter state change
 - discoverIncludedServices
-- advertised service data (see https://github.com/OpenBluetoothToolbox/SimpleBLE/pull/147)
-- characteristic props:
-                        // authenticatedSignedWrites: characteristic.capabilities.includes('???'),
-                        // reliableWrite: characteristic.capabilities.includes('???'),
-                        // writableAuxiliaries: characteristic.capabilities.includes('???'),
+- missing char properties
 
 */
 import { EventEmitter } from 'events';
@@ -210,13 +211,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
 
         if (!this.adapter) {
             this.adapter = SimpleBle.simpleble_adapter_get_handle(0);
-            /* TODO: - once implemented
-            SimpleBle.simpleble_adapter_set_callback_on_found(this.adapter, (_adapter: bigint, peripheral: bigint) => {
-                if (this.discoverFn) {
-                    this.discoverFn(peripheral);
-                }
-            }, undefined);
-            */
         }
 
         SimpleBle.simpleble_adapter_scan_start(this.adapter);
@@ -290,7 +284,6 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     }
 
     public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
-        // TODO: see how this works in noble
         // Currently not implemented
         return [];
     }
