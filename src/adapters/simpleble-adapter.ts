@@ -349,9 +349,9 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         let success = false;
 
         if (withoutResponse) {
-            success = SimpleBle.simpleble_peripheral_write_request(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
-        } else {
             success = SimpleBle.simpleble_peripheral_write_command(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
+        } else {
+            success = SimpleBle.simpleble_peripheral_write_request(this.adapter, serviceUuid, charUuid, new Uint8Array(value.buffer));
         }
 
         if (!success) {
@@ -359,7 +359,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
     }
 
-    public enableNotify(_handle: string, _notifyFn: (value: DataView) => void): Promise<void> {
+    public async enableNotify(_handle: string, _notifyFn: (value: DataView) => void): Promise<void> {
         throw new Error('not implemented');
 
         // TODO: - emit notitifications
@@ -387,7 +387,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
     }
 
-    public disableNotify(_handle: string): Promise<void> {
+    public async disableNotify(_handle: string): Promise<void> {
         throw new Error('not implemented');
 
         // TODO: - stop emit notitifications

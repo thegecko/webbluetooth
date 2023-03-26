@@ -45,6 +45,11 @@ export interface BluetoothOptions {
     scanTime?: number;
 
     /**
+     * Optional flag to automatically allow all devices
+     */
+    allowAllDevices?: boolean;
+
+    /**
      * An optional referring device
      */
     referringDevice?: BluetoothDevice;
@@ -143,11 +148,13 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         this.addEventListener('availabilitychanged', this._onavailabilitychanged);
     }
 
+    private allowedDevices = new Set<string>();
+
     /**
      * Bluetooth constructor
      * @param options Bluetooth initialisation options
      */
-    constructor(options?: BluetoothOptions) {
+    constructor(private options?: BluetoothOptions) {
         super();
 
         options = options || {};
@@ -261,14 +268,21 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
             throw new TypeError('requestDevice error: specify filters or acceptAllDevices');
         }
 
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let found = false;
-            await adapter.startScan(searchUUIDs, deviceInfo => {
+            this.scanner = setTimeout(() => {
+                this.cancelRequest();
+                if (!found) {
+                    reject('requestDevice error: no devices found');
+                }
+            }, this.scanTime);
+
+            adapter.startScan(searchUUIDs, deviceInfo => {
                 let validServices = [];
 
-                const complete = async bluetoothDevice => {
-                    await this.cancelRequest();
+                const complete = (bluetoothDevice: BluetoothDevice) => {
+                    this.allowedDevices.add(bluetoothDevice.id);
+                    this.cancelRequest();
                     resolve(bluetoothDevice);
                 };
 
@@ -306,13 +320,6 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                     }
                 }
             });
-
-            this.scanner = setTimeout(async () => {
-                await this.cancelRequest();
-                if (!found) {
-                    reject('requestDevice error: no devices found');
-                }
-            }, this.scanTime);
         });
     }
 
@@ -327,27 +334,29 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
         return new Promise(resolve => {
             const devices: BluetoothDevice[] = [];
 
-            adapter.startScan([], deviceInfo => {
-                Object.assign(deviceInfo, {
-                    _bluetooth: this,
-                    _allowedServices: []
-                });
-
-                const bluetoothDevice = new BluetoothDevice(deviceInfo);
-                devices.push(bluetoothDevice);
-            });
-
-            this.scanner = setTimeout(async () => {
-                await this.cancelRequest();
+            this.scanner = setTimeout(() => {
+                this.cancelRequest();
                 resolve(devices);
             }, this.scanTime);
+
+            adapter.startScan([], deviceInfo => {
+                if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
+                    Object.assign(deviceInfo, {
+                        _bluetooth: this,
+                        _allowedServices: []
+                    });
+
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo);
+                    devices.push(bluetoothDevice);
+                }
+            });
         });
     }
 
     /**
      * Cancels the scan for devices
      */
-    public async cancelRequest(): Promise<void> {
+    public cancelRequest(): void {
         if (this.scanner) {
             clearTimeout(this.scanner);
             this.scanner = undefined;
