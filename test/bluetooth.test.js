@@ -39,6 +39,17 @@ describe('device', () => {
         await device.gatt.disconnect();
         assert.equal(device.gatt.connected, false);
     });
+
+    it('should have disconnect event', done => {
+        const disconnect = () => {
+            assert.equal(device.gatt.connected, false);
+            done();
+        }
+
+        device.addEventListener('gattserverdisconnected', disconnect);
+        device.gatt.connect()
+        .then(() => device.gatt.disconnect());
+    });
 });
 
 describe('devices', () => {

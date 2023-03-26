@@ -251,11 +251,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         this.enumerate(handle);
 
         if (disconnectFn) {
-            SimpleBle.simpleble_peripheral_set_callback_on_disconnected(this.adapter, (peripheral: bigint) => {
-                if (peripheral === handle) {
-                    disconnectFn();
-                }
-            }, undefined);
+            SimpleBle.simpleble_peripheral_set_callback_on_disconnected(handle, () => disconnectFn(), undefined);
         }
     }
 
