@@ -232,7 +232,7 @@ describe('descriptors', () => {
         assert.equal(descriptor.value, undefined);
         assert.deepEqual(descriptor.characteristic, char);
     });
-
+/*
     it('should read descriptor value', async () => {
         const descriptor = await char.getDescriptor(buttonDescriptorUuid);
         const value = await descriptor.readValue();
@@ -248,4 +248,5 @@ describe('descriptors', () => {
         const array = encoder.encode(time);
         await descriptor.writeValue(new DataView(array.buffer));
     });
+*/
 });

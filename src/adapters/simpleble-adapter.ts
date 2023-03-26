@@ -56,7 +56,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private peripheralByService = new Map<string, bigint>();
     private serviceByCharacteristic = new Map<string, string>();
     private characteristicsByService = new Map<string, SimpleBle.Characteristic[]>();
-    private characteristicByDescriptor = new Map<string, string>();
+    private characteristicByDescriptor = new Map<string, { char: string, desc: string }>();
     private descriptors = new Map<string, string[]>();
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
 
@@ -177,7 +177,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
                 this.descriptors.set(char.uuid, char.descriptors);
 
                 for (const desc of char.descriptors) {
-                    this.characteristicByDescriptor.set(desc, char.uuid);
+                    this.characteristicByDescriptor.set(`${char.uuid}-${desc}`, { char: char.uuid, desc });
                 }
             }
 
@@ -437,21 +437,21 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         */
     }
 
-    public async readDescriptor(descUuid: string): Promise<DataView> {
-        const charUuid = this.characteristicByDescriptor.get(descUuid);
-        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const handle = this.peripheralByService.get(serviceUuid);
+    public async readDescriptor(handle: string): Promise<DataView> {
+        const { char, desc } = this.characteristicByDescriptor.get(handle);
+        const serviceUuid = this.serviceByCharacteristic.get(char);
+        const peripheral = this.peripheralByService.get(serviceUuid);
 
-        const data = SimpleBle.simpleble_peripheral_read_descriptor(handle, serviceUuid, charUuid, descUuid);
+        const data = SimpleBle.simpleble_peripheral_read_descriptor(peripheral, serviceUuid, char, desc);
         return new DataView(data.buffer);
     }
 
-    public async writeDescriptor(descUuid: string, value: DataView): Promise<void> {
-        const charUuid = this.characteristicByDescriptor.get(descUuid);
-        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const handle = this.peripheralByService.get(serviceUuid);
+    public async writeDescriptor(handle: string, value: DataView): Promise<void> {
+        const { char, desc } = this.characteristicByDescriptor.get(handle);
+        const serviceUuid = this.serviceByCharacteristic.get(char);
+        const peripheral = this.peripheralByService.get(serviceUuid);
 
-        const success = SimpleBle.simpleble_peripheral_write_descriptor(handle, serviceUuid, charUuid, descUuid, new Uint8Array(value.buffer));
+        const success = SimpleBle.simpleble_peripheral_write_descriptor(peripheral, serviceUuid, char, desc, new Uint8Array(value.buffer));
 
         if (!success) {
             throw new Error('Write failed');
