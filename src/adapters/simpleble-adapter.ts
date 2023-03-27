@@ -254,7 +254,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         if (!handle) {
             throw new Error('Peripheral not found');
         }
-    
+
         const success = SimpleBle.simpleble_peripheral_disconnect(handle);
         if (!success) {
             throw new Error('Disconnect failed');
