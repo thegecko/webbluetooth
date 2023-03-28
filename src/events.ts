@@ -31,6 +31,7 @@ import { EventEmitter } from 'events';
 export class EventDispatcher<T> {
     protected emitter = new EventEmitter();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private isEventListenerObject = (listener: any): listener is EventListenerObject => (listener as EventListenerObject).handleEvent !== undefined;
 
     public addEventListener<K extends keyof T>(type: K, listener: (this: this, ev: T[K]) => void): void;
