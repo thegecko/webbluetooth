@@ -63,8 +63,8 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
     private discoverFn: ((handle: bigint) => void | undefined) | undefined;
 
     private get state(): boolean {
-        const adaptersEnabled = SimpleBle.simpleble_adapter_is_bluetooth_enabled();
-        return adaptersEnabled.length && !!adaptersEnabled[0];
+        const adapterEnabled = SimpleBle.simpleble_adapter_is_bluetooth_enabled();
+        return !!adapterEnabled;
     }
 
     private get scanning(): boolean {

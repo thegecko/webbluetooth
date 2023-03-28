@@ -39,8 +39,10 @@ struct PeripheralContext {
 std::map<simpleble_peripheral_t, Napi::FunctionReference *> notifyCallbacks;
 std::map<simpleble_peripheral_t, Napi::FunctionReference *> indicateCallbacks;
 
-extern "C" void onPeripheralCallback(simpleble_peripheral_t peripheral, void* userdata) {
-  PeripheralContext* context = static_cast<PeripheralContext*>(userdata);
+
+extern "C" void onPeripheralCallback(simpleble_peripheral_t peripheral,
+                                     void *userdata) {
+  PeripheralContext *context = static_cast<PeripheralContext *>(userdata);
   if (!context->done) {
     context->done = true;
     context->cb.Call({});
@@ -871,7 +873,8 @@ PeripheralWrapper::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
   auto cbData = new PeripheralContext();
   cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
 
-  const auto ret = simpleble_peripheral_set_callback_on_connected(handle, onPeripheralCallback, cbData);
+  const auto ret = simpleble_peripheral_set_callback_on_connected(
+      handle, onPeripheralCallback, cbData);
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }
@@ -900,7 +903,8 @@ PeripheralWrapper::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
   auto cbData = new PeripheralContext();
   cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
 
-  const auto ret = simpleble_peripheral_set_callback_on_disconnected(handle, onPeripheralCallback, cbData);
+  const auto ret = simpleble_peripheral_set_callback_on_disconnected(
+      handle, onPeripheralCallback, cbData);
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }

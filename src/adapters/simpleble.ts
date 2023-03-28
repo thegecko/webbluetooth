@@ -57,7 +57,7 @@ export interface ManufacturerData {
 }
 
 /** Returns if a Bluetooth adapter is available. */
-export declare function simpleble_adapter_is_bluetooth_enabled(): boolean[];
+export declare function simpleble_adapter_is_bluetooth_enabled(): boolean;
 
 /** Returns the number of available adapters. */
 export declare function simpleble_adapter_get_count(): number;
@@ -101,30 +101,30 @@ export declare function simpleble_adapter_get_paired_peripherals_handle(handle: 
 /** Register a callback for when the adapter begins scanning. */
 export declare function simpleble_adapter_set_callback_on_scan_start(
     handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (adapter: Adapter, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Register a callback for when the adapter stops scanning. */
 export declare function simpleble_adapter_set_callback_on_scan_stop(
     handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (adapter: Adapter, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Register a callback for when the adapter changes. */
 export declare function simpleble_adapter_set_callback_on_updated(
     handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Register a callback for when a peripheral is found. */
 export declare function simpleble_adapter_set_callback_on_found(
     handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Deallocate resources for a Peripheral handle. */
 export declare function simpleble_peripheral_release_handle(handle: Peripheral): void;
@@ -189,61 +189,61 @@ export declare function simpleble_peripheral_unsubscribe(handle: Peripheral, ser
 /** Regiser a callback for when an indication (notification) is received. */
 export declare function simpleble_peripheral_indicate(
     handle: Peripheral,
+    service: string,
+    characteristic: string,
+    cb: (
         service: string,
         characteristic: string,
-        cb: (
-            service: string,
-            characteristic: string,
-            data: Uint8Array,
-            userdata: UserData,
-        ) => void,
+        data: Uint8Array,
         userdata: UserData,
-    ): boolean;
+    ) => void,
+    userdata: UserData,
+): boolean;
 
 /** Regiser a callback for when a device notification is received. */
 export declare function simpleble_peripheral_notify(
     handle: Peripheral,
+    service: string,
+    characteristic: string,
+    cb: (
         service: string,
         characteristic: string,
-        cb: (
-            service: string,
-            characteristic: string,
-            data: Uint8Array,
-            userdata: UserData
-        ) => void,
-        userdata: UserData,
-    ): boolean;
+        data: Uint8Array,
+        userdata: UserData
+    ) => void,
+    userdata: UserData,
+): boolean;
 
 /** Register a callback for when the device is connected. */
 export declare function simpleble_peripheral_set_callback_on_connected(
     handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (peripheral: Peripheral, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Register a callback for when the device is disconnected. */
 export declare function simpleble_peripheral_set_callback_on_disconnected(
     handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
-    ): boolean;
+    cb: (peripheral: Peripheral, userdata: UserData) => void,
+    userdata: UserData,
+): boolean;
 
 /** Read data from a device descriptor. */
 export declare function simpleble_peripheral_read_descriptor(
     handle: Peripheral,
-        service: string,
-        characteristic: string,
-        descriptor: string,
-    ): Uint8Array | undefined;
+    service: string,
+    characteristic: string,
+    descriptor: string,
+): Uint8Array | undefined;
 
 /** Write data to a device descriptor. */
 export declare function simpleble_peripheral_write_descriptor(
     handle: Peripheral,
-        service: string,
-        characteristic: string,
-        descriptor: string,
-        data: Uint8Array,
-    ): boolean;
+    service: string,
+    characteristic: string,
+    descriptor: string,
+    data: Uint8Array,
+): boolean;
 
 /** Release memory allocated. */
 export declare function simpleble_free(handle: bigint): void;
