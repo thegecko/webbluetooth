@@ -7,7 +7,7 @@ Node.js implementation of the [Web Bluetooth Specification](https://webbluetooth
 
 ## Prerequisites
 
-[Node.js > v10.16.0](https://nodejs.org), which includes `npm`.
+[Node.js > v10.20.0](https://nodejs.org), which includes `npm`.
 
 ## Installation
 
@@ -37,10 +37,10 @@ The module exports a default `navigator.bluetooth` instance, the `Bluetooth` cla
 To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
 
 ```JavaScript
-const bluetooth = require("webbluetooth").bluetooth;
+const bluetooth = require('webbluetooth').bluetooth;
 
 const device = await bluetooth.requestDevice({
-    filters:[{ services:[ "heart_rate" ] }]
+    filters:[{ services:[ 'heart_rate' ] }]
 });
 
 const server = await device.gatt.connect();
@@ -54,11 +54,11 @@ The first device matching the filters will be returned.
 You may want to create your own instance of the `Bluetooth` class. For example, to inject a device chooser function or control the referring device:
 
 ```JavaScript
-const Bluetooth = require("webbluetooth").Bluetooth;
+const Bluetooth = require('webbluetooth').Bluetooth;
 
 const deviceFound = (device, selectFn) => {
     // If device can be automatically selected, do so by returning true
-    if (device.name === "myName") return true;
+    if (device.name === 'myName') return true;
 
     // Otherwise store the selectFn somewhere and execute it later to select this device
 };
@@ -66,7 +66,7 @@ const deviceFound = (device, selectFn) => {
 const bluetooth = new Bluetooth({ deviceFound });
 
 const device = await bluetooth.requestDevice({
-    filters:[{ services:[ "heart_rate" ] }]
+    filters:[{ services:[ 'heart_rate' ] }]
 });
 
 const server = await device.gatt.connect();
@@ -183,3 +183,39 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] Canonical UUID helper
 - [x] Examples
 - [x] API Documentation
+
+## Development
+
+### Cloning
+
+This repository uses a submodule to reference the SimpleBLE library. Clone it as follows:
+
+```bash
+git clone https://github.com/thegecko/webbluetooth
+cd webbluetooth
+git submodule update --init
+```
+
+### Building
+
+To build the SimpleBLE module, bindings and TypeScriptsource, run:
+
+``` bash
+yarn build:all
+```
+
+### Testing
+
+The tests are set up to use a BBC micro:bit in range with the following services available:
+
+- Device Info Service (0000180a-0000-1000-8000-00805f9b34fb)
+- LED Service (e95dd91d-251d-470a-a062-fa1922dfa9a8)
+- Button Service (e95d9882-251d-470a-a062-fa1922dfa9a8)
+
+Firmware for this hardware including the services can be found here: https://microbit.org/get-started/user-guide/firmware/
+
+To run the tests:
+
+```bash
+yarn test
+```
