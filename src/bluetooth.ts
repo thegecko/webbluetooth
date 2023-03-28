@@ -23,12 +23,10 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from './dispatcher';
-import { BluetoothDevice, BluetoothDeviceEvents } from './device';
-import { getServiceUUID } from './helpers';
 import { adapter, EVENT_ENABLED } from './adapters';
-import { W3CBluetooth } from './interfaces';
-import { DOMEvent } from './events';
+import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { getServiceUUID } from './helpers';
+import { EventDispatcher, DOMEvent } from './events';
 
 /**
  * Bluetooth Options interface
@@ -68,14 +66,7 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
 /**
  * Bluetooth class
  */
-export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<BluetoothEvents>) implements W3CBluetooth {
-
-    /**
-     * Bluetooth Availability Changed event
-     * @event
-     */
-    public static EVENT_AVAILABILITY = 'availabilitychanged';
-
+export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
@@ -84,87 +75,107 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
     private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
     private scanTime: number = 10.24 * 1000;
     private scanner = undefined;
-
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
-    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
-        if (this._oncharacteristicvaluechanged) {
-            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
-        }
-        this._oncharacteristicvaluechanged = fn;
-        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
-    }
-
-    private _onserviceadded: (ev: Event) => void;
-    public set onserviceadded(fn: (ev: Event) => void) {
-        if (this._onserviceadded) {
-            this.removeEventListener('serviceadded', this._onserviceadded);
-        }
-        this._onserviceadded = fn;
-        this.addEventListener('serviceadded', this._onserviceadded);
-    }
-
-    private _onservicechanged: (ev: Event) => void;
-    public set onservicechanged(fn: (ev: Event) => void) {
-        if (this._onservicechanged) {
-            this.removeEventListener('servicechanged', this._onservicechanged);
-        }
-        this._onservicechanged = fn;
-        this.addEventListener('servicechanged', this._onservicechanged);
-    }
-
-    private _onserviceremoved: (ev: Event) => void;
-    public set onserviceremoved(fn: (ev: Event) => void) {
-        if (this._onserviceremoved) {
-            this.removeEventListener('serviceremoved', this._onserviceremoved);
-        }
-        this._onserviceremoved = fn;
-        this.addEventListener('serviceremoved', this._onserviceremoved);
-    }
-
-    private _ongattserverdisconnected: (ev: Event) => void;
-    public set ongattserverdisconnected(fn: (ev: Event) => void) {
-        if (this._ongattserverdisconnected) {
-            this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
-        }
-        this._ongattserverdisconnected = fn;
-        this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
-    }
-
-    private _onadvertisementreceived: (ev: Event) => void;
-    public set onadvertisementreceived(fn: (ev: Event) => void) {
-        if (this._onadvertisementreceived) {
-            this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
-        }
-        this._onadvertisementreceived = fn;
-        this.addEventListener('advertisementreceived', this._onadvertisementreceived);
-    }
-
-    private _onavailabilitychanged: (ev: Event) => void;
-    public set onavailabilitychanged(fn: (ev: Event) => void) {
-        if (this._onavailabilitychanged) {
-            this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
-        }
-        this._onavailabilitychanged = fn;
-        this.addEventListener('availabilitychanged', this._onavailabilitychanged);
-    }
-
     private allowedDevices = new Set<string>();
 
     /**
      * Bluetooth constructor
      * @param options Bluetooth initialisation options
      */
-    constructor(private options?: BluetoothOptions) {
+    constructor(private options: BluetoothOptions = {}) {
         super();
-
-        options = options || {};
         this.referringDevice = options.referringDevice;
         this.deviceFound = options.deviceFound;
-        if (options.scanTime) this.scanTime = options.scanTime * 1000;
+        if (options.scanTime) {
+            this.scanTime = options.scanTime * 1000;
+        }
 
         adapter.on(EVENT_ENABLED, _value => {
             this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
         });
+    }
+
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+        if (this._oncharacteristicvaluechanged) {
+            this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+            this._oncharacteristicvaluechanged = undefined;
+        }
+        if (fn) {
+            this._oncharacteristicvaluechanged = fn;
+            this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        }
+    }
+
+    private _onserviceadded: (ev: Event) => void;
+    public set onserviceadded(fn: (ev: Event) => void) {
+        if (this._onserviceadded) {
+            this.removeEventListener('serviceadded', this._onserviceadded);
+            this._onserviceadded = undefined;
+        }
+        if (fn) {
+            this._onserviceadded = fn;
+            this.addEventListener('serviceadded', this._onserviceadded);
+        }
+    }
+
+    private _onservicechanged: (ev: Event) => void;
+    public set onservicechanged(fn: (ev: Event) => void) {
+        if (this._onservicechanged) {
+            this.removeEventListener('servicechanged', this._onservicechanged);
+            this._onservicechanged = undefined;
+        }
+        if (fn) {
+            this._onservicechanged = fn;
+            this.addEventListener('servicechanged', this._onservicechanged);
+        }
+    }
+
+    private _onserviceremoved: (ev: Event) => void;
+    public set onserviceremoved(fn: (ev: Event) => void) {
+        if (this._onserviceremoved) {
+            this.removeEventListener('serviceremoved', this._onserviceremoved);
+            this._onserviceremoved = undefined;
+        }
+        if (fn) {
+            this._onserviceremoved = fn;
+            this.addEventListener('serviceremoved', this._onserviceremoved);
+        }
+    }
+
+    private _ongattserverdisconnected: (ev: Event) => void;
+    public set ongattserverdisconnected(fn: (ev: Event) => void) {
+        if (this._ongattserverdisconnected) {
+            this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
+            this._ongattserverdisconnected = undefined;
+        }
+        if (fn) {
+            this._ongattserverdisconnected = fn;
+            this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
+        }
+    }
+
+    private _onadvertisementreceived: (ev: Event) => void;
+    public set onadvertisementreceived(fn: (ev: Event) => void) {
+        if (this._onadvertisementreceived) {
+            this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
+            this._onadvertisementreceived = undefined;
+        }
+        if (fn) {
+            this._onadvertisementreceived = fn;
+            this.addEventListener('advertisementreceived', this._onadvertisementreceived);
+        }
+    }
+
+    private _onavailabilitychanged: (ev: Event) => void;
+    public set onavailabilitychanged(fn: (ev: Event) => void) {
+        if (this._onavailabilitychanged) {
+            this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
+            this._onavailabilitychanged = undefined;
+        }
+        if (fn) {
+            this._onavailabilitychanged = fn;
+            this.addEventListener('availabilitychanged', this._onavailabilitychanged);
+        }
     }
 
     private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo, validServices) {
@@ -312,7 +323,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -350,7 +361,7 @@ export class Bluetooth extends (EventDispatcher as new() => TypedDispatcher<Blue
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });

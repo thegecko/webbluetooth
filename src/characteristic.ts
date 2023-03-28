@@ -23,20 +23,18 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from './dispatcher';
-import { BluetoothRemoteGATTService } from './service';
-import { BluetoothRemoteGATTDescriptor } from './descriptor';
-import { getDescriptorUUID } from './helpers';
 import { adapter } from './adapters';
-import { W3CBluetoothRemoteGATTCharacteristic } from './interfaces';
-import { DOMEvent } from './events';
+import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
+import { getDescriptorUUID } from './helpers';
+import { BluetoothRemoteGATTServiceImpl } from './service';
+import { EventDispatcher, DOMEvent } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
  * @hidden
  */
-export interface BluetoothRemoteGATTCharacteristicEvents {
+export interface CharacteristicEvents {
     /**
      * Characteristic value changed event
      */
@@ -46,12 +44,12 @@ export interface BluetoothRemoteGATTCharacteristicEvents {
 /**
  * Bluetooth Remote GATT Characteristic class
  */
-export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTCharacteristicEvents>) implements W3CBluetoothRemoteGATTCharacteristic {
+export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTService = undefined;
+    public readonly service: BluetoothRemoteGATTServiceImpl = undefined;
 
     /**
      * The unique identifier of the characteristic
@@ -78,16 +76,19 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+            this._oncharacteristicvaluechanged = undefined;
         }
-        this._oncharacteristicvaluechanged = fn;
-        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        if (fn) {
+            this._oncharacteristicvaluechanged = fn;
+            this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        }
     }
 
     /**
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTCharacteristic>) {
+    constructor(init: Partial<BluetoothRemoteGATTCharacteristicImpl>) {
         super();
 
         this.service = init.service;
@@ -146,7 +147,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
                 Object.assign(descriptorInfo, {
                     characteristic: this
                 });
-                return new BluetoothRemoteGATTDescriptor(descriptorInfo);
+                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo);
             });
         }
 
@@ -228,7 +229,7 @@ export class BluetoothRemoteGATTCharacteristic extends (EventDispatcher as new()
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public async startNotifications(): Promise<W3CBluetoothRemoteGATTCharacteristic> {
+    public async startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
         if (!this.service.device.gatt.connected) {
             throw new Error('startNotifications error: device not connected');
         }

@@ -23,16 +23,14 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from './dispatcher';
-import { Bluetooth } from './bluetooth';
-import { BluetoothRemoteGATTServer } from './server';
-import { BluetoothRemoteGATTServiceEvents } from './service';
-import { W3CBluetoothDevice } from './interfaces';
+import { BluetoothRemoteGATTServerImpl } from './server';
+import { ServiceEvents } from './service';
+import { EventDispatcher } from './events';
 
 /**
  * @hidden
  */
-export interface BluetoothDeviceEvents extends BluetoothRemoteGATTServiceEvents {
+export interface BluetoothDeviceEvents extends ServiceEvents {
     /**
      * GATT server disconnected event
      */
@@ -46,7 +44,7 @@ export interface BluetoothDeviceEvents extends BluetoothRemoteGATTServiceEvents 
 /**
  * Bluetooth Device class
  */
-export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatcher<BluetoothDeviceEvents>) implements W3CBluetoothDevice {
+export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
 
     /**
      * The unique identifier of the device
@@ -97,61 +95,79 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+            this._oncharacteristicvaluechanged = undefined;
         }
-        this._oncharacteristicvaluechanged = fn;
-        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        if (fn) {
+            this._oncharacteristicvaluechanged = fn;
+            this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        }
     }
 
     private _onserviceadded: (ev: Event) => void;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
+            this._onserviceadded = undefined;
         }
-        this._onserviceadded = fn;
-        this.addEventListener('serviceadded', this._onserviceadded);
+        if (fn) {
+            this._onserviceadded = fn;
+            this.addEventListener('serviceadded', this._onserviceadded);
+        }
     }
 
     private _onservicechanged: (ev: Event) => void;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
+            this._onservicechanged = undefined;
         }
-        this._onservicechanged = fn;
-        this.addEventListener('servicechanged', this._onservicechanged);
+        if (fn) {
+            this._onservicechanged = fn;
+            this.addEventListener('servicechanged', this._onservicechanged);
+        }
     }
 
     private _onserviceremoved: (ev: Event) => void;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
+            this._onserviceremoved = undefined;
         }
-        this._onserviceremoved = fn;
-        this.addEventListener('serviceremoved', this._onserviceremoved);
+        if (fn) {
+            this._onserviceremoved = fn;
+            this.addEventListener('serviceremoved', this._onserviceremoved);
+        }
     }
 
     private _ongattserverdisconnected: (ev: Event) => void;
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
+            this._ongattserverdisconnected = undefined;
         }
-        this._ongattserverdisconnected = fn;
-        this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
+        if (fn) {
+            this._ongattserverdisconnected = fn;
+            this.addEventListener('gattserverdisconnected', this._ongattserverdisconnected);
+        }
     }
 
     private _onadvertisementreceived: (ev: Event) => void;
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
+            this._onadvertisementreceived = undefined;
         }
-        this._onadvertisementreceived = fn;
-        this.addEventListener('advertisementreceived', this._onadvertisementreceived);
+        if (fn) {
+            this._onadvertisementreceived = fn;
+            this.addEventListener('advertisementreceived', this._onadvertisementreceived);
+        }
     }
 
     /**
      * Device constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothDevice>, private forgetFn: () => void) {
+    constructor(init: Partial<BluetoothDeviceImpl>, private forgetFn: () => void) {
         super();
 
         this.id = init.id;
@@ -165,7 +181,7 @@ export class BluetoothDevice extends (EventDispatcher as new() => TypedDispatche
         this._serviceUUIDs = init._serviceUUIDs;
 
         if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServer(this);
+        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServerImpl(this);
     }
 
     /**

@@ -40,9 +40,10 @@ import { EventEmitter } from 'events';
 import * as SimpleBle from './simpleble';
 import { Adapter } from './adapter';
 import { getCanonicalUUID } from '../helpers';
-import { BluetoothDevice } from '../device';
-import { BluetoothRemoteGATTService } from '../service';
-import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
+import { BluetoothDeviceImpl } from '../device';
+import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
+import { BluetoothRemoteGATTServiceImpl } from '../service';
+import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
 
 const FIND_TIMEOUT = 500;
 
@@ -73,7 +74,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return SimpleBle.simpleble_adapter_scan_is_active(this.adapter);
     }
 
-    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
@@ -90,7 +91,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
-    private buildBluetoothDevice(handle: bigint): Partial<BluetoothDevice> {
+    private buildBluetoothDevice(handle: bigint): Partial<BluetoothDeviceImpl> {
         const name = SimpleBle.simpleble_peripheral_identifier(handle);
         const address = SimpleBle.simpleble_peripheral_address(handle);
         const rssi = SimpleBle.simpleble_peripheral_rssi(handle);
@@ -261,7 +262,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         }
     }
 
-    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
         const handle = this.peripherals.get(id);
         if (!handle) {
             throw new Error('Peripheral not found');
@@ -283,12 +284,12 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return discovered;
     }
 
-    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
         // Currently not implemented
         return [];
     }
 
-    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
+    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
         const characteristics = this.characteristicsByService.get(serviceUuid);
         const discovered = [];
 
@@ -328,7 +329,7 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
         return discovered;
     }
 
-    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
+    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
         const descriptors = this.descriptors.get(charUuid);
         const discovered = [];
 

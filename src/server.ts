@@ -23,22 +23,21 @@
 * SOFTWARE.
 */
 
-import { BluetoothDevice } from './device';
 import { getServiceUUID } from './helpers';
 import { adapter } from './adapters';
-import { W3CBluetoothRemoteGATTServer } from './interfaces';
-import { BluetoothRemoteGATTService } from './service';
+import { BluetoothRemoteGATTServiceImpl } from './service';
 import { DOMEvent } from './events';
+import { BluetoothDeviceImpl } from './device';
 
 /**
  * Bluetooth Remote GATT Server class
  */
-export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
+export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
 
     /**
      * The device the gatt server is related to
      */
-    public readonly device: BluetoothDevice = undefined;
+    public readonly device: BluetoothDeviceImpl = undefined;
 
     private _connected = false;
     /**
@@ -55,7 +54,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
      * Server constructor
      * @param device Device the gatt server relates to
      */
-    constructor(device: BluetoothDevice) {
+    constructor(device: BluetoothDeviceImpl) {
         this.device = device;
         this.handle = this.device.id;
     }
@@ -126,7 +125,7 @@ export class BluetoothRemoteGATTServer implements W3CBluetoothRemoteGATTServer {
                 Object.assign(serviceInfo, {
                     device: this.device
                 });
-                return new BluetoothRemoteGATTService(serviceInfo);
+                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
             });
         }
 
