@@ -90,11 +90,12 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] RequestDeviceOptions.filter.name
 - [x] RequestDeviceOptions.filter.namePrefix
 - [x] RequestDeviceOptions.filter.services
-- [ ] RequestDeviceOptions.filter.manufacturerData
-- [ ] RequestDeviceOptions.filter.serviceData
+- [x] RequestDeviceOptions.filter.manufacturerData
+- [x] RequestDeviceOptions.filter.serviceData
 - [x] RequestDeviceOptions.acceptAllDevices
 - [x] RequestDeviceOptions.optionalServices
-- [ ] RequestDeviceOptions.optionalManufacturerData
+- [ ] RequestDeviceOptions.exclusionFilters
+- [ ] RequestDeviceOptions.optionalManufacturerData - used in advertisements, unsupported in adapter
 
 ### BluetoothDevice
 
@@ -102,8 +103,8 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] name
 - [x] gatt
 - [x] forget()
-- [ ] watchAdvertisements()
-- [ ] watchingAdvertisements
+- [ ] watchAdvertisements() - unsupported in adapter
+- [ ] watchingAdvertisements - unsupported in adapter
 
 ### BluetoothRemoteGATTServer
 
@@ -164,7 +165,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 #### Bluetooth Device
 
 - [x] gattserverdisconnected
-- [ ] advertisementreceived
+- [ ] advertisementreceived - unsupported in adapter
 
 #### Bluetooth Service
 

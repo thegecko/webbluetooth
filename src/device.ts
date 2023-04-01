@@ -69,11 +69,11 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     /**
      * @hidden
      */
-    public readonly adData: {
+    public readonly _adData: {
         rssi?: number;
         txPower?: number;
-        serviceData?: Map<string, DataView>;
-        manufacturerData?: Map<string, DataView>;
+        serviceData?: BluetoothServiceData;
+        manufacturerData?: BluetoothManufacturerData;
     };
 
     /**
@@ -173,9 +173,8 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this.id = init.id;
         this.name = init.name;
         this.gatt = init.gatt;
-        this.watchAdvertisements = init.watchAdvertisements;
-        this.adData = init.adData;
 
+        this._adData = init._adData;
         this._bluetooth = init._bluetooth;
         this._allowedServices = init._allowedServices;
         this._serviceUUIDs = init._serviceUUIDs;

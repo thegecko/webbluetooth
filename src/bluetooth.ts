@@ -178,7 +178,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo, validServices) {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -202,10 +202,28 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                 validServices = validServices.concat(serviceUUIDs);
             }
 
+            // Service Data
+            if (filter.serviceData) {
+                if (!deviceInfo._adData.serviceData) return;
+                const services = [...deviceInfo._adData.serviceData.keys()];
+                for (const entry of filter.serviceData) {
+                    if (!services.includes(entry.service)) return;
+                }
+            }
+
+            // Manufacturer Data
+            if (filter.manufacturerData) {
+                if (!deviceInfo._adData.manufacturerData) return;
+                const manufacturers = [...deviceInfo._adData.manufacturerData.keys()];
+                for (const entry of filter.manufacturerData) {
+                    if (!manufacturers.includes(entry.companyIdentifier)) return;
+                }
+            }
+
             valid = true;
         });
 
-        if (!valid) return false;
+        if (!valid) return undefined;
         return deviceInfo;
     }
 

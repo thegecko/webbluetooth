@@ -129,7 +129,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
             id: deviceID,
             name: deviceInfo.advertisement.localName,
             _serviceUUIDs: serviceUUIDs,
-            adData: {
+            _adData: {
                 rssi: deviceInfo.rssi,
                 txPower: deviceInfo.advertisement.txPowerLevel,
                 serviceData: serviceData,

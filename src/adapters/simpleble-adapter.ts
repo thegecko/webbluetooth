@@ -23,19 +23,6 @@
 * SOFTWARE.
 */
 
-/*
-
-Missing Implementation
-- notify/indicate events (start/stop/char changed)
-- watching advertisements + advertisementreceived
-- request manufacturerData + serviceData
-
-Missing functionality in SimpleBLE
-- event on adapter state change
-- discoverIncludedServices
-- missing char properties
-
-*/
 import { EventEmitter } from 'events';
 import * as SimpleBle from './simpleble';
 import { Adapter } from './adapter';
@@ -117,22 +104,11 @@ export class SimplebleAdapter extends EventEmitter implements Adapter {
             manufacturerData.set(manufacturer.id, new DataView(manufacturer.data.buffer));
         }
 
-        /* TODO: check this
-        if (deviceInfo.advertisement.manufacturerData) {
-            // First 2 bytes are 16-bit company identifier
-            const company = deviceInfo.advertisement.manufacturerData.readUInt16LE(0);
-
-            // Remove company ID
-            const buffer = deviceInfo.advertisement.manufacturerData.slice(2);
-            manufacturerData.set(('0000' + company.toString(16)).slice(-4), this.bufferToDataView(buffer));
-        }
-        */
-
         return {
             id,
             name,
             _serviceUUIDs: serviceUUIDs,
-            adData: {
+            _adData: {
                 rssi,
                 txPower,
                 serviceData,
