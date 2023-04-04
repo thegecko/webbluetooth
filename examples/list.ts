@@ -25,83 +25,27 @@
 import { bluetooth } from "../dist/index.js";
 import type { RequestDeviceInfo } from "../dist/index.js";
 
+// TODO: integrate readline.
+const DEVICE_ADDRESS = "90:84:2B:08:34:BB";
+
 (async () => {
-    /*
-    const options = {
-        filter: () => false,
-        signal: controller.signal,
-    }
-    */
-    //console.log("SCANNING")
-    //const devices = await bluetooth.requestDevices(options);
-    //console.log(`Found ${devices.length} devices`);
     console.log("Scanning");
-    const devices = await bluetooth.requestDevices({
+    const device = await bluetooth.requestDevice({
         filter: (info: RequestDeviceInfo) => {
-            if (info.name === "HUB NO.4") {
+            if (info.address === DEVICE_ADDRESS) {
                 return true;
             }
             return false;
         },
         timeout: 5000,
     });
-    console.log(`Done - found ${devices.length} devices`);
-    for (const device of devices) {
-        console.log(`- ${device.name} [${device.id}]`);
-        await device.gatt.connect();
-        const services = await device.gatt.getPrimaryServices();
-        for (const service of services) {
-            console.log(`    + ${service.uuid}`);
-        }
-        device.gatt.disconnect();
+    console.log(`- ${device.name} [${device.id}]`);
+    await device.gatt.connect();
+    const services = await device.gatt.getPrimaryServices();
+    for (const service of services) {
+        console.log(`\t+ ${service.uuid}`);
     }
+    device.gatt.disconnect();
     console.log("Done");
     process.exit(0);
-
-    /*
-    try {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), 8000);
-        //process.on("SIGINT", () => {});
-        const options = {
-            filter: (info: RequestDeviceInfo) => {
-                //console.log(info);
-                if (info.services!.length > 1) {
-                    console.log("GOOD")
-                    return true;
-                }
-                return false;
-            },
-            signal: controller.signal,
-            timeout: 2000,
-        };
-        console.log("Scanning for devices:");
-        for await (const device of bluetooth.scan(options)) {
-            console.log(`- ${device.name} [${device.id}]`);
-        }
-    } catch (err: any) {
-        if (err.name === "AbortError") {
-            console.log("Done");
-            process.exit(0);
-        }
-        console.log(`Error: ${err.message}`);
-        process.exit(1);
-    }
-    */
-
-    /*
-    try {
-        const options = {
-            filter: () => true
-        };
-        console.log("Scanning for devices:")
-        for await (const device of bluetooth.scan(options)) {
-            console.log(`- ${device.name} [${device.id}]`);
-        }
-        process.exit(0);
-    } catch (err: any) {
-        console.log(`Error: ${err.message}`);
-        process.exit(1);
-    }
-    */
 })();

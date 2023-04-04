@@ -466,7 +466,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         }
         this._bindings.simpleble_peripheral_set_callback_on_connected(this._peripheral, () => {
             this._connected = true;
-        }, null);
+        });
         const ret = this._bindings.simpleble_peripheral_connect(this._peripheral);
         if (!ret) {
             throw new DOMException("Connection failed", "NetworkError");
@@ -477,7 +477,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         this.device.bluetooth.dispatchEvent(new Event('gattserverdisconnected'));
         this._bindings.simpleble_peripheral_set_callback_on_disconnected(this._peripheral, () => {
             this._connected = false;
-        }, null);
+        });
         return Promise.resolve(this);
     }
 

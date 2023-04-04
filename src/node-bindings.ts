@@ -32,7 +32,6 @@ import type {
     ManufacturerData,
     Peripheral,
     Service,
-    UserData
 } from "./bindings.js";
 
 const require = createRequire(import.meta.url);
@@ -146,31 +145,27 @@ export class SimpleBLE implements Bindings {
     }
     simpleble_adapter_set_callback_on_scan_start(
         handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter) => void,
     ): boolean {
-        return this._bindings.simpleble_adapter_set_callback_on_scan_start(handle, cb, userdata);
+        return this._bindings.simpleble_adapter_set_callback_on_scan_start(handle, cb);
     }
     simpleble_adapter_set_callback_on_scan_stop(
         handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter) => void,
     ): boolean {
-        return this._bindings.simpleble_adapter_set_callback_on_scan_start(handle, cb, userdata);
+        return this._bindings.simpleble_adapter_set_callback_on_scan_start(handle, cb);
     }
     simpleble_adapter_set_callback_on_updated(
         handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter, peripheral: Peripheral) => void,
     ): boolean {
-        return this._bindings.simpleble_adapter_set_callback_on_updated(handle, cb, userdata);
+        return this._bindings.simpleble_adapter_set_callback_on_updated(handle, cb);
     }
     simpleble_adapter_set_callback_on_found(
         handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter, peripheral: Peripheral) => void,
     ): boolean {
-        return this._bindings.simpleble_adapter_set_callback_on_found(handle, cb, userdata);
+        return this._bindings.simpleble_adapter_set_callback_on_found(handle, cb);
     }
 
     simpleble_peripheral_release_handle(handle: Peripheral): void {
@@ -239,11 +234,9 @@ export class SimpleBLE implements Bindings {
             service: string,
             characteristic: string,
             data: Uint8Array,
-            userdata: UserData,
         ) => void,
-        userdata: UserData = null,
     ): boolean {
-        return this._bindings.simpleble_peripheral_indicate(handle, service, characteristic, cb, userdata);
+        return this._bindings.simpleble_peripheral_indicate(handle, service, characteristic, cb);
     }
     simpleble_peripheral_notify(
         handle: Peripheral,
@@ -253,25 +246,21 @@ export class SimpleBLE implements Bindings {
             service: string,
             characteristic: string,
             data: Uint8Array,
-            userdata: UserData,
         ) => void,
-        userdata: UserData = null,
     ): boolean {
-        return this._bindings.simpleble_peripheral_notify(handle, service, characteristic, cb, userdata);
+        return this._bindings.simpleble_peripheral_notify(handle, service, characteristic, cb);
     }
     simpleble_peripheral_set_callback_on_connected(
         handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData = null,
+        cb: (peripheral: Peripheral) => void,
     ): boolean {
-        return this._bindings.simpleble_peripheral_set_callback_on_connected(handle, cb, userdata);
+        return this._bindings.simpleble_peripheral_set_callback_on_connected(handle, cb);
     }
     simpleble_peripheral_set_callback_on_disconnected(
         handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData = null,
+        cb: (peripheral: Peripheral) => void,
     ): boolean {
-        return this._bindings.simpleble_peripheral_set_callback_on_disconnected(handle, cb, userdata);
+        return this._bindings.simpleble_peripheral_set_callback_on_disconnected(handle, cb);
     }
     simpleble_peripheral_read_descriptor(
         handle: Peripheral,

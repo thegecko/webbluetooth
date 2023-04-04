@@ -25,4 +25,5 @@ public:
   static Napi::Value SetCallbackOnScanStop(const Napi::CallbackInfo &info);
   static Napi::Value SetCallbackOnScanUpdated(const Napi::CallbackInfo &info);
   static Napi::Value SetCallbackOnScanFound(const Napi::CallbackInfo &info);
+  static Napi::Value Cleanup(const Napi::CallbackInfo &info);
 };

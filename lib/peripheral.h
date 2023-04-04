@@ -12,7 +12,9 @@ public:
   static Napi::Value ReleaseHandle(const Napi::CallbackInfo &info);
   static Napi::Value Identifier(const Napi::CallbackInfo &info);
   static Napi::Value Address(const Napi::CallbackInfo &info);
+  static Napi::Value AddressType(const Napi::CallbackInfo &info);
   static Napi::Value RSSI(const Napi::CallbackInfo &info);
+  static Napi::Value TxPower(const Napi::CallbackInfo &info);
   static Napi::Value MTU(const Napi::CallbackInfo &info);
   static Napi::Value Connect(const Napi::CallbackInfo &info);
   static Napi::Value Disconnect(const Napi::CallbackInfo &info);
@@ -34,4 +36,5 @@ public:
   static Napi::Value WriteDescriptor(const Napi::CallbackInfo &info);
   static Napi::Value SetCallbackOnConnected(const Napi::CallbackInfo &info);
   static Napi::Value SetCallbackOnDisconnected(const Napi::CallbackInfo &info);
+  static Napi::Value Cleanup(const Napi::CallbackInfo &info);
 };

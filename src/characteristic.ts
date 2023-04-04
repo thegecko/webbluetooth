@@ -286,7 +286,6 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
                 const view = new DataView(arrayBuffer);
                 this._setValue(view, true);
             },
-            null
         );
         return Promise.resolve(this);
     }

@@ -306,7 +306,7 @@ export class Bluetooth extends EventTarget {
             for (let j = 0; j < dataCount; j++) {
                 const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
                 if (data) {
-                    manufacturerData.set(data.id, new DataView(data.data.buffer));
+                    manufacturerData.set(data!.id, new DataView(data!.data.buffer));
                 }
             }
             // TODO: serviceData

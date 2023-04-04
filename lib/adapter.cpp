@@ -1,47 +1,49 @@
 #include "adapter.h"
-#include <atomic>
-#include <functional>
+#include <memory>
+#include <mutex>
+#include <vector>
 
 #define GET_AND_CHECK_HANDLE(env, info, handle)                                \
-  if (info.Length() < 1) {                                                     \
-    Napi::TypeError::New(env, "No handle given").ThrowAsJavaScriptException(); \
-    return env.Null();                                                         \
-  }                                                                            \
-                                                                               \
-  if (!info[0].IsExternal()) {                                                 \
-    Napi::TypeError::New(env, "Invalid handle given")                          \
-        .ThrowAsJavaScriptException();                                         \
-    return env.Null();                                                         \
-  }                                                                            \
-                                                                               \
-  handle = info[0].As<Napi::External<simpleble_adapter_t>>().Data();           \
-  if (handle == nullptr) {                                                     \
+  if (info.Length() < 1 || !info[0].IsBigInt()) {                              \
     Napi::TypeError::New(env, "Invalid handle").ThrowAsJavaScriptException();  \
     return env.Null();                                                         \
+  }                                                                            \
+                                                                               \
+  bool lossless;                                                               \
+  handle = reinterpret_cast<simpleble_adapter_t>(                              \
+      info[0].As<Napi::BigInt>().Uint64Value(&lossless));                      \
+  if (!lossless || handle == nullptr) {                                        \
+    Napi::Error::New(env, "Internal handle error")                             \
+        .ThrowAsJavaScriptException();                                         \
+    return env.Null();                                                         \
   }
 
-struct AdapterContext {
-  AdapterContext() : done(false) {}
-  Napi::FunctionReference cb;
-  std::atomic<bool> done;
-};
+std::vector<std::shared_ptr<Napi::ThreadSafeFunction>> adapter_tsfn_vector;
+std::mutex adapter_tsfn_mutex;
 
-extern "C" void onAdapterCallback(simpleble_adapter_t adapter, void* userdata) {
-  AdapterContext* context = static_cast<AdapterContext*>(userdata);
-  if (!context->done) {
-    context->done = true;
-    context->cb.Call({});
-    context->cb.Unref();
-  }
+void AdapterCallback(simpleble_adapter_t adapter, void *userdata) {
+  Napi::ThreadSafeFunction tsfn =
+      *reinterpret_cast<Napi::ThreadSafeFunction *>(userdata);
+  auto callback = [adapter](Napi::Env env, Napi::Function jsCallback) {
+    jsCallback.Call(
+        {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(adapter))});
+  };
+  tsfn.NonBlockingCall(callback);
 }
 
-extern "C" void onAdapterPeripheralCallback(simpleble_adapter_t adapter, simpleble_peripheral_t peripheral, void* userdata) {
-  AdapterContext* context = static_cast<AdapterContext*>(userdata);
-  if (!context->done) {
-    context->done = true;
-    context->cb.Call({});
-    context->cb.Unref();
-  }
+void AdapterPeripheralCallback(simpleble_adapter_t adapter,
+                               simpleble_peripheral_t peripheral,
+                               void *userdata) {
+  Napi::ThreadSafeFunction tsfn =
+      *reinterpret_cast<Napi::ThreadSafeFunction *>(userdata);
+  auto callback = [adapter, peripheral](Napi::Env env,
+                                        Napi::Function jsCallback) {
+    jsCallback.Call(
+        {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(adapter)),
+         Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
+  };
+
+  tsfn.NonBlockingCall(callback);
 }
 
 Napi::Object AdapterWrapper::Init(Napi::Env env, Napi::Object exports) {
@@ -84,6 +86,8 @@ Napi::Object AdapterWrapper::Init(Napi::Env env, Napi::Object exports) {
               Napi::Function::New(env, &AdapterWrapper::SetCallbackOnScanUpdated));
   exports.Set("simpleble_adapter_set_callback_on_found",
               Napi::Function::New(env, &AdapterWrapper::SetCallbackOnScanFound));
+  exports.Set("simpleble_adapter_cleanup",
+              Napi::Function::New(env, &AdapterWrapper::Cleanup));
   // clang-format on
 
   return exports;
@@ -108,22 +112,16 @@ Napi::Value AdapterWrapper::GetCount(const Napi::CallbackInfo &info) {
 Napi::Value AdapterWrapper::GetHandle(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (info.Length() < 1) {
-    Napi::TypeError::New(env, "Wrong number of arguments")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
-
-  if (!info[0].IsNumber()) {
+  if (info.Length() < 1 || !info[0].IsNumber()) {
     Napi::TypeError::New(env, "Index is not a number")
         .ThrowAsJavaScriptException();
     return env.Null();
   }
 
-  uint32_t index = info[0].As<Napi::Number>().Uint32Value();
+  size_t index = info[0].As<Napi::Number>().Uint32Value();
   simpleble_adapter_t handle = simpleble_adapter_get_handle(index);
 
-  return Napi::External<simpleble_adapter_t>::New(env, &handle);
+  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(handle));
 }
 
 Napi::Value AdapterWrapper::ReleaseHandle(const Napi::CallbackInfo &info) {
@@ -257,8 +255,7 @@ AdapterWrapper::ScanGetResultsHandle(const Napi::CallbackInfo &info) {
   simpleble_peripheral_t peripheral =
       simpleble_adapter_scan_get_results_handle(handle, index);
 
-  //
-  return Napi::External<simpleble_peripheral_t>::New(env, &peripheral);
+  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral));
 }
 
 Napi::Value
@@ -295,13 +292,12 @@ AdapterWrapper::GetPairedPeripheralsHandle(const Napi::CallbackInfo &info) {
   simpleble_peripheral_t peripheral =
       simpleble_adapter_get_paired_peripherals_handle(handle, index);
 
-  return Napi::External<simpleble_peripheral_t>::New(env, &peripheral);
+  return Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral));
 }
 
 Napi::Value
 AdapterWrapper::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -317,10 +313,19 @@ AdapterWrapper::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  auto cbData = new AdapterContext();
-  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+  Napi::Function callback = info[1].As<Napi::Function>();
 
-  const auto ret = simpleble_adapter_set_callback_on_scan_start(handle, onAdapterCallback, cbData);
+  auto tsfn_ptr =
+      std::make_shared<Napi::ThreadSafeFunction>(Napi::ThreadSafeFunction::New(
+          env, callback, "SetCallbackOnScanStart", 0, 1));
+
+  {
+    std::unique_lock<std::mutex> lock(adapter_tsfn_mutex);
+    adapter_tsfn_vector.push_back(tsfn_ptr);
+  }
+  const auto ret = simpleble_adapter_set_callback_on_scan_start(
+      handle, AdapterCallback, tsfn_ptr.get());
+
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }
@@ -331,7 +336,6 @@ AdapterWrapper::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
 Napi::Value
 AdapterWrapper::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -347,10 +351,20 @@ AdapterWrapper::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  auto cbData = new AdapterContext();
-  cbData->cb = Napi::Persistent(info[1].As<Napi::Function>());
+  Napi::Function callback = info[1].As<Napi::Function>();
 
-  const auto ret = simpleble_adapter_set_callback_on_scan_stop(handle, onAdapterCallback, cbData);
+  auto tsfn_ptr =
+      std::make_shared<Napi::ThreadSafeFunction>(Napi::ThreadSafeFunction::New(
+          env, callback, "SetCallbackOnScanStop", 0, 1));
+
+  {
+    std::unique_lock<std::mutex> lock(adapter_tsfn_mutex);
+    adapter_tsfn_vector.push_back(tsfn_ptr);
+  }
+
+  const auto ret = simpleble_adapter_set_callback_on_scan_stop(
+      handle, AdapterCallback, tsfn_ptr.get());
+
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
   }
@@ -361,7 +375,6 @@ AdapterWrapper::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
 Napi::Value
 AdapterWrapper::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
   simpleble_adapter_t handle;
 
   GET_AND_CHECK_HANDLE(env, info, handle);
@@ -377,9 +390,25 @@ AdapterWrapper::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  Napi::TypeError::New(env, "InternalError - simpleble_adapter_set_callback_on_scan_updated causes an exception").ThrowAsJavaScriptException();
+  Napi::Function callback = info[1].As<Napi::Function>();
 
-  return Napi::Boolean::New(env, false);
+  auto tsfn_ptr =
+      std::make_shared<Napi::ThreadSafeFunction>(Napi::ThreadSafeFunction::New(
+          env, callback, "SetCallbackOnScanUpdated", 0, 1));
+
+  {
+    std::unique_lock<std::mutex> lock(adapter_tsfn_mutex);
+    adapter_tsfn_vector.push_back(tsfn_ptr);
+  }
+
+  const auto ret = simpleble_adapter_set_callback_on_scan_updated(
+      handle, AdapterPeripheralCallback, tsfn_ptr.get());
+
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
+  }
+
+  return Napi::Boolean::New(env, true);
 }
 
 Napi::Value
@@ -400,7 +429,28 @@ AdapterWrapper::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
     return env.Null();
   }
 
-  Napi::TypeError::New(env, "InternalError - simpleble_adapter_set_callback_on_scan_found causes an exception").ThrowAsJavaScriptException();
+  Napi::Function callback = info[1].As<Napi::Function>();
 
-  return Napi::Boolean::New(env, false);
+  auto tsfn_ptr =
+      std::make_shared<Napi::ThreadSafeFunction>(Napi::ThreadSafeFunction::New(
+          env, callback, "SetCallbackOnScanFound", 0, 1));
+
+  {
+    std::unique_lock<std::mutex> lock(adapter_tsfn_mutex);
+    adapter_tsfn_vector.push_back(tsfn_ptr);
+  }
+
+  const auto ret = simpleble_adapter_set_callback_on_scan_found(
+      handle, AdapterPeripheralCallback, tsfn_ptr.get());
+  if (ret != SIMPLEBLE_SUCCESS) {
+    return Napi::Boolean::New(env, false);
+  }
+
+  return Napi::Boolean::New(env, true);
+}
+
+Napi::Value AdapterWrapper::Cleanup(const Napi::CallbackInfo& info) {
+  std::unique_lock<std::mutex> lock(adapter_tsfn_mutex);
+  adapter_tsfn_vector.clear();
+  return Napi::Value();
 }

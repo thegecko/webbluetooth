@@ -81,26 +81,22 @@ export interface Bindings {
     /** Register a callback for when the adapter begins scanning. */
     simpleble_adapter_set_callback_on_scan_start(
         handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter) => void,
     ): boolean;
     /** Register a callback for when the adapter stops scanning. */
     simpleble_adapter_set_callback_on_scan_stop(
         handle: Adapter,
-        cb: (adapter: Adapter, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter) => void,
     ): boolean;
     /** Register a callback for when the adapter changes. */
     simpleble_adapter_set_callback_on_updated(
         handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter, peripheral: Peripheral) => void,
     ): boolean;
     /** Register a callback for when a peripheral is found. */
     simpleble_adapter_set_callback_on_found(
         handle: Adapter,
-        cb: (adapter: Adapter, peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (adapter: Adapter, peripheral: Peripheral) => void,
     ): boolean;
     /** @hidden Deallocate resources for a Peripheral handle. */
     simpleble_peripheral_release_handle(handle: Peripheral): void;
@@ -149,9 +145,7 @@ export interface Bindings {
             service: string,
             characteristic: string,
             data: Uint8Array,
-            userdata: UserData,
         ) => void,
-        userdata: UserData,
     ): boolean;
     /** Regiser a callback for when a device notification is received. */
     simpleble_peripheral_notify(
@@ -162,21 +156,17 @@ export interface Bindings {
             service: string,
             characteristic: string,
             data: Uint8Array,
-            userdata: UserData
         ) => void,
-        userdata: UserData,
     ): boolean;
     /** Register a callback for when the device is connected. */
     simpleble_peripheral_set_callback_on_connected(
         handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (peripheral: Peripheral) => void,
     ): boolean;
     /** Register a callback for when the device is disconnected. */
     simpleble_peripheral_set_callback_on_disconnected(
         handle: Peripheral,
-        cb: (peripheral: Peripheral, userdata: UserData) => void,
-        userdata: UserData,
+        cb: (peripheral: Peripheral) => void,
     ): boolean;
     /** Read data from a device descriptor. */
     simpleble_peripheral_read_descriptor(
