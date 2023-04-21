@@ -156,6 +156,13 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] readValue()
 - [x] writeValue()
 
+### BluetoothUUID
+
+- [ ] getService()
+- [ ] getCharacteristic()
+- [ ] getDescriptor()
+- [ ] canonicalUUID()
+
 ### Events
 
 #### Bluetooth
