@@ -28,7 +28,7 @@ import {
     BluetoothRemoteGATTDescriptor,
     BluetoothRemoteGATTService,
 } from "./gatt.ts";
-import type { Bindings, Characteristic, Peripheral } from "./bindings.ts";
+import type { Characteristic, Peripheral } from "./bindings.ts";
 import type { CustomEventListener } from "./common.ts";
 import type {
     BluetoothCharacteristicProperties,
@@ -73,8 +73,7 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
  *
  * See also: {@link https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic}
  */
- export class BluetoothRemoteGATTCharacteristic extends EventTarget {
-    private readonly _bindings: Bindings;
+export class BluetoothRemoteGATTCharacteristic extends EventTarget {
     private readonly _peripheral: Peripheral;
     private readonly _characteristic: Characteristic;
     private readonly _service: BluetoothRemoteGATTService;
@@ -85,13 +84,11 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
 
     /** @hidden */
     constructor(
-        bindings: Bindings,
         peripheral: Peripheral,
         service: BluetoothRemoteGATTService,
         characteristic: Characteristic,
     ) {
         super();
-        this._bindings = bindings;
         this._peripheral = peripheral;
         this._service = service;
         this._characteristic = characteristic;
@@ -112,12 +109,12 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         return {
             authenticatedSignedWrites: false,
             broadcast: false,
-            indicate: true,
-            notify: true,
-            read: true,
-            reliableWrite: true,
-            write: true,
-            writeWithoutResponse: true,
+            indicate: this._characteristic.canIndicate,
+            notify: this._characteristic.canNotify,
+            read: this._characteristic.canRead,
+            reliableWrite: this._characteristic.canWriteCommand,
+            write: this._characteristic.canWriteCommand,
+            writeWithoutResponse: this._characteristic.canWriteRequest,
             writableAuxiliaries: false,
         };
     }
@@ -172,7 +169,6 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
             const descriptors: BluetoothRemoteGATTDescriptor[] = [];
             for (const descriptorUuid of this._characteristic.descriptors) {
                 const descriptor = new BluetoothRemoteGATTDescriptor(
-                    this._bindings,
                     this._peripheral,
                     this._service,
                     this,
@@ -200,8 +196,7 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         if (!this.service.device.gatt.connected) {
             throw new DOMException("Device not connected", "NetworkError");
         }
-        const buffer = this._bindings.simpleble_peripheral_read(
-            this._peripheral,
+        const buffer = this._peripheral.read(
             this.service.uuid,
             this.uuid,
         );
@@ -233,8 +228,7 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         if (data.byteLength > 512) {
             throw new DOMException("Value can't exceed 512 bytes", "InvalidModificationError");
         }
-        const ret = this._bindings.simpleble_peripheral_write_command(
-            this._peripheral,
+        const ret = this._peripheral.writeCommand(
             this.service.uuid,
             this.uuid,
             data,
@@ -257,8 +251,7 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         if (data.byteLength > 512) {
             throw new DOMException("Value can't exceed 512 bytes", "InvalidModificationError");
         }
-        const ret = this._bindings.simpleble_peripheral_write_request(
-            this._peripheral,
+        const ret = this._peripheral.writeRequest(
             this.service.uuid,
             this.uuid,
             data,
@@ -276,15 +269,14 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         if (!this.service.device.gatt.connected) {
             throw new DOMException("Device not connected", "NetworkError");
         }
-        this._bindings.simpleble_peripheral_notify(
-            this._peripheral,
+        this._peripheral.notify(
             this.service.uuid,
             this.uuid,
-            (_service: string, _char: string, data: Uint8Array) => {
-                this.dispatchEvent(new Event("notify"));
+            (data: Uint8Array) => {
                 const arrayBuffer = data.buffer;
                 const view = new DataView(arrayBuffer);
                 this._setValue(view, true);
+                this.dispatchEvent(new Event("notify"));
             },
         );
         return Promise.resolve(this);
@@ -295,8 +287,7 @@ export interface BluetoothRemoteGATTCharacteristic extends EventTarget {
         if (!this.service.device.gatt.connected) {
             throw new DOMException("Device not connected", "NetworkError");
         }
-        this._bindings.simpleble_peripheral_unsubscribe(
-            this._peripheral,
+        this._peripheral.unsubscribe(
             this._service.uuid,
             this.uuid,
         );

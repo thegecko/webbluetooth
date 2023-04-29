@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -23,17 +22,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-export * from "./interfaces.ts/index.ts";
-export * from "./common.ts/index.ts";
-export * from "./gatt.ts/index.ts";
-export * from "./characteristic.ts/index.ts";
-export * from "./bluetooth.ts/index.ts";
+import * as readline from 'node:readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
+import { bluetooth } from "../dist/index.js";
+import type { RequestDeviceInfo } from "../dist/index.js";
 
-// Use NAPI for now.
-import { SimpleBLE } from "./node-bindings.ts/index.ts";
-import { Bluetooth } from "./bluetooth.ts/index.ts";
+const rl = readline.createInterface({ input, output });
+const deviceName = await rl.question("Please enter a device name or address: ");
 
-const bindings = await SimpleBLE.load();
-
-/** @hidden The global `bluetooth` variable. */
-export const bluetooth = new Bluetooth(bindings);
+(async () => {
+    console.log("Scanning");
+    const device = await bluetooth.requestDevice({
+        filter: (info: RequestDeviceInfo) => {
+            if (info.address === deviceName || info.name?.includes(deviceName)) {
+                return true;
+            }
+            return false;
+        },
+        timeout: 5000,
+    });
+    console.log(`- ${device.name} [${device.id}]`);
+    await device.gatt.connect();
+    const services = await device.gatt.getPrimaryServices();
+    for (const service of services) {
+        console.log(`\t+ ${service.uuid}`);
+    }
+    device.gatt.disconnect();
+    console.log("Done");
+    process.exit(0);
+})();

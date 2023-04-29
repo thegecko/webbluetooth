@@ -30,18 +30,6 @@ export * from "./characteristic.ts";
 export * from "./bluetooth.ts";
 
 import { Bluetooth } from "./bluetooth.ts";
-import { SimpleBLE } from "./ffi.ts";
-
-/** @hidden Returns the available WebBluetooth instance. */
-export async function getWebBluetooth(): Promise<Bluetooth> {
-  if (navigator && navigator.bluetooth) {
-    return navigator.bluetooth;
-  }
-  const bindings = await SimpleBLE.load();
-  const bluetooth = new Bluetooth(bindings);
-  navigator.bluetooth = bluetooth;
-  return bluetooth;
-}
 
 /** @hidden The global `bluetooth` variable. */
-export const bluetooth = await getWebBluetooth();
+export const bluetooth = new Bluetooth();

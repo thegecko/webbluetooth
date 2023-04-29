@@ -27,9 +27,14 @@ import type { BluetoothRemoteGATTCharacteristic } from "../dist/index.js";
 
 function onHeartRateChanged(event: Event) {
     const characteristic = event.target as BluetoothRemoteGATTCharacteristic;
-    console.log(characteristic.value);
-    //if (event.value.buffer.byteLength) console.log(event.value.getUint16(0));
+    if (characteristic) {
+        const view = characteristic.value!;
+        if (view.buffer.byteLength) {
+            console.log(view.getUint16(0));
+        }
+    }
 }
+
 
 (async () => {
 	try {

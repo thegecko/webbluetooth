@@ -23,29 +23,11 @@
  * SOFTWARE.
  */
 import { bluetooth } from "../dist/index.js";
-import type { RequestDeviceInfo } from "../dist/index.js";
-
-// TODO: integrate readline.
-const DEVICE_ADDRESS = "90:84:2B:08:34:BB";
 
 (async () => {
-    console.log("Scanning");
-    const device = await bluetooth.requestDevice({
-        filter: (info: RequestDeviceInfo) => {
-            if (info.address === DEVICE_ADDRESS) {
-                return true;
-            }
-            return false;
-        },
-        timeout: 5000,
+    const devices = await bluetooth.requestDevices({
+        acceptAllDevices: true
     });
-    console.log(`- ${device.name} [${device.id}]`);
-    await device.gatt.connect();
-    const services = await device.gatt.getPrimaryServices();
-    for (const service of services) {
-        console.log(`\t+ ${service.uuid}`);
-    }
-    device.gatt.disconnect();
-    console.log("Done");
-    process.exit(0);
+    console.log(devices);
+    process.exit();
 })();

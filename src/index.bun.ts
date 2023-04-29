@@ -1,3 +1,4 @@
+// @denoify-ignore
 // @ts-nocheck
 /*
  * Node Web Bluetooth
@@ -30,10 +31,7 @@ export * from "./characteristic.ts";
 export * from "./bluetooth.ts";
 
 // Use NAPI for now.
-import { SimpleBLE } from "./node-bindings.ts";
-import { Bluetooth } from "./bluetooth.ts";
+import { Bluetooth } from "./bluetooth.js";
 
-const bindings = await SimpleBLE.load();
-
-/** @hidden The global `bluetooth` variable. */
-export const bluetooth = new Bluetooth(bindings);
+/** Default bluetooth instance synonymous with `navigator.bluetooth`. */
+export const bluetooth = new Bluetooth();

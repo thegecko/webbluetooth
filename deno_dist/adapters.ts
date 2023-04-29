@@ -1,4 +1,5 @@
-// @denoify-ignore
+// @ts-nocheck
+/* eslint-disable */
 /*
  * Node Web Bluetooth
  * Copyright (c) 2019 Rob Moran
@@ -24,13 +25,8 @@
  * SOFTWARE.
  */
 
-export * from "./interfaces.js";
-export * from "./common.js";
-export * from "./gatt.js";
-export * from "./characteristic.js";
-export * from "./bluetooth.js";
+// TODO
 
-import { Bluetooth } from "./bluetooth.js";
+import type { Adapter } from "./bindings.ts";
 
-/** Default bluetooth instance synonymous with `navigator.bluetooth`. */
-export const bluetooth = new Bluetooth();
+export const adapters: Adapter = [];

@@ -33,7 +33,7 @@ import {
     BluetoothRemoteGATTCharacteristic,
 } from "./characteristic.ts";
 import type { Bluetooth } from "./bluetooth.ts";
-import type { Bindings, Peripheral, Service } from "./bindings.ts";
+import type { Peripheral, Service } from "./bindings.ts";
 import type { CustomEventListener } from "./common.ts";
 import type {
     BluetoothCharacteristicUUID,
@@ -47,16 +47,40 @@ export interface WatchAdvertisementsOptions {
     signal?: AbortSignal;
 }
 
-/** BLE advertisement received. */
-export interface BluetoothAdvertisingEvent extends Event {
+/** @hidden Interface for creating an Advertisement event. */
+export interface BluetoothAdvertisingEventInit extends EventInit {
+    device: BluetoothDevice;
+    uuids: BluetoothServiceUUID[];
+    name?: string;
+    appearance?: number;
+    txPower?: number;
+    rssi?: number;
+    manufacturerData: BluetoothManufacturerData;
+    serviceData: BluetoothServiceData;
+}
+
+/** Bluetooth Advertisement event. */
+export class BluetoothAdvertisingEvent extends Event {
     readonly device: BluetoothDevice;
     readonly uuids: BluetoothServiceUUID[];
-    readonly manufacturerData: BluetoothManufacturerData;
-    readonly serviceData: BluetoothServiceData;
     readonly name?: string | undefined;
     readonly appearance?: number | undefined;
-    readonly rssi?: number | undefined;
     readonly txPower?: number | undefined;
+    readonly rssi?: number | undefined;
+    readonly manufacturerData: BluetoothManufacturerData;
+    readonly serviceData: BluetoothServiceData;
+
+    constructor(dict: BluetoothAdvertisingEventInit) {
+        super("advertisementreceived", dict);
+        this.device = dict.device;
+        this.uuids = dict.uuids;
+        this.name = dict.name;
+        this.appearance = dict.appearance;
+        this.txPower = dict.txPower;
+        this.rssi = dict.rssi;
+        this.manufacturerData = dict.manufacturerData;
+        this.serviceData = dict.serviceData;
+    }
 }
 
 /** @hidden Events for {@link BluetoothRemoteGATTService} */
@@ -141,7 +165,6 @@ export class BluetoothRemoteGATTDescriptor extends EventTarget {
     private readonly _peripheral: Peripheral;
     private readonly _char: BluetoothRemoteGATTCharacteristic;
     private readonly _uuid: string;
-    private readonly _bindings: Bindings;
     private _value?: DataView;
 
     /** The {@link BluetoothRemoteGATTService} this descriptor belongs to. */
@@ -166,14 +189,12 @@ export class BluetoothRemoteGATTDescriptor extends EventTarget {
 
     /** @private */
     constructor(
-        bindings: Bindings,
         peripheral: Peripheral,
         service: BluetoothRemoteGATTService,
         char: BluetoothRemoteGATTCharacteristic,
         uuid: string,
     ) {
         super();
-        this._bindings = bindings;
         this._peripheral = peripheral;
         this._char = char;
         this._service = service;
@@ -186,8 +207,7 @@ export class BluetoothRemoteGATTDescriptor extends EventTarget {
         if (!this.characteristic.service.device.gatt.connected) {
             throw new DOMException("Device not connected", "NetworkError");
         }
-        const data = this._bindings.simpleble_peripheral_read_descriptor(
-            this._peripheral,
+        const data = this._peripheral.readDescriptor(
             this.service.uuid,
             this._char.uuid,
             this._uuid,
@@ -204,8 +224,7 @@ export class BluetoothRemoteGATTDescriptor extends EventTarget {
     writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
         const buffer = isView(value) ? value.buffer : value;
         const data = new Uint8Array(buffer);
-        const ret = this._bindings.simpleble_peripheral_write_descriptor(
-            this._peripheral,
+        const ret = this._peripheral.writeDescriptor(
             this.service.uuid,
             this._char.uuid,
             this._uuid,
@@ -233,7 +252,6 @@ export class BluetoothRemoteGATTDescriptor extends EventTarget {
  * - __`serviceremoved`__
  */
 export class BluetoothRemoteGATTService extends EventTarget {
-    private readonly _bindings: Bindings;
     private readonly _peripheral: Peripheral;
     private readonly _service: Service;
     private readonly _device: BluetoothDevice;
@@ -247,13 +265,11 @@ export class BluetoothRemoteGATTService extends EventTarget {
 
     /** @hidden */
     constructor(
-        bindings: Bindings,
         peripheral: Peripheral,
         device: BluetoothDevice,
         service: Service,
     ) {
         super();
-        this._bindings = bindings;
         this._peripheral = peripheral;
         this._service = service;
         this._device = device;
@@ -306,7 +322,6 @@ export class BluetoothRemoteGATTService extends EventTarget {
         }
         for (const char of this._service.characteristics) {
             const characteristic = new BluetoothRemoteGATTCharacteristic(
-                this._bindings,
                 this._peripheral,
                 this,
                 char,
@@ -358,16 +373,13 @@ export class BluetoothRemoteGATTService extends EventTarget {
         }
 
         if (this._services.length < 1) {
-            const count = this._bindings.simpleble_peripheral_services_count(this._peripheral);
-            for (let i = 0; i < count; i++) {
-                const handle = this._bindings.simpleble_peripheral_services_get(this._peripheral, i);
-                const service = new BluetoothRemoteGATTService(
-                    this._bindings,
+            for (const service of this._peripheral.services) {
+                const gattService = new BluetoothRemoteGATTService(
                     this._peripheral,
                     this._device,
-                    handle,
+                    service,
                 );
-                this._services.push(service)
+                this._services.push(gattService);
             }
         }
 
@@ -426,7 +438,6 @@ export class BluetoothRemoteGATTService extends EventTarget {
  * See also: {@link https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTServer}
  */
 export class BluetoothRemoteGATTServer extends EventTarget {
-    private readonly _bindings: Bindings;
     private readonly _device: BluetoothDevice;
     private _peripheral: Peripheral;
     private _connected: boolean;
@@ -434,12 +445,10 @@ export class BluetoothRemoteGATTServer extends EventTarget {
 
     /** @hidden */
     constructor(
-        bindings: Bindings,
         peripheral: Peripheral,
         device: BluetoothDevice,
     ) {
         super();
-        this._bindings = bindings;
         this._peripheral = peripheral;
         this._device = device;
         this._connected = false;
@@ -464,10 +473,10 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         if (this.connected) {
             throw new DOMException('Connection already in progress', "NetworkError");
         }
-        this._bindings.simpleble_peripheral_set_callback_on_connected(this._peripheral, () => {
+        this._peripheral.setCallbackOnConnected(() => {
             this._connected = true;
         });
-        const ret = this._bindings.simpleble_peripheral_connect(this._peripheral);
+        const ret = this._peripheral.connect();
         if (!ret) {
             throw new DOMException("Connection failed", "NetworkError");
         }
@@ -475,7 +484,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         this._connected = true;
         this.device.dispatchEvent(new Event('gattserverdisconnected'));
         this.device.bluetooth.dispatchEvent(new Event('gattserverdisconnected'));
-        this._bindings.simpleble_peripheral_set_callback_on_disconnected(this._peripheral, () => {
+        this._peripheral.setCallbackOnDisconnected(() => {
             this._connected = false;
         });
         return Promise.resolve(this);
@@ -483,7 +492,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
 
     /** Disconnect from this device. */
     disconnect(): void {
-        this._bindings.simpleble_peripheral_disconnect(this._peripheral);
+        this._peripheral.disconnect();
         this._connected = false;
     }
 
@@ -516,16 +525,13 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         }
 
         if (this._services.length < 1) {
-            const count = this._bindings.simpleble_peripheral_services_count(this._peripheral);
-            for (let i = 0; i < count; i++) {
-                const handle = this._bindings.simpleble_peripheral_services_get(this._peripheral, i);
-                const service = new BluetoothRemoteGATTService(
-                    this._bindings,
+            for (const service of this._peripheral.services) {
+                const gattService = new BluetoothRemoteGATTService(
                     this._peripheral,
                     this._device,
-                    handle,
+                    service,
                 );
-                this._services.push(service)
+                this._services.push(gattService);
             }
         }
 
@@ -559,8 +565,9 @@ export class BluetoothDevice extends EventTarget {
     private _id: string;
     private _name: string;
     private _gatt: BluetoothRemoteGATTServer;
-    private _manufacturerData?: BluetoothManufacturerData;
-    private _serviceData?: BluetoothServiceData;
+    private _manufacturerData: BluetoothManufacturerData;
+    private _serviceData: BluetoothServiceData;
+
     private _oncharacteristicvaluechanged?: EventListenerOrEventListenerObject;
     private _onserviceadded?: EventListenerOrEventListenerObject;
     private _onservicechanged?: EventListenerOrEventListenerObject;
@@ -575,18 +582,19 @@ export class BluetoothDevice extends EventTarget {
     get id(): string {
         return this._id
     }
+
     /** The name of the device. */
     get name(): string {
         return this._name;
     }
 
     /** The manufacturer-specific data of the device. */
-    get manufacturerData(): BluetoothManufacturerData | undefined {
+    get manufacturerData(): BluetoothManufacturerData {
         return this._manufacturerData;
     }
 
     /** The service-specific data of the device. */
-    get serviceData(): BluetoothServiceData | undefined {
+    get serviceData(): BluetoothServiceData {
         return this._serviceData;
     }
 
@@ -602,20 +610,19 @@ export class BluetoothDevice extends EventTarget {
 
     /** @hidden */
     constructor(
-        bindings: Bindings,
         peripheral: Peripheral,
-        id: string,
-        name: string,
         bluetooth: Bluetooth,
+        serviceData: BluetoothServiceData,
         manufacturerData: BluetoothManufacturerData,
     ) {
         super();
-        this._id = id;
-        this._name = name;
+        this._id = peripheral.address;
+        this._name = peripheral.identifier;
+
+        this._serviceData = serviceData;
         this._manufacturerData = manufacturerData;
         this.bluetooth = bluetooth;
         this._gatt = new BluetoothRemoteGATTServer(
-            bindings,
             peripheral,
             this,
         );

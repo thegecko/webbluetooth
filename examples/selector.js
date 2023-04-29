@@ -23,7 +23,8 @@
 * SOFTWARE.
 */
 
-import { bluetooth } from "../";
+import { bluetooth } from "../dist/index.js";
+
 const bluetoothDevices = [];
 
 process.stdin.setEncoding("utf8");
@@ -45,11 +46,11 @@ const deviceFound = (bluetoothDevice, selectFn) => {
     const discovered = bluetoothDevices.some(device => {
         return (device.id === bluetoothDevice.id);
     });
-    if (discovered) return;
+    if (discovered) return false;
 
     if (bluetoothDevices.length === 0) {
         process.stdin.setRawMode(true);
-        console.log("select a device:");
+        console.log("Select a device:");
     }
 
     bluetoothDevices.push({ id: bluetoothDevice.id, select: selectFn });
@@ -58,6 +59,8 @@ const deviceFound = (bluetoothDevice, selectFn) => {
     if (bluetoothDevice._serviceUUIDs.length) {
         console.log(`\tAdvertising: ${bluetoothDevice._serviceUUIDs}`);
     }
+
+    return true;
 };
 
 const enumerateGatt = async server => {

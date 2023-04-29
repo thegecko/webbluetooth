@@ -24,15 +24,15 @@
  */
 
 import { bluetooth, getServiceUUID } from "..";
-import type { BluetoothAdvertisingEvent } from "..";
+import type { BluetoothDevice } from "..";
 
 const eddystoneUUID = 0xFEAA;
 const eddystoneServiceUUID = getServiceUUID(eddystoneUUID);
 
-const frameTypes = {
-    "UID": 0x00,
-    "URL": 0x10,
-    "TLM": 0x20
+enum FrameType {
+    "UID" = 0x00,
+    "URL" = 0x10,
+    "TLM" = 0x20
 }
 
 const schemes = {
@@ -65,7 +65,7 @@ function decodeEddystone(view: DataView) {
         return undefined;
     }
 
-    if (type === frameTypes.UID) {
+    if (type === FrameType.UID) {
         const uidArray: string[] = [];
         for (let i = 2; i < view.byteLength; i++) {
             const hex = view.getUint8(i).toString(16);
@@ -77,9 +77,7 @@ function decodeEddystone(view: DataView) {
             namespace: uidArray.slice(0, 10).join(),
             instance: uidArray.slice(10, 16).join()
         };
-    }
-
-    if (type === frameTypes.URL) {
+    } else if (type === FrameType.URL) {
         let url = "";
         for (let i = 2; i < view.byteLength; i++) {
             if (i === 2) {
@@ -93,9 +91,7 @@ function decodeEddystone(view: DataView) {
             txPower: view.getInt8(1),
             url: url
         };
-    }
-
-    if (type === frameTypes.TLM) {
+    } else if (type === FrameType.TLM) {
         return {
             type: type,
             version: view.getUint8(1),
@@ -105,21 +101,24 @@ function decodeEddystone(view: DataView) {
             secCount: view.getUint32(10)
         };
     }
+
+    // TODO: notify of unrecognized type?
+    return undefined;
 }
 
-function interpretEddystone(event: BluetoothAdvertisingEvent) {
-    const eddyData = event.serviceData.get(eddystoneServiceUUID);
+function interpretEddystone(device: BluetoothDevice) {
+    const eddyData = device.serviceData.get(eddystoneServiceUUID);
     if (eddyData) {
         const decoded = decodeEddystone(eddyData);
         if (decoded) {
             switch(decoded.type) {
-                case frameTypes.UID:
+                case FrameType.UID:
                     console.log(`txPower: ${decoded.txPower}`);
                     break;
-                case frameTypes.URL:
+                case FrameType.URL:
                     console.log(`url: ${decoded.url}`);
                     break;
-                case frameTypes.TLM:
+                case FrameType.TLM:
                     console.log(`version: ${decoded.version}`);
                     break;
             }
@@ -131,8 +130,11 @@ const options = {
     filters: [{ services: [ eddystoneUUID ] }]
 };
 
-
-for await (const device of bluetooth.scan(options)) {
-    device.addEventListener("advertisementreceived", interpretEddystone);
-    device.watchAdvertisements();
+try {
+    for await (const device of bluetooth.scan(options)) {
+        interpretEddystone(device);
+    }
+} catch (e) {
+    console.error(e);
+    process.exit(1);
 }

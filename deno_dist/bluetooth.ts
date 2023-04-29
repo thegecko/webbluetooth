@@ -23,21 +23,29 @@
  * SOFTWARE.
  */
 
-import { abortable, delay, isView } from "./common.ts";
-import { Bindings, Adapter } from "./bindings.ts";
+import { abortable, delay, getServiceUUID, isView } from "./common.ts";
+import { adapters } from "./adapters.ts";
 import { BluetoothDevice, BluetoothDeviceEventMap } from "./gatt.ts";
-import {
+
+import type { Adapter } from "./bindings.ts";
+import type {
     BluetoothManufacturerData,
     BluetoothManufacturerDataFilter,
     BluetoothServiceData,
+    BluetoothServiceDataFilter,
     BluetoothServiceUUID,
-} from "./interfaces.ts";
-
-import type {
     BluetoothLEScanFilter,
     RequestDeviceInfo,
     RequestDeviceOptions,
 } from "./interfaces.ts";
+
+/** Bluetooth Options. */
+export interface BluetoothOptions {
+    /** The amount of seconds to scan for devices (default is 10). */
+    scanTime?: number;
+    /** An optional referring device. */
+    referringDevice?: BluetoothDevice;
+}
 
 /** @hidden Events for {@link BluetoothDevice} */
 export interface BluetoothEventMap extends BluetoothDeviceEventMap {
@@ -80,9 +88,64 @@ function checkManufacturerData(
     return false;
 }
 
+function checkServiceData(
+    map: BluetoothServiceData,
+    filters: BluetoothServiceDataFilter[],
+): boolean {
+    for (const filter of filters) {
+        const { service, dataPrefix } = filter;
+        const serviceUUID = getServiceUUID(service);
+        // Service not found - not a match.
+        if (!map.has(serviceUUID)) {
+            continue;
+        }
+        // If no dataPrefix, then the match was successful.
+        if (!dataPrefix) {
+            return true;
+        }
+        const view = map.get(serviceUUID);
+        if (!view) {
+            // Not sure if this is correct.
+            continue;
+        }
+        const buffer = isView(dataPrefix) ? dataPrefix.buffer : dataPrefix;
+        const bytes = new Uint8Array(buffer);
+        const values: boolean[] = [];
+        for (const [i, b] of bytes.entries()) {
+            const a = view.getUint8(i);
+            values[i] = a === b;
+        }
+        const valid = values.every((val) => val);
+        if (valid) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function checkServices(
+    info: RequestDeviceInfo,
+    services: BluetoothServiceUUID[],
+): boolean {
+    const validServices = (info.services || []).map(getServiceUUID);
+    if (info.serviceData) {
+        for (const uuid of info.serviceData?.keys()) {
+            validServices.push(getServiceUUID(uuid));
+        }
+    }
+    const allowedServices = services.map(getServiceUUID);
+    for (const service of validServices) {
+        if (allowedServices.includes(service)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /** Interface for creating {@link BluetoothDevice} objects. */
 export class Bluetooth extends EventTarget {
-    private _bindings: Bindings;
     private _adapter: Adapter;
     private _devices: BluetoothDevice[];
     private _oncharacteristicvaluechanged?: EventListenerOrEventListenerObject;
@@ -97,25 +160,23 @@ export class Bluetooth extends EventTarget {
     readonly referringDevice?: BluetoothDevice;
 
     /** @hidden */
-    constructor(bindings: Bindings) {
+    constructor(options?: BluetoothOptions) {
         super();
-        this._bindings = bindings;
         this._devices = [];
 
-        const enabled = this._bindings.simpleble_adapter_is_bluetooth_enabled();
-        if (!enabled) {
+        if (!adapters) {
             throw new DOMException("No Bluetooth adapters found", "NotFoundError");
         }
 
-        this._adapter = this._bindings.simpleble_adapter_get_handle(0);
+        this._adapter = adapters[0];
+        this.referringDevice = options?.referringDevice;
 
         this.dispatchEvent(new Event("availabilitychanged"));
     }
 
     /** Determines if a working Bluetooth adapter is usable. */
     getAvailability(): Promise<boolean> {
-        const count = this._bindings.simpleble_adapter_get_count();
-        return Promise.resolve(count > 0);
+        return Promise.resolve(!!this._adapter);
     }
 
     /** Returns a list of every device requested thus far. */
@@ -149,18 +210,22 @@ export class Bluetooth extends EventTarget {
                 continue;
             }
 
-            if (filter.services) {
-                throw new Error("Filtering by services is not supported yet");
-                /*
-                const serviceUUIDs = filter.services.map(getServiceUUID);
-                const servicesValid = serviceUUIDs.every(serviceUUID => {
-                    return (info._serviceUUIDs.indexOf(serviceUUID) > -1);
-                });
-
-                if (!servicesValid) return;
-                validServices = validServices.concat(serviceUUIDs);
-                */
+            if (
+                info.serviceData &&
+                filter.serviceData &&
+                !checkServiceData(info.serviceData, filter.serviceData)
+            ) {
+                continue;
             }
+
+            if (
+                info.services &&
+                filter.services &&
+                !checkServices(info, filter.services)
+            ) {
+                continue;
+            }
+
             return true;
         }
         return false;
@@ -196,56 +261,46 @@ export class Bluetooth extends EventTarget {
         }, { once: true });
 
         while (!done) {
-            this._bindings.simpleble_adapter_scan_start(this._adapter);
+            this._adapter.scanStart();
             await abortable(delay(timeout), signal);
-            this._bindings.simpleble_adapter_scan_stop(this._adapter);
+            this._adapter.scanStop();
 
-            const resultsCount = this._bindings.simpleble_adapter_scan_get_results_count(
-                this._adapter,
-            );
-
-            for (let i = 0; i < resultsCount; i++) {
-                const d = this._bindings.simpleble_adapter_scan_get_results_handle(this._adapter, i);
-                const id = this._bindings.simpleble_peripheral_identifier(d);
-                const address = this._bindings.simpleble_peripheral_address(d);
-                if (addrs.includes(address)) {
+            for (const peripheral of this._adapter.peripherals) {
+                if (addrs.includes(peripheral.address)) {
                     continue;
                 }
-                const count = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
-                const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
-                const manufacturerData: BluetoothManufacturerData = new Map();
-                const serviceData: BluetoothServiceData = new Map();
+
                 const services: BluetoothServiceUUID[] = [];
-                for (let j = 0; j < serviceCount; j++) {
-                    const service = this._bindings.simpleble_peripheral_services_get(d, j);
+                const serviceData: BluetoothServiceData = new Map();
+                const manufacturerData: BluetoothManufacturerData = new Map();
+
+                for (const service of peripheral.services) {
                     services.push(service.uuid);
+                    serviceData.set(service.uuid, new DataView(service.data));
                 }
-                for (let j = 0; j < count; j++) {
-                    const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
-                    if (data) {
-                        manufacturerData.set(data.id, new DataView(data.data.buffer));
-                    }
+
+                for (const [id, data] of Object.entries(peripheral.manufacturerData)) {
+                    manufacturerData.set(parseInt(id, 10), new DataView(data.buffer));
                 }
+
                 const found = filterCb({
-                    name: id,
-                    address,
+                    name: peripheral.identifier,
+                    address: peripheral.address,
                     manufacturerData,
                     serviceData,
                     services,
                 });
+
                 if (found) {
                     const device = new BluetoothDevice(
-                        this._bindings,
-                        d,
-                        address,
-                        id,
+                        peripheral,
                         (this as any),
+                        serviceData,
                         manufacturerData,
                     );
-                    addrs.push(id);
+                    addrs.push(peripheral.address);
                     yield device;
                 }
-                //this._bindings.simpleble_peripheral_release_handle(d);
             }
         }
     }
@@ -280,51 +335,39 @@ export class Bluetooth extends EventTarget {
 
         const filterCb = this._createFilter(options);
 
-        this._bindings.simpleble_adapter_scan_start(this._adapter);
+        this._adapter.scanStart();
         await delay(timeout);
-        this._bindings.simpleble_adapter_scan_stop(this._adapter);
-
-        const resultsCount = this._bindings.simpleble_adapter_scan_get_results_count(
-            this._adapter,
-        );
+        this._adapter.scanStop();
 
         const devices: BluetoothDevice[] = [];
 
-        for (let i = 0; i < resultsCount; i++) {
-            const d = this._bindings.simpleble_adapter_scan_get_results_handle(this._adapter, i);
-            const id = this._bindings.simpleble_peripheral_identifier(d);
-            const address = this._bindings.simpleble_peripheral_address(d);
-            const dataCount = this._bindings.simpleble_peripheral_manufacturer_data_count(d);
-            const serviceCount = this._bindings.simpleble_peripheral_services_count(d);
-            const manufacturerData: BluetoothManufacturerData = new Map();
-            const serviceData: BluetoothServiceData = new Map();
+        for (const peripheral of this._adapter.peripherals) {
             const services: BluetoothServiceUUID[] = [];
-            for (let j = 0; j < serviceCount; j++) {
-                const service = this._bindings.simpleble_peripheral_services_get(d, j);
+            const serviceData: BluetoothServiceData = new Map();
+            const manufacturerData: BluetoothManufacturerData = new Map();
+
+            for (const service of peripheral.services) {
                 services.push(service.uuid);
+                serviceData.set(service.uuid, new DataView(service.data));
             }
-            for (let j = 0; j < dataCount; j++) {
-                const data = this._bindings.simpleble_peripheral_manufacturer_data_get(d, j);
-                if (data) {
-                    manufacturerData.set(data!.id, new DataView(data!.data.buffer));
-                }
+
+            for (const [id, data] of Object.entries(peripheral.manufacturerData)) {
+                manufacturerData.set(parseInt(id, 10), new DataView(data.buffer));
             }
-            // TODO: serviceData
 
             const found = filterCb({
-                name: id,
-                address,
+                name: peripheral.identifier,
+                address: peripheral.address,
                 manufacturerData,
                 serviceData,
-                services
+                services,
             });
+
             if (found) {
                 const device = new BluetoothDevice(
-                    this._bindings,
-                    d,
-                    address,
-                    id,
+                    peripheral,
                     (this as any),
+                    serviceData,
                     manufacturerData,
                 );
                 devices.push(device);
@@ -332,7 +375,6 @@ export class Bluetooth extends EventTarget {
                     break;
                 }
             }
-            //this._bindings.simpleble_peripheral_release_handle(d);
         }
 
         return devices;
@@ -452,118 +494,4 @@ export class Bluetooth extends EventTarget {
         this._onavailabilitychanged = fn;
         this.addEventListener('availabilitychanged', this._onavailabilitychanged);
     }
-
-    /*
-    public requestDevice(options: RequestDeviceOptions = { filters: [] }): Promise<BluetoothDevice> {
-        if (this.scanner !== undefined) {
-            throw new Error('requestDevice error: request in progress');
-        }
-
-        interface Filtered {
-            filters: Array<BluetoothLEScanFilter>;
-            optionalServices?: Array<BluetoothServiceUUID>;
-        }
-
-        interface AcceptAll {
-            acceptAllDevices: boolean;
-            optionalServices?: Array<BluetoothServiceUUID>;
-        }
-
-        const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
-            (maybeFiltered as Filtered).filters !== undefined;
-
-        const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
-            (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
-
-        let searchUUIDs = [];
-
-        if (isFiltered(options)) {
-            // Must have a filter
-            if (options.filters.length === 0) {
-                throw new TypeError('requestDevice error: no filters specified');
-            }
-
-            // Don't allow empty filters
-            const emptyFilter = options.filters.some(filter => {
-                return (Object.keys(filter).length === 0);
-            });
-            if (emptyFilter) {
-                throw new TypeError('requestDevice error: empty filter specified');
-            }
-
-            // Don't allow empty namePrefix
-            const emptyPrefix = options.filters.some(filter => {
-                return (typeof filter.namePrefix !== 'undefined' && filter.namePrefix === '');
-            });
-            if (emptyPrefix) {
-                throw new TypeError('requestDevice error: empty namePrefix specified');
-            }
-
-            options.filters.forEach(filter => {
-                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
-
-                // Unique-ify
-                searchUUIDs = searchUUIDs.filter((item, index, array) => {
-                    return array.indexOf(item) === index;
-                });
-            });
-        } else if (!isAcceptAll(options)) {
-            throw new TypeError('requestDevice error: specify filters or acceptAllDevices');
-        }
-
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            let found = false;
-            await adapter.startScan(searchUUIDs, deviceInfo => {
-                let validServices = [];
-
-                const complete = async bluetoothDevice => {
-                    await this.cancelRequest();
-                    resolve(bluetoothDevice);
-                };
-
-                // filter devices if filters specified
-                if (isFiltered(options)) {
-                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
-                }
-
-                if (deviceInfo) {
-                    found = true;
-
-                    // Add additional services
-                    if (options.optionalServices) {
-                        validServices = validServices.concat(options.optionalServices.map(getServiceUUID));
-                    }
-
-                    // Set unique list of allowed services
-                    const allowedServices = validServices.filter((item, index, array) => {
-                        return array.indexOf(item) === index;
-                    });
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: allowedServices
-                    });
-
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo);
-
-                    const selectFn = () => {
-                        complete.call(this, bluetoothDevice);
-                    };
-
-                    if (!this.deviceFound || this.deviceFound(bluetoothDevice, selectFn.bind(this)) === true) {
-                        // If no deviceFound function, or deviceFound returns true, resolve with this device immediately
-                        complete.call(this, bluetoothDevice);
-                    }
-                }
-            });
-
-            this.scanner = setTimeout(async () => {
-                await this.cancelRequest();
-                if (!found) {
-                    reject('requestDevice error: no devices found');
-                }
-            }, this.scanTime);
-        });
-    }
-    */
 }
