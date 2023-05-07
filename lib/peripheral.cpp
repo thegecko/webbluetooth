@@ -179,7 +179,7 @@ Napi::Value Peripheral::GetServices(const Napi::CallbackInfo &info) {
     }
 
     Napi::String uuid =
-        Napi::String::New(env, service.uuid.value, SIMPLEBLE_UUID_STR_LEN);
+        Napi::String::New(env, service.uuid.value, SIMPLEBLE_UUID_STR_LEN_TS);
 
     Napi::Uint8Array data = Napi::Uint8Array::New(env, service.data_length);
     for (size_t i = 0; i < service.data_length; i++) {
@@ -197,7 +197,7 @@ Napi::Value Peripheral::GetServices(const Napi::CallbackInfo &info) {
       for (size_t j = 0; j < characteristic.descriptor_count; j++) {
         descriptors[j] =
             Napi::String::New(env, characteristic.descriptors[j].uuid.value,
-                              SIMPLEBLE_UUID_STR_LEN);
+                              SIMPLEBLE_UUID_STR_LEN_TS);
       }
 
       obj.Set("uuid", characteristic.uuid.value);

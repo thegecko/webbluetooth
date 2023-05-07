@@ -3,6 +3,8 @@
 #include <napi.h>
 #include <simpleble_c/peripheral.h>
 
+#define SIMPLEBLE_UUID_STR_LEN_TS SIMPLEBLE_UUID_STR_LEN - 1 // remove null terminator
+
 class Peripheral : public Napi::ObjectWrap<Peripheral> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
