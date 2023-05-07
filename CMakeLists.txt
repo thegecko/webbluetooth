@@ -45,15 +45,3 @@ if (MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
     # Generate node.lib
     execute_process(COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF} /out:${CMAKE_JS_NODELIB_TARGET} ${CMAKE_STATIC_LINKER_FLAGS})
 endif()
-
-# Add FFI library.
-add_library(simpleble-wrapper SHARED lib/wrapper.cpp)
-target_link_libraries(simpleble-wrapper PRIVATE simpleble-c)
-set_target_properties(simpleble-wrapper PROPERTIES
-    OUTPUT_NAME "simpleble"
-    CXX_STANDARD 17
-    CXX_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN YES
-    POSITION_INDEPENDENT_CODE ON
-    WINDOWS_EXPORT_ALL_SYMBOLS ON
-)
