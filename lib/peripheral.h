@@ -1,38 +1,47 @@
 #pragma once
-#pragma once
 
 #include <napi.h>
-#include <simpleble/PeripheralSafe.h>
 #include <simpleble_c/peripheral.h>
 
-class PeripheralWrapper {
+#define SIMPLEBLE_UUID_STR_LEN_TS SIMPLEBLE_UUID_STR_LEN - 1 // remove null terminator
+
+class Peripheral : public Napi::ObjectWrap<Peripheral> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  Peripheral(const Napi::CallbackInfo &info);
+  ~Peripheral();
 
-  static Napi::Value ReleaseHandle(const Napi::CallbackInfo &info);
-  static Napi::Value Identifier(const Napi::CallbackInfo &info);
-  static Napi::Value Address(const Napi::CallbackInfo &info);
-  static Napi::Value RSSI(const Napi::CallbackInfo &info);
-  static Napi::Value MTU(const Napi::CallbackInfo &info);
-  static Napi::Value TxPower(const Napi::CallbackInfo &info);
-  static Napi::Value Connect(const Napi::CallbackInfo &info);
-  static Napi::Value Disconnect(const Napi::CallbackInfo &info);
-  static Napi::Value IsConnected(const Napi::CallbackInfo &info);
-  static Napi::Value IsConnectable(const Napi::CallbackInfo &info);
-  static Napi::Value IsPaired(const Napi::CallbackInfo &info);
-  static Napi::Value Unpair(const Napi::CallbackInfo &info);
-  static Napi::Value ServicesCount(const Napi::CallbackInfo &info);
-  static Napi::Value ServicesGet(const Napi::CallbackInfo &info);
-  static Napi::Value ManufacturerDataCount(const Napi::CallbackInfo &info);
-  static Napi::Value ManufacturerDataGet(const Napi::CallbackInfo &info);
-  static Napi::Value Read(const Napi::CallbackInfo &info);
-  static Napi::Value WriteRequest(const Napi::CallbackInfo &info);
-  static Napi::Value WriteCommand(const Napi::CallbackInfo &info);
-  static Napi::Value Notify(const Napi::CallbackInfo &info);
-  static Napi::Value Indicate(const Napi::CallbackInfo &info);
-  static Napi::Value Unsubscribe(const Napi::CallbackInfo &info);
-  static Napi::Value ReadDescriptor(const Napi::CallbackInfo &info);
-  static Napi::Value WriteDescriptor(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnConnected(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnDisconnected(const Napi::CallbackInfo &info);
+  static Napi::FunctionReference constructor;
+
+private:
+  simpleble_peripheral_t handle;
+  Napi::Reference<Napi::Function> notifyFnRef;
+  Napi::Reference<Napi::Function> indicateFnRef;
+  Napi::Reference<Napi::Function> onConnectedFnRef;
+  Napi::Reference<Napi::Function> onDisconnectedFnRef;
+
+  Napi::Value Identifier(const Napi::CallbackInfo &info);
+  Napi::Value Address(const Napi::CallbackInfo &info);
+  Napi::Value AddressType(const Napi::CallbackInfo &info);
+  Napi::Value RSSI(const Napi::CallbackInfo &info);
+  Napi::Value TxPower(const Napi::CallbackInfo &info);
+  Napi::Value MTU(const Napi::CallbackInfo &info);
+  Napi::Value Connect(const Napi::CallbackInfo &info);
+  Napi::Value Disconnect(const Napi::CallbackInfo &info);
+  Napi::Value Connected(const Napi::CallbackInfo &info);
+  Napi::Value Connectable(const Napi::CallbackInfo &info);
+  Napi::Value Paired(const Napi::CallbackInfo &info);
+  Napi::Value Unpair(const Napi::CallbackInfo &info);
+  Napi::Value GetServices(const Napi::CallbackInfo &info);
+  Napi::Value GetManufacturerData(const Napi::CallbackInfo &info);
+  Napi::Value Read(const Napi::CallbackInfo &info);
+  Napi::Value WriteRequest(const Napi::CallbackInfo &info);
+  Napi::Value WriteCommand(const Napi::CallbackInfo &info);
+  Napi::Value Notify(const Napi::CallbackInfo &info);
+  Napi::Value Indicate(const Napi::CallbackInfo &info);
+  Napi::Value Unsubscribe(const Napi::CallbackInfo &info);
+  Napi::Value ReadDescriptor(const Napi::CallbackInfo &info);
+  Napi::Value WriteDescriptor(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnConnected(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnDisconnected(const Napi::CallbackInfo &info);
 };

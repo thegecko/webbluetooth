@@ -1,28 +1,37 @@
 #pragma once
 
 #include <napi.h>
-#include <simpleble/AdapterSafe.h>
 #include <simpleble_c/adapter.h>
 
-class AdapterWrapper {
+class Adapter : public Napi::ObjectWrap<Adapter> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
-  static Napi::Value IsEnabled(const Napi::CallbackInfo &info);
-  static Napi::Value GetCount(const Napi::CallbackInfo &info);
-  static Napi::Value GetHandle(const Napi::CallbackInfo &info);
-  static Napi::Value ReleaseHandle(const Napi::CallbackInfo &info);
-  static Napi::Value Identifier(const Napi::CallbackInfo &info);
-  static Napi::Value Address(const Napi::CallbackInfo &info);
-  static Napi::Value ScanStart(const Napi::CallbackInfo &info);
-  static Napi::Value ScanStop(const Napi::CallbackInfo &info);
-  static Napi::Value ScanIsActive(const Napi::CallbackInfo &info);
-  static Napi::Value ScanFor(const Napi::CallbackInfo &info);
-  static Napi::Value ScanGetResultsCount(const Napi::CallbackInfo &info);
-  static Napi::Value ScanGetResultsHandle(const Napi::CallbackInfo &info);
-  static Napi::Value GetPairedPeripheralsCount(const Napi::CallbackInfo &info);
-  static Napi::Value GetPairedPeripheralsHandle(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnScanStart(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnScanStop(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnScanUpdated(const Napi::CallbackInfo &info);
-  static Napi::Value SetCallbackOnScanFound(const Napi::CallbackInfo &info);
+  Adapter(const Napi::CallbackInfo &info);
+  ~Adapter();
+
+  static Napi::FunctionReference constructor;
+
+private:
+  simpleble_adapter_t handle;
+  Napi::Reference<Napi::Function> onScanStartCbRef;
+  Napi::Reference<Napi::Function> onScanStopCbRef;
+  Napi::Reference<Napi::Function> onScanUpdatedCbRef;
+  Napi::Reference<Napi::Function> onScanFoundCbRef;
+
+  static void onPeripheralFound(Napi::Env env, Napi::Function jsCallback,
+                                simpleble_peripheral_t peripheral);
+
+  Napi::Value Identifier(const Napi::CallbackInfo &info);
+  Napi::Value Address(const Napi::CallbackInfo &info);
+  Napi::Value IsActive(const Napi::CallbackInfo &info);
+  Napi::Value ScanStart(const Napi::CallbackInfo &info);
+  Napi::Value ScanStop(const Napi::CallbackInfo &info);
+  Napi::Value ScanFor(const Napi::CallbackInfo &info);
+  Napi::Value GetPeripherals(const Napi::CallbackInfo &info);
+  Napi::Value GetPairedPeripherals(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnScanStart(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnScanStop(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnScanUpdated(const Napi::CallbackInfo &info);
+  Napi::Value SetCallbackOnScanFound(const Napi::CallbackInfo &info);
+  Napi::Value Release(const Napi::CallbackInfo &info);
 };

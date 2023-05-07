@@ -5,36 +5,35 @@
 #include "adapter.h"
 #include "peripheral.h"
 
-static Napi::Value Free(const Napi::CallbackInfo &info) {
+Napi::Value GetAdapters(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (!info[0].IsBigInt()) {
-    Napi::TypeError::New(env, "Invalid handle given")
-        .ThrowAsJavaScriptException();
-    return env.Null();
+  const size_t count = simpleble_adapter_get_count();
+
+  Napi::Array adapters = Napi::Array::New(env, count);
+
+  for (size_t i = 0; i < count; i++) {
+    Napi::Value adapterInstance =
+        Adapter::constructor.New({Napi::Number::New(env, i)});
+    adapters.Set(i, adapterInstance);
   }
 
-  bool lossless;
-  const uint64_t addr = info[0].As<Napi::BigInt>().Uint64Value(&lossless);
-  if (!lossless) {
-    Napi::TypeError::New(env, "Not lossless").ThrowAsJavaScriptException();
-    return env.Null();
-  }
+  return adapters;
+}
 
-  void *handle = reinterpret_cast<void *>(addr);
-  if (handle == nullptr) {
-    Napi::TypeError::New(env, "Invalid handle").ThrowAsJavaScriptException();
-    return env.Null();
-  }
+Napi::Value IsEnabled(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
 
-  simpleble_free(handle);
-  return env.Null();
+  const bool enabled = simpleble_adapter_is_bluetooth_enabled();
+  return Napi::Boolean::New(env, enabled);
 }
 
 static Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  AdapterWrapper::Init(env, exports);
-  PeripheralWrapper::Init(env, exports);
-  exports.Set("simpleble_free", Napi::Function::New(env, &Free));
+  Adapter::Init(env, exports);
+  Peripheral::Init(env, exports);
+  exports.Set("getAdapters", Napi::Function::New(env, GetAdapters));
+  exports.Set("isEnabled", Napi::Function::New(env, IsEnabled));
+
   return exports;
 }
 
