@@ -577,9 +577,9 @@ Napi::Value Peripheral::Notify(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  const Napi::String cbService = info[1].As<Napi::String>();
-  const Napi::String cbChar = info[2].As<Napi::String>();
-  Napi::Function cbFn = info[3].As<Napi::Function>();
+  const Napi::String cbService = info[0].As<Napi::String>();
+  const Napi::String cbChar = info[1].As<Napi::String>();
+  Napi::Function cbFn = info[2].As<Napi::Function>();
   simpleble_uuid_t service;
   simpleble_uuid_t characteristic;
 
@@ -640,9 +640,9 @@ Napi::Value Peripheral::Indicate(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  const Napi::String cbService = info[1].As<Napi::String>();
-  const Napi::String cbChar = info[2].As<Napi::String>();
-  Napi::Function cbFn = info[3].As<Napi::Function>();
+  const Napi::String cbService = info[0].As<Napi::String>();
+  const Napi::String cbChar = info[1].As<Napi::String>();
+  Napi::Function cbFn = info[2].As<Napi::Function>();
   simpleble_uuid_t service;
   simpleble_uuid_t characteristic;
 
