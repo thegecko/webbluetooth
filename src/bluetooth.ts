@@ -39,8 +39,12 @@ import type {
     RequestDeviceOptions,
 } from "./interfaces";
 
+export type DeviceFoundCallback = (device: BluetoothDevice) => boolean;
+
 /** Bluetooth Options. */
 export interface BluetoothOptions {
+    /** Callback to allow the user to select a device. */
+    deviceFound?: DeviceFoundCallback;
     /** The amount of seconds to scan for devices (default is 10). */
     scanTime?: number;
     /** An optional referring device. */
@@ -148,6 +152,7 @@ function checkServices(
 export class Bluetooth extends EventTarget {
     private _adapter: Adapter;
     private _devices: BluetoothDevice[];
+    private _deviceFound?: DeviceFoundCallback;
     private _oncharacteristicvaluechanged?: EventListenerOrEventListenerObject;
     private _onserviceadded?: EventListenerOrEventListenerObject;
     private _onservicechanged?: EventListenerOrEventListenerObject;
@@ -170,6 +175,7 @@ export class Bluetooth extends EventTarget {
 
         this._adapter = adapters[0];
         this.referringDevice = options?.referringDevice;
+        this._deviceFound = options?.deviceFound;
 
         this.dispatchEvent(new Event("availabilitychanged"));
     }
@@ -283,21 +289,30 @@ export class Bluetooth extends EventTarget {
                     manufacturerData.set(parseInt(id, 10), new DataView(data.buffer));
                 }
 
-                const found = filterCb({
-                    name: peripheral.identifier,
-                    address: peripheral.address,
-                    manufacturerData,
+                const device = new BluetoothDevice(
+                    peripheral,
+                    (this as any),
                     serviceData,
-                    services,
-                });
+                    manufacturerData,
+                );
+
+                let found = false;
+
+                if (this._deviceFound) {
+                    if (this._deviceFound(device)) {
+                        found = true;
+                    }
+                } else {
+                    found = filterCb({
+                        name: peripheral.identifier,
+                        address: peripheral.address,
+                        manufacturerData,
+                        serviceData,
+                        services,
+                    });
+                }
 
                 if (found) {
-                    const device = new BluetoothDevice(
-                        peripheral,
-                        (this as any),
-                        serviceData,
-                        manufacturerData,
-                    );
                     addrs.push(peripheral.address);
                     yield device;
                 }
@@ -348,28 +363,37 @@ export class Bluetooth extends EventTarget {
 
             for (const service of peripheral.services) {
                 services.push(service.uuid);
-                serviceData.set(service.uuid, new DataView(service.data));
+                serviceData.set(service.uuid, new DataView(service.data.buffer));
             }
 
             for (const [id, data] of Object.entries(peripheral.manufacturerData)) {
                 manufacturerData.set(parseInt(id, 10), new DataView(data.buffer));
             }
 
-            const found = filterCb({
-                name: peripheral.identifier,
-                address: peripheral.address,
-                manufacturerData,
+            const device = new BluetoothDevice(
+                peripheral,
+                (this as any),
                 serviceData,
-                services,
-            });
+                manufacturerData,
+            );
+
+            let found = false;
+
+            if (this._deviceFound) {
+                if (this._deviceFound(device)) {
+                    found = true;
+                }
+            } else {
+                found = filterCb({
+                    name: peripheral.identifier,
+                    address: peripheral.address,
+                    manufacturerData,
+                    serviceData,
+                    services,
+                });
+            }
 
             if (found) {
-                const device = new BluetoothDevice(
-                    peripheral,
-                    (this as any),
-                    serviceData,
-                    manufacturerData,
-                );
                 devices.push(device);
                 if (singleDevice) {
                     break;

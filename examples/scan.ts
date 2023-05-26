@@ -45,7 +45,15 @@ const deviceName = await rl.question("Please enter a device name or address: ");
     await device.gatt.connect();
     const services = await device.gatt.getPrimaryServices();
     for (const service of services) {
-        console.log(`\t+ ${service.uuid}`);
+        console.log(`Service: ${service.uuid}`);
+        const characteristics = await service.getCharacteristics();
+        for (const characteristic of characteristics) {
+            console.log(`\t└Characteristic: ${characteristic.uuid}`);
+            const descriptors = await characteristic.getDescriptors();
+            for (const descriptor of descriptors) {
+                console.log(`\t\t└Descriptor: ${descriptor.uuid}`);
+            }
+        }
     }
     device.gatt.disconnect();
     console.log("Done");

@@ -79,9 +79,9 @@ The first device matching the filters will be returned.
 
 ### Running the examples
 
+    npx ts-node --esm ./examples/list.ts
     deno run -A --unstable https://deno.land/x/webbluetooth/examples/deno/list.ts
     deno run -A --unstable ./deno_dist/examples/deno/list.ts
-    npx ts-node-esm ./examples/list.ts
 
 ## Building
 

@@ -62,9 +62,27 @@ Peripheral::Peripheral(const Napi::CallbackInfo &info)
   }
 }
 
+#include <iostream>
+
 Peripheral::~Peripheral() {
   if (this->handle != nullptr) {
     simpleble_peripheral_release_handle(this->handle);
+  }
+
+  if (this->notifyFn) {
+    this->notifyFn.Release();
+  }
+
+  if (this->indicateFn) {
+    this->indicateFn.Release();
+  }
+
+  if (this->onConnectedFn) {
+    this->onConnectedFn.Release();
+  }
+
+  if (this->onDisconnectedFn) {
+    this->onDisconnectedFn.Release();
   }
 
   this->handle = nullptr;
@@ -547,6 +565,7 @@ Napi::Value Peripheral::WriteDescriptor(const Napi::CallbackInfo &info) {
 
 Napi::Value Peripheral::Notify(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Missing service").ThrowAsJavaScriptException();
@@ -586,30 +605,18 @@ Napi::Value Peripheral::Notify(const Napi::CallbackInfo &info) {
   memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
          SIMPLEBLE_UUID_STR_LEN);
 
-  this->notifyFnRef.Reset(cbFn, 1);
-
-  // clang-format off
-  auto callback = [](simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata) {
-    auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-    Napi::Function jsCallback = peripheral->notifyFnRef.Value();
-    Napi::HandleScope scope(jsCallback.Env());
-
-    Napi::Uint8Array cbData = Napi::Uint8Array::New(jsCallback.Env(), data_length);
-    for (size_t i = 0; i < data_length; i++) {
-      cbData[i] = data[i];
-    }
-    jsCallback.Call({cbData});
-  };
-  // clang-format on
+  this->notifyFn = Napi::ThreadSafeFunction::New(env, cbFn, "onNotify", 0, 1);
+  this->notifyFn.Unref(env);
 
   const auto ret = simpleble_peripheral_notify(this->handle, service,
-                                               characteristic, callback, this);
+                                               characteristic, onNotify, this);
 
   return Napi::Boolean::New(env, ret == SIMPLEBLE_SUCCESS);
 }
 
 Napi::Value Peripheral::Indicate(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Missing service").ThrowAsJavaScriptException();
@@ -649,30 +656,19 @@ Napi::Value Peripheral::Indicate(const Napi::CallbackInfo &info) {
   memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
          SIMPLEBLE_UUID_STR_LEN);
 
-  this->indicateFnRef.Reset(cbFn, 1);
-
-  // clang-format off
-  auto callback = [](simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata) {
-    auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-    Napi::Function jsCallback = peripheral->indicateFnRef.Value();
-    Napi::HandleScope scope(jsCallback.Env());
-
-    Napi::Uint8Array cbData = Napi::Uint8Array::New(jsCallback.Env(), data_length);
-    for (size_t i = 0; i < data_length; i++) {
-      cbData[i] = data[i];
-    }
-    jsCallback.Call({cbData});
-  };
-  // clang-format on
+  this->indicateFn =
+      Napi::ThreadSafeFunction::New(env, cbFn, "onIndicate", 0, 1);
+  this->indicateFn.Unref(env);
 
   const auto ret = simpleble_peripheral_indicate(
-      this->handle, service, characteristic, callback, this);
+      this->handle, service, characteristic, onIndicate, this);
 
   return Napi::Boolean::New(env, ret == SIMPLEBLE_SUCCESS);
 }
 
 Napi::Value Peripheral::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "No callback given").ThrowAsJavaScriptException();
@@ -683,16 +679,12 @@ Napi::Value Peripheral::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onConnectedFnRef.Reset(info[0].As<Napi::Function>(), 1);
-
-  auto callback = [](simpleble_peripheral_t handle, void *userdata) {
-    auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-    Napi::Function jsCallback = peripheral->onConnectedFnRef.Value();
-    jsCallback.Call({});
-  };
+  this->onConnectedFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onConnected", 0, 1);
+  this->onConnectedFn.Unref(env);
 
   const auto ret = simpleble_peripheral_set_callback_on_connected(
-      this->handle, callback, this);
+      this->handle, onConnected, this);
 
   return Napi::Boolean::New(env, ret == SIMPLEBLE_SUCCESS);
 }
@@ -700,6 +692,7 @@ Napi::Value Peripheral::SetCallbackOnConnected(const Napi::CallbackInfo &info) {
 Napi::Value
 Peripheral::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "No callback given").ThrowAsJavaScriptException();
@@ -710,16 +703,63 @@ Peripheral::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onDisconnectedFnRef.Reset(info[0].As<Napi::Function>(), 1);
-
-  auto callback = [](simpleble_peripheral_t handle, void *userdata) {
-    auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-    Napi::Function jsCallback = peripheral->onDisconnectedFnRef.Value();
-    jsCallback.Call({});
-  };
+  this->onDisconnectedFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onDisconnectedFn", 0, 1);
+  this->onDisconnectedFn.Unref(env);
 
   const auto ret = simpleble_peripheral_set_callback_on_disconnected(
-      this->handle, callback, this);
+      this->handle, onDisconnected, this);
 
   return Napi::Boolean::New(env, ret == SIMPLEBLE_SUCCESS);
+}
+
+void Peripheral::onConnected(simpleble_peripheral_t, void *userdata) {
+  auto peripheral = reinterpret_cast<Peripheral *>(userdata);
+  auto callback = [peripheral](Napi::Env env, Napi::Function jsCallback) {
+    jsCallback.Call({});
+    peripheral->onConnectedFn.Unref(env);
+  };
+  peripheral->onConnectedFn.BlockingCall(callback);
+}
+
+void Peripheral::onDisconnected(simpleble_peripheral_t, void *userdata) {
+  auto peripheral = reinterpret_cast<Peripheral *>(userdata);
+  auto callback = [peripheral](Napi::Env env, Napi::Function jsCallback) {
+    jsCallback.Call({});
+    peripheral->onDisconnectedFn.Unref(env);
+  };
+  peripheral->onDisconnectedFn.BlockingCall(callback);
+}
+
+void Peripheral::onNotify(simpleble_uuid_t service,
+                          simpleble_uuid_t characteristic, const uint8_t *data,
+                          size_t data_length, void *userdata) {
+  auto peripheral = reinterpret_cast<Peripheral *>(userdata);
+  std::vector<uint8_t> vecData(data, data + data_length);
+  auto callback = [vecData, peripheral](Napi::Env env, Napi::Function jsCallback) {
+    auto arrayBuffer = Napi::ArrayBuffer::New(env, vecData.size());
+    std::memcpy(arrayBuffer.Data(), vecData.data(), vecData.size());
+    auto uint8Array =
+        Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
+    jsCallback.Call({uint8Array});
+    peripheral->notifyFn.Unref(env);
+  };
+  peripheral->notifyFn.BlockingCall(callback);
+}
+
+void Peripheral::onIndicate(simpleble_uuid_t service,
+                            simpleble_uuid_t characteristic,
+                            const uint8_t *data, size_t data_length,
+                            void *userdata) {
+  auto peripheral = reinterpret_cast<Peripheral *>(userdata);
+  std::vector<uint8_t> vecData(data, data + data_length);
+  auto callback = [vecData, peripheral](Napi::Env env, Napi::Function jsCallback) {
+    auto arrayBuffer = Napi::ArrayBuffer::New(env, vecData.size());
+    std::memcpy(arrayBuffer.Data(), vecData.data(), vecData.size());
+    auto uint8Array =
+        Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
+    jsCallback.Call({uint8Array});
+    peripheral->indicateFn.Unref(env);
+  };
+  peripheral->indicateFn.BlockingCall(callback);
 }
