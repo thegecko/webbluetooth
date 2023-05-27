@@ -1,6 +1,7 @@
 const assert = require('assert');
 const bluetooth = require('../').bluetooth;
 const Bluetooth = require('../').Bluetooth;
+const BluetoothUUID = require('../').BluetoothUUID;
 
 describe('bluetooth module', () => {
     it('should describe basic constants', () => {
@@ -17,7 +18,7 @@ describe('device', () => {
         });
     });
 
-    it('should return a device with requestDevice', async () => {
+    it('should return a device with requestDevice', () => {
         assert.notEqual(device, undefined);
     });
 
@@ -285,4 +286,26 @@ describe('descriptors', () => {
         assert.equal(value, 7);
     });
     */
+});
+
+describe('bluetoothuuid', () => {
+    it('should get service', () => {
+        const uuid = BluetoothUUID.getService('cycling_power');
+        assert.equal(uuid, '00001818-0000-1000-8000-00805f9b34fb');
+    });
+
+    it('should get characteristic', () => {
+        const uuid = BluetoothUUID.getCharacteristic('ieee_11073-20601_regulatory_certification_data_list');
+        assert.equal(uuid, '00002a2a-0000-1000-8000-00805f9b34fb');
+    });
+
+    it('should get descriptor', () => {
+        const uuid = BluetoothUUID.getDescriptor('gatt.characteristic_presentation_format');
+        assert.equal(uuid, '00002904-0000-1000-8000-00805f9b34fb');
+    });
+
+    it('should get canonical uuid', () => {
+        const uuid = BluetoothUUID.canonicalUUID(0x2A2B);
+        assert.equal(uuid, '00002a2b-0000-1000-8000-00805f9b34fb');
+    });
 });
