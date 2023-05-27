@@ -206,6 +206,32 @@ describe('characteristics', () => {
         const char = await service.getCharacteristic(ledTextCharUuid);
         await char.writeValue(new DataView(array.buffer));
     });
+
+    it('should emit characteristic value changed event', () => {
+        return new Promise(async resolve => {
+            const buttonServiceUuid = 'e95d9882-251d-470a-a062-fa1922dfa9a8';
+            const buttonACharUuid = 'e95dda90-251d-470a-a062-fa1922dfa9a8';
+            const buttonBCharUuid = 'e95dda91-251d-470a-a062-fa1922dfa9a8';
+            const service = await device.gatt.getPrimaryService(buttonServiceUuid);
+            const charA = await service.getCharacteristic(buttonACharUuid);
+            const charB = await service.getCharacteristic(buttonBCharUuid);
+    
+            const fn = async () => {
+                charA.removeEventListener('characteristicvaluechanged', fn);
+                charB.removeEventListener('characteristicvaluechanged', fn);
+                await charA.stopNotifications();
+                await charB.stopNotifications();
+                resolve();
+            }
+    
+            charA.addEventListener('characteristicvaluechanged', fn);
+            charB.addEventListener('characteristicvaluechanged', fn);
+            await charA.startNotifications();
+            await charB.startNotifications();
+    
+            console.log('\n--- PRESS A BUTTON ---\n');    
+        });
+    });
 });
 
 describe('descriptors', () => {
@@ -245,21 +271,18 @@ describe('descriptors', () => {
     });
 
     /*
-    it('should read descriptor value', async () => {
-        const descriptor = await char.getDescriptor(buttonDescriptorUuid);
-        const value = await descriptor.readValue();
-        assert.notEqual(value, undefined);
-        const decoder = new TextDecoder();
-        assert.equal(decoder.decode(value).startsWith('BBC micro:bit'), true);
-    });
-
     it('should write descriptor value', async () => {
         const descriptor = await char.getDescriptor(buttonDescriptorUuid);
-        const date = new Date();
-        const time = `${date.getHours()}:${date.getMinutes()}`;
-        const encoder = new TextEncoder();
-        const array = encoder.encode(time);
-        await descriptor.writeValue(new DataView(array.buffer));
+        const view = new DataView(new ArrayBuffer(1));
+        view.setUint8(0, 7);
+        await descriptor.writeValue(view);
+    });
+
+    it('should read descriptor value', async () => {
+        const descriptor = await char.getDescriptor(buttonDescriptorUuid);
+        const view = await descriptor.readValue();
+        const value = view.getUint8(0);
+        assert.equal(value, 7);
     });
     */
 });

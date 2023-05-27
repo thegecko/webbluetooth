@@ -145,8 +145,8 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] writeValue()
 - [x] writeValueWithResponse()
 - [x] writeValueWithoutResponse()
-- [ ] startNotifications()
-- [ ] stopNotifications()
+- [x] startNotifications()
+- [x] stopNotifications()
 
 ### BluetoothRemoteGATTDescriptor
 
@@ -182,7 +182,7 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 #### Bluetooth Characteristic
 
-- [ ] characteristicvaluechanged
+- [x] characteristicvaluechanged
 
 ### Other
 

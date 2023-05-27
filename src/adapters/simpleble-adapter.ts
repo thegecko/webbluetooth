@@ -53,6 +53,8 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private characteristicsByService = new Map<string, Characteristic[]>();
     private characteristicByDescriptor = new Map<string, { char: string, desc: string }>();
     private descriptors = new Map<string, string[]>();
+    private charEvents = new Map<string, (value: DataView) => void>();
+
     private discoverFn: ((peripheral: Peripheral) => void | undefined) | undefined;
 
     private get scanning(): boolean {
@@ -133,6 +135,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         this.characteristicsByService.clear();
         this.characteristicByDescriptor.clear();
         this.descriptors.clear();
+        this.charEvents.clear();
 
         const services: Service[] = [];
         for (const service of peripheral.services) {
@@ -262,6 +265,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     }
 
     public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
+        const peripheral = this.peripheralByService.get(serviceUuid);
         const characteristics = this.characteristicsByService.get(serviceUuid);
         const discovered = [];
 
@@ -273,7 +277,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
                 discovered.push({
                     uuid: charUUID,
                     properties: {
-                        // Not all of these are suppoertred in SimpleBle
+                        // Not all of these are supported in SimpleBle
                         // broadcast: characteristic.capabilities.includes('???'),
                         read: characteristic.canRead,
                         writeWithoutResponse: characteristic.canWriteRequest,
@@ -286,15 +290,23 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
                     }
                 });
 
-                // TODO: notify/indicate events
-                /*
-                characteristicInfo.on('data', (data: Buffer, isNotification: boolean) => {
-                    if (isNotification === true && this.charNotifies.has(charUUID)) {
-                        const dataView = this.bufferToDataView(data);
-                        this.charNotifies.get(charUUID)!(dataView);
-                    }
-                });
-                */
+                if (characteristic.canIndicate) {
+                    peripheral.indicate(serviceUuid, charUUID, data => {
+                        if (this.charEvents.has(charUUID)) {
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                            this.charEvents.get(charUUID)!(new DataView(data.buffer));
+                        }
+                    });
+                }
+
+                if (characteristic.canNotify) {
+                    peripheral.notify(serviceUuid, charUUID, data => {
+                        if (this.charEvents.has(charUUID)) {
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                            this.charEvents.get(charUUID)!(new DataView(data.buffer));
+                        }
+                    });
+                }
             }
         }
 
@@ -341,62 +353,12 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         }
     }
 
-    public async enableNotify(_handle: string, _notifyFn: (value: DataView) => void): Promise<void> {
-        throw new Error('not implemented');
-
-        // TODO: - emit notitifications
-        /*
-        if (this.charNotifies.has(handle)) {
-            this.charNotifies.set(handle, notifyFn);
-            return Promise.resolve();
-        }
-
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            const characteristic = this.characteristicHandles.get(handle);
-
-            // TODO: check type emitted
-            characteristic.once('notify', (state: string) => {
-                if (state !== 'true') {
-                    reject('notify failed to enable');
-                }
-                this.charNotifies.set(handle, notifyFn);
-                resolve(undefined);
-            });
-
-            await characteristic.notifyAsync(true);
-        });
-        */
+    public async enableNotify(handle: string, notifyFn: (value: DataView) => void): Promise<void> {
+        this.charEvents.set(handle, notifyFn);
     }
 
-    public async disableNotify(_handle: string): Promise<void> {
-        throw new Error('not implemented');
-
-        // TODO: - stop emit notitifications
-        /*
-        if (!this.charNotifies.has(handle)) {
-            return Promise.resolve();
-        }
-
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            const characteristic = this.characteristicHandles.get(handle);
-
-            // TODO: check type emitted
-            characteristic.once('notify', (state: string) => {
-                if (state !== 'false') {
-                    reject('notify failed to disable');
-                }
-
-                if (this.charNotifies.has(handle)) {
-                    this.charNotifies.delete(handle);
-                }
-                resolve(undefined);
-            });
-
-            await characteristic.notifyAsync(false);
-        });
-        */
+    public async disableNotify(handle: string): Promise<void> {
+        this.charEvents.delete(handle);
     }
 
     public async readDescriptor(handle: string): Promise<DataView> {
@@ -405,6 +367,9 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         const peripheral = this.peripheralByService.get(serviceUuid);
 
         const data = peripheral.readDescriptor(serviceUuid, char, desc);
+        if (!data) {
+            throw new Error('Read failed');
+        }
         return new DataView(data.buffer);
     }
 

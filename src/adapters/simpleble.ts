@@ -78,7 +78,7 @@ export interface Peripheral {
     notify(service: string, characteristic: string, cb: (data: Uint8Array) => void): boolean;
     indicate(service: string, characteristic: string, cb: (data: Uint8Array) => void): boolean;
     unsubscribe(service: string, characteristic: string): boolean;
-    readDescriptor(sevice: string, characteristic: string, descriptor: string): Uint8Array;
+    readDescriptor(service: string, characteristic: string, descriptor: string): Uint8Array;
     writeDescriptor(service: string, characteristic: string, descriptor: string, data: Uint8Array): boolean;
     setCallbackOnConnected(cb: () => void): boolean;
     setCallbackOnDisconnected(cb: () => void): boolean;
