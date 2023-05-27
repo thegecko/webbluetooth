@@ -39,8 +39,6 @@ import {
     Characteristic
 } from './simpleble';
 
-const FIND_TIMEOUT = 500;
-
 /**
  * @hidden
  */
@@ -54,27 +52,6 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private characteristicByDescriptor = new Map<string, { char: string, desc: string }>();
     private descriptors = new Map<string, string[]>();
     private charEvents = new Map<string, (value: DataView) => void>();
-
-    private discoverFn: ((peripheral: Peripheral) => void | undefined) | undefined;
-
-    private get scanning(): boolean {
-        if (!this.adapter) {
-            return false;
-        }
-        return this.adapter.active;
-    }
-
-    private findDevices() {
-        if (this.adapter && this.discoverFn) {
-            for (const peripheral of this.adapter.peripherals) {
-                this.discoverFn(peripheral);
-            }
-        }
-
-        if (this.scanning) {
-            setTimeout(() => this.findDevices(), FIND_TIMEOUT);
-        }
-    }
 
     private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
@@ -177,7 +154,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             this.adapter = getAdapters()[0];
         }
 
-        this.discoverFn = peripheral => {
+        this.adapter.setCallbackOnScanFound(peripheral => {
             const device = this.buildBluetoothDevice(peripheral);
             if (this.validDevice(device, serviceUUIDs)) {
                 if (!this.peripherals.has(device.id)) {
@@ -186,18 +163,16 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
                     foundFn(device);
                 }
             }
-        };
+        });
 
         this.peripherals.clear();
         const success = this.adapter.scanStart();
         if (!success) {
             throw new Error('scan start failed');
         }
-        this.findDevices();
     }
 
     public stopScan(_errorFn?: (errorMsg: string) => void): void {
-        this.discoverFn = undefined;
         if (this.adapter) {
             const success = this.adapter.scanStop();
             if (!success) {
