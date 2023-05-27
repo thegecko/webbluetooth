@@ -26,7 +26,7 @@
 /**
  * Known services enum
  */
-export enum bluetoothServices {
+enum bluetoothServices {
     'alert_notification' = 0x1811,
     'automation_io' = 0x1815,
     'battery_service' = 0x180F,
@@ -64,7 +64,7 @@ export enum bluetoothServices {
 /**
  * Known characteristics enum
  */
-export enum bluetoothCharacteristics {
+enum bluetoothCharacteristics {
     'aerobic_heart_rate_lower_limit' = 0x2A7E,
     'aerobic_heart_rate_upper_limit' = 0x2A84,
     'aerobic_threshold' = 0x2A7F,
@@ -231,7 +231,7 @@ export enum bluetoothCharacteristics {
 /**
  * Known descriptors enum
  */
-export enum bluetoothDescriptors {
+enum bluetoothDescriptors {
     'gatt.characteristic_extended_properties' = 0x2900,
     'gatt.characteristic_user_description' = 0x2901,
     'gatt.client_characteristic_configuration' = 0x2902,
@@ -251,55 +251,62 @@ export enum bluetoothDescriptors {
 
 /**
  * Gets a canonical UUID from a partial UUID in string or hex format
- * @param uuid The partial UUID
+ * @param alias The partial UUID
  * @returns canonical UUID
  */
-export const getCanonicalUUID = (uuid: string | number): string => {
-    if (typeof uuid === 'number') uuid = uuid.toString(16);
-    uuid = uuid.toLowerCase();
-    if (uuid.length <= 8) uuid = ('00000000' + uuid).slice(-8) + '-0000-1000-8000-00805f9b34fb';
-    if (uuid.length === 32) uuid = uuid.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/).splice(1).join('-');
-    return uuid;
+const canonicalUUID = (alias: string | number): string => {
+    if (typeof alias === 'number') alias = alias.toString(16);
+    alias = alias.toLowerCase();
+    if (alias.length <= 8) alias = ('00000000' + alias).slice(-8) + '-0000-1000-8000-00805f9b34fb';
+    if (alias.length === 32) alias = alias.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/).splice(1).join('-');
+    return alias;
 };
 
 /**
  * Gets a canonical service UUID from a known service name or partial UUID in string or hex format
- * @param service The known service name
+ * @param name The known service name
  * @returns canonical UUID
  */
-export const getServiceUUID = (service: string | number): string => {
+const getService = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof service === 'string' && bluetoothServices[service]) {
-        service = bluetoothServices[service];
+    if (typeof name === 'string' && bluetoothServices[name]) {
+        name = bluetoothServices[name];
     }
 
-    return getCanonicalUUID(service);
+    return canonicalUUID(name);
 };
 
 /**
  * Gets a canonical characteristic UUID from a known characteristic name or partial UUID in string or hex format
- * @param characteristic The known characteristic name
+ * @param name The known characteristic name
  * @returns canonical UUID
  */
-export const getCharacteristicUUID = (characteristic: string | number): string => {
+const getCharacteristic = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof characteristic === 'string' && bluetoothCharacteristics[characteristic]) {
-        characteristic = bluetoothCharacteristics[characteristic];
+    if (typeof name === 'string' && bluetoothCharacteristics[name]) {
+        name = bluetoothCharacteristics[name];
     }
 
-    return getCanonicalUUID(characteristic);
+    return canonicalUUID(name);
 };
 
 /**
  * Gets a canonical descriptor UUID from a known descriptor name or partial UUID in string or hex format
- * @param descriptor The known descriptor name
+ * @param name The known descriptor name
  * @returns canonical UUID
  */
-export const getDescriptorUUID = (descriptor: string | number): string => {
+const getDescriptor = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof descriptor === 'string' && bluetoothDescriptors[descriptor]) {
-        descriptor = bluetoothDescriptors[descriptor];
+    if (typeof name === 'string' && bluetoothDescriptors[name]) {
+        name = bluetoothDescriptors[name];
     }
 
-    return getCanonicalUUID(descriptor);
+    return canonicalUUID(name);
+};
+
+export const BluetoothUUID = {
+    getService,
+    getCharacteristic,
+    getDescriptor,
+    canonicalUUID
 };

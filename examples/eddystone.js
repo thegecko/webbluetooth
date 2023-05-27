@@ -60,7 +60,7 @@ const expansions = {
 }
 
 const deviceFound = bluetoothDevice => {
-    const uuid = webbluetooth.getServiceUUID(eddystoneUUID);
+    const uuid = webbluetooth.BluetoothUUID.getService(eddystoneUUID);
     const eddyData = bluetoothDevice._adData.serviceData.get(uuid);
     if (eddyData) {
         const decoded = decodeEddystone(eddyData);

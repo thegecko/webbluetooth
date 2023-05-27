@@ -25,7 +25,7 @@
 
 import { EventEmitter } from 'events';
 import { Adapter as BluetoothAdapter } from './adapter';
-import { getCanonicalUUID } from '../helpers';
+import { BluetoothUUID } from '../uuid';
 import { BluetoothDeviceImpl } from '../device';
 import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
 import { BluetoothRemoteGATTServiceImpl } from '../service';
@@ -87,7 +87,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             return false;
         }
 
-        const advertisedUUIDs = device._serviceUUIDs.map((serviceUUID: string) => getCanonicalUUID(serviceUUID));
+        const advertisedUUIDs = device._serviceUUIDs.map((serviceUUID: string) => BluetoothUUID.canonicalUUID(serviceUUID));
 
         // An advertised UUID matches our search UUIDs
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
@@ -139,7 +139,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
 
         const services: Service[] = [];
         for (const service of peripheral.services) {
-            const serviceUUID = getCanonicalUUID(service.uuid);
+            const serviceUUID = BluetoothUUID.canonicalUUID(service.uuid);
 
             this.characteristicsByService.set(serviceUUID, service.characteristics);
 
@@ -270,7 +270,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         const discovered = [];
 
         for (const characteristic of characteristics) {
-            const charUUID = getCanonicalUUID(characteristic.uuid);
+            const charUUID = BluetoothUUID.canonicalUUID(characteristic.uuid);
 
             if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
 
@@ -318,7 +318,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         const discovered = [];
 
         for (const descriptor of descriptors) {
-            const descUUID = getCanonicalUUID(descriptor);
+            const descUUID = BluetoothUUID.canonicalUUID(descriptor);
 
             if (!descriptorUUIDs || descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
                 discovered.push({

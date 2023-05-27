@@ -26,7 +26,7 @@
 import { adapter } from './adapters';
 import { BluetoothDeviceImpl } from './device';
 import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
-import { getCharacteristicUUID, getServiceUUID } from './helpers';
+import { BluetoothUUID } from './uuid';
 import { EventDispatcher, DOMEvent } from './events';
 
 /**
@@ -184,7 +184,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
 
         // Canonical-ize characteristic
-        characteristic = getCharacteristicUUID(characteristic);
+        characteristic = BluetoothUUID.getCharacteristic(characteristic);
 
         const filtered = this.characteristics.filter(characteristicObject => characteristicObject.uuid === characteristic);
 
@@ -241,7 +241,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
             return this.services;
         }
 
-        const filtered = this.services.filter(serviceObject => serviceObject.uuid === getServiceUUID(service));
+        const filtered = this.services.filter(serviceObject => serviceObject.uuid === BluetoothUUID.getService(service));
 
         if (filtered.length !== 1) {
             throw new Error('getIncludedServices error: service not found');

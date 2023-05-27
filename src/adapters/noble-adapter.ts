@@ -28,7 +28,7 @@ import { platform } from 'os';
 import { EventEmitter } from 'events';
 import { EVENT_ENABLED } from './';
 import { Adapter } from './adapter';
-import { getCanonicalUUID } from '../helpers';
+import { BluetoothUUID } from '../helpers';
 import { BluetoothDevice } from '../device';
 import { BluetoothRemoteGATTService } from '../service';
 import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
@@ -95,7 +95,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         }
 
         const advertisedUUIDs = deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => {
-            return getCanonicalUUID(serviceUUID);
+            return BluetoothUUID.canonicalUUID(serviceUUID);
         });
 
         return serviceUUIDs.some(serviceUUID => {
@@ -106,7 +106,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
     private deviceToBluetoothDevice(deviceInfo: noble.Peripheral): Partial<BluetoothDevice> {
         const deviceID = (deviceInfo.address && deviceInfo.address !== 'unknown') ? deviceInfo.address : deviceInfo.id;
-        const serviceUUIDs = deviceInfo.advertisement.serviceUuids ? deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => getCanonicalUUID(serviceUUID)) : [];
+        const serviceUUIDs = deviceInfo.advertisement.serviceUuids ? deviceInfo.advertisement.serviceUuids.map((serviceUUID: string) => BluetoothUUID.canonicalUUID(serviceUUID)) : [];
 
         const manufacturerData = new Map();
         if (deviceInfo.advertisement.manufacturerData) {
@@ -121,7 +121,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const serviceData = new Map();
         if (deviceInfo.advertisement.serviceData) {
             for (const serviceAdvert of deviceInfo.advertisement.serviceData) {
-                serviceData.set(getCanonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
+                serviceData.set(BluetoothUUID.canonicalUUID(serviceAdvert.uuid), this.bufferToDataView(serviceAdvert.data));
             }
         }
 
@@ -210,7 +210,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const discovered = [];
 
         for (const serviceInfo of services) {
-            const serviceUUID = getCanonicalUUID(serviceInfo.uuid);
+            const serviceUUID = BluetoothUUID.canonicalUUID(serviceInfo.uuid);
 
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
                 if (!this.serviceHandles.has(serviceUUID)) {
@@ -234,7 +234,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
 
         // TODO: check retiurn here!
         for (const service of services) {
-            const serviceUUID = getCanonicalUUID(service);
+            const serviceUUID = BluetoothUUID.canonicalUUID(service);
 
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(serviceUUID) >= 0) {
                 discovered.push({
@@ -253,7 +253,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const discovered = [];
 
         for (const characteristicInfo of characteristics) {
-            const charUUID = getCanonicalUUID(characteristicInfo.uuid);
+            const charUUID = BluetoothUUID.canonicalUUID(characteristicInfo.uuid);
 
             if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
                 if (!this.characteristicHandles.has(charUUID)) {
@@ -294,7 +294,7 @@ export class NobleAdapter extends EventEmitter implements Adapter {
         const discovered = [];
 
         for (const descriptorInfo of descriptors) {
-            const descUUID = getCanonicalUUID(descriptorInfo.uuid);
+            const descUUID = BluetoothUUID.canonicalUUID(descriptorInfo.uuid);
 
             if (!descriptorUUIDs || descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
                 const descHandle = characteristicInfo.uuid + '-' + descriptorInfo.uuid;

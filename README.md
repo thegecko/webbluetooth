@@ -23,14 +23,14 @@ https://thegecko.github.io/webbluetooth/
 
 ## Usage
 
-The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and some helper methods:
+The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and the Bluetooth helper methods:
 
 - [bluetooth](globals.html#bluetooth)
 - [Bluetooth()](classes/bluetooth.html)
-- [getCanonicalUUID()](globals.html#getcanonicaluuid)
-- [getServiceUUID()](globals.html#getserviceuuid)
-- [getCharacteristicUUID()](globals.html#getcharacteristicuuid)
-- [getDescriptorUUID()](globals.html#getdescriptoruuid)
+- [BluetoothUUID.getService()](globals.html)
+- [BluetoothUUID.getCharacteristic()](globals.html)
+- [BluetoothUUID.getDescriptor()](globals.html)
+- [BluetoothUUID.canonicalUUID()](globals.html)
 
 ### Using the default bluetooth instance
 
@@ -158,10 +158,10 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### BluetoothUUID
 
-- [ ] getService()
-- [ ] getCharacteristic()
-- [ ] getDescriptor()
-- [ ] canonicalUUID()
+- [x] getService()
+- [x] getCharacteristic()
+- [x] getDescriptor()
+- [x] canonicalUUID()
 
 ### Events
 

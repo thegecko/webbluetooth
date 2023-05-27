@@ -25,7 +25,7 @@
 
 import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
-import { getServiceUUID } from './helpers';
+import { BluetoothUUID } from './uuid';
 import { EventDispatcher, DOMEvent } from './events';
 
 /**
@@ -193,7 +193,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
             // Services
             if (filter.services) {
-                const serviceUUIDs = filter.services.map(getServiceUUID);
+                const serviceUUIDs = filter.services.map(BluetoothUUID.getService);
                 const servicesValid = serviceUUIDs.every(serviceUUID => {
                     return (deviceInfo._serviceUUIDs.indexOf(serviceUUID) > -1);
                 });
@@ -290,7 +290,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             }
 
             options.filters.forEach(filter => {
-                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(getServiceUUID));
+                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(BluetoothUUID.getService));
 
                 // Unique-ify
                 searchUUIDs = searchUUIDs.filter((item, index, array) => {
@@ -329,7 +329,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
                     // Add additional services
                     if (options.optionalServices) {
-                        validServices = validServices.concat(options.optionalServices.map(getServiceUUID));
+                        validServices = validServices.concat(options.optionalServices.map(BluetoothUUID.getService));
                     }
 
                     // Set unique list of allowed services

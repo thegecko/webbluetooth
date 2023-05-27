@@ -38,4 +38,4 @@ export { BluetoothImpl as Bluetooth, BluetoothOptions };
 /**
  * Helper methods and enums
  */
-export * from './helpers';
+export * from './uuid';

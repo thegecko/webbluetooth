@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { getServiceUUID } from './helpers';
+import { BluetoothUUID } from './uuid';
 import { adapter } from './adapters';
 import { BluetoothRemoteGATTServiceImpl } from './service';
 import { DOMEvent } from './events';
@@ -133,7 +133,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
             return this.services;
         }
 
-        const filtered = this.services.filter(serviceObject => serviceObject.uuid === getServiceUUID(service));
+        const filtered = this.services.filter(serviceObject => serviceObject.uuid === BluetoothUUID.getService(service));
 
         if (filtered.length !== 1) {
             throw new Error('getPrimaryServices error: service not found');

@@ -25,7 +25,7 @@
 
 import { adapter } from './adapters';
 import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
-import { getDescriptorUUID } from './helpers';
+import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceImpl } from './service';
 import { EventDispatcher, DOMEvent } from './events';
 
@@ -155,7 +155,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
             return this.descriptors;
         }
 
-        const filtered = this.descriptors.filter(descriptorObject => descriptorObject.uuid === getDescriptorUUID(descriptor));
+        const filtered = this.descriptors.filter(descriptorObject => descriptorObject.uuid === BluetoothUUID.getDescriptor(descriptor));
 
         if (filtered.length !== 1) {
             throw new Error('getDescriptors error: descriptor not found');
