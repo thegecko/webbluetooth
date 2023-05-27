@@ -28,6 +28,9 @@ import { bluetooth } from "../dist/index.js";
     const devices = await bluetooth.requestDevices({
         acceptAllDevices: true
     });
-    console.log(devices);
+    console.log(`Found ${devices.length} devices`);
+    for (const device of devices) {
+        console.log(`${device.id} - ${device.name}`);
+    }
     process.exit();
 })();

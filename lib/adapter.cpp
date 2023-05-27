@@ -231,6 +231,7 @@ Napi::Value Adapter::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
 
   this->onScanUpdatedFn = Napi::ThreadSafeFunction::New(
       env, info[0].As<Napi::Function>(), "onScanUpdatedFn", 0, 1);
+  this->onScanUpdatedFn.Unref(env);
 
   const auto ret = simpleble_adapter_set_callback_on_scan_updated(
       this->handle, onScanUpdated, this);
@@ -257,6 +258,7 @@ Napi::Value Adapter::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
 
   this->onScanFoundFn = Napi::ThreadSafeFunction::New(
       env, info[0].As<Napi::Function>(), "onScanFoundFn", 0, 1);
+  this->onScanFoundFn.Unref(env);
 
   const auto ret = simpleble_adapter_set_callback_on_scan_found(
       this->handle, onScanFound, this);
@@ -278,44 +280,40 @@ Napi::Value Adapter::Release(const Napi::CallbackInfo &info) {
 
 void Adapter::onScanStart(simpleble_adapter_t handle, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
-  auto callback = [adapter](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
     jsCallback.Call({});
-    adapter->onScanStartFn.Unref(env);
   };
-  adapter->onScanStartFn.BlockingCall(callback);
+  adapter->onScanStartFn.NonBlockingCall(callback);
 }
 
 void Adapter::onScanStop(simpleble_adapter_t handle, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
-  auto callback = [adapter](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
     jsCallback.Call({});
-    adapter->onScanStopFn.Unref(env);
   };
-  adapter->onScanStopFn.BlockingCall(callback);
+  adapter->onScanStopFn.NonBlockingCall(callback);
 }
 
 void Adapter::onScanUpdated(simpleble_adapter_t handle,
                             simpleble_peripheral_t peripheral, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
-  auto callback = [adapter](Napi::Env env, Napi::Function jsCallback,
+  auto callback = [](Napi::Env env, Napi::Function jsCallback,
                      simpleble_peripheral_t peripheral) {
     Napi::Value peripheralInstance = Peripheral::constructor.New(
         {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
     jsCallback.Call({peripheralInstance});
-    adapter->onScanUpdatedFn.Unref(env);
   };
-  adapter->onScanUpdatedFn.BlockingCall(peripheral, callback);
+  adapter->onScanUpdatedFn.NonBlockingCall(peripheral, callback);
 }
 
 void Adapter::onScanFound(simpleble_adapter_t handle,
                           simpleble_peripheral_t peripheral, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
-  auto callback = [adapter](Napi::Env env, Napi::Function jsCallback,
+  auto callback = [](Napi::Env env, Napi::Function jsCallback,
                      simpleble_peripheral_t peripheral) {
     Napi::Value peripheralInstance = Peripheral::constructor.New(
         {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
     jsCallback.Call({peripheralInstance});
-    adapter->onScanFoundFn.Unref(env);
   };
-  adapter->onScanFoundFn.BlockingCall(peripheral, callback);
+  adapter->onScanFoundFn.NonBlockingCall(peripheral, callback);
 }

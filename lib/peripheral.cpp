@@ -715,20 +715,18 @@ Peripheral::SetCallbackOnDisconnected(const Napi::CallbackInfo &info) {
 
 void Peripheral::onConnected(simpleble_peripheral_t, void *userdata) {
   auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-  auto callback = [peripheral](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
     jsCallback.Call({});
-    peripheral->onConnectedFn.Unref(env);
   };
-  peripheral->onConnectedFn.BlockingCall(callback);
+  peripheral->onConnectedFn.NonBlockingCall(callback);
 }
 
 void Peripheral::onDisconnected(simpleble_peripheral_t, void *userdata) {
   auto peripheral = reinterpret_cast<Peripheral *>(userdata);
-  auto callback = [peripheral](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
     jsCallback.Call({});
-    peripheral->onDisconnectedFn.Unref(env);
   };
-  peripheral->onDisconnectedFn.BlockingCall(callback);
+  peripheral->onDisconnectedFn.NonBlockingCall(callback);
 }
 
 void Peripheral::onNotify(simpleble_uuid_t service,
@@ -736,15 +734,14 @@ void Peripheral::onNotify(simpleble_uuid_t service,
                           size_t data_length, void *userdata) {
   auto peripheral = reinterpret_cast<Peripheral *>(userdata);
   std::vector<uint8_t> vecData(data, data + data_length);
-  auto callback = [vecData, peripheral](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [vecData](Napi::Env env, Napi::Function jsCallback) {
     auto arrayBuffer = Napi::ArrayBuffer::New(env, vecData.size());
     std::memcpy(arrayBuffer.Data(), vecData.data(), vecData.size());
     auto uint8Array =
         Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
     jsCallback.Call({uint8Array});
-    peripheral->notifyFn.Unref(env);
   };
-  peripheral->notifyFn.BlockingCall(callback);
+  peripheral->notifyFn.NonBlockingCall(callback);
 }
 
 void Peripheral::onIndicate(simpleble_uuid_t service,
@@ -753,13 +750,12 @@ void Peripheral::onIndicate(simpleble_uuid_t service,
                             void *userdata) {
   auto peripheral = reinterpret_cast<Peripheral *>(userdata);
   std::vector<uint8_t> vecData(data, data + data_length);
-  auto callback = [vecData, peripheral](Napi::Env env, Napi::Function jsCallback) {
+  auto callback = [vecData](Napi::Env env, Napi::Function jsCallback) {
     auto arrayBuffer = Napi::ArrayBuffer::New(env, vecData.size());
     std::memcpy(arrayBuffer.Data(), vecData.data(), vecData.size());
     auto uint8Array =
         Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
     jsCallback.Call({uint8Array});
-    peripheral->indicateFn.Unref(env);
   };
-  peripheral->indicateFn.BlockingCall(callback);
+  peripheral->indicateFn.NonBlockingCall(callback);
 }

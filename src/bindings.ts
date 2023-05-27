@@ -59,15 +59,16 @@ export interface Adapter {
     identifier: string;
     address: string;
     active: boolean;
-    release(): void;
+    peripherals: Peripheral[];
+    pairedPeripherals: Peripheral[];
     scanFor(ms: number): boolean;
     scanStart(): boolean;
     scanStop(): boolean;
-    peripherals: Peripheral[];
     setCallbackOnScanStart(cb: () => void): boolean;
     setCallbackOnScanStop(cb: () => void): boolean;
     setCallbackOnScanUpdated(cb: (peripheral: Peripheral) => void): boolean;
     setCallbackOnScanFound(cb: (peripheral: Peripheral) => void): boolean;
+    release(): void;
 }
 
 /** @hidden SimpleBLE bindings. */

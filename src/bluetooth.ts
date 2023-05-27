@@ -441,7 +441,7 @@ export class Bluetooth extends EventTarget {
         options: RequestDeviceOptions,
     ): Promise<BluetoothDevice[]> {
         let devices: BluetoothDevice[];
-        const p = this._request(options, true);
+        const p = this._request(options, false);
         if (options.signal) {
             devices = await abortable(p, options.signal);
         } else {
