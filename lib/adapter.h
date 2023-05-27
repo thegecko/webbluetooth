@@ -13,13 +13,15 @@ public:
 
 private:
   simpleble_adapter_t handle;
-  Napi::Reference<Napi::Function> onScanStartCbRef;
-  Napi::Reference<Napi::Function> onScanStopCbRef;
-  Napi::Reference<Napi::Function> onScanUpdatedCbRef;
-  Napi::Reference<Napi::Function> onScanFoundCbRef;
+  Napi::ThreadSafeFunction onScanStartFn;
+  Napi::ThreadSafeFunction onScanStopFn;
+  Napi::ThreadSafeFunction onScanUpdatedFn;
+  Napi::ThreadSafeFunction onScanFoundFn;
 
-  static void onPeripheralFound(Napi::Env env, Napi::Function jsCallback,
-                                simpleble_peripheral_t peripheral);
+  static void onScanStart(simpleble_adapter_t handle, void *userdata);
+  static void onScanStop(simpleble_adapter_t handle, void *userdata);
+  static void onScanUpdated(simpleble_adapter_t handle, simpleble_peripheral_t peripheral, void *userdata);
+  static void onScanFound(simpleble_adapter_t handle, simpleble_peripheral_t peripheral, void *userdata);
 
   Napi::Value Identifier(const Napi::CallbackInfo &info);
   Napi::Value Address(const Napi::CallbackInfo &info);

@@ -46,21 +46,20 @@ Adapter::~Adapter() {
   if (this->handle != nullptr) {
     simpleble_adapter_release_handle(this->handle);
   }
-
-  if (!this->onScanStartCbRef.IsEmpty()) {
-    this->onScanStartCbRef.Reset();
+  if (this->onScanStartFn) {
+    this->onScanStartFn.Release();
   }
 
-  if (!this->onScanStopCbRef.IsEmpty()) {
-    this->onScanStopCbRef.Reset();
+  if (this->onScanStopFn) {
+    this->onScanStopFn.Release();
   }
 
-  if (!this->onScanUpdatedCbRef.IsEmpty()) {
-    this->onScanUpdatedCbRef.Reset();
+  if (this->onScanUpdatedFn) {
+    this->onScanUpdatedFn.Release();
   }
 
-  if (!this->onScanFoundCbRef.IsEmpty()) {
-    this->onScanFoundCbRef.Reset();
+  if (this->onScanFoundFn) {
+    this->onScanFoundFn.Release();
   }
 
   this->handle = nullptr;
@@ -166,6 +165,7 @@ Napi::Value Adapter::GetPairedPeripherals(const Napi::CallbackInfo &info) {
 
 Napi::Value Adapter::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "No callback given").ThrowAsJavaScriptException();
@@ -176,16 +176,12 @@ Napi::Value Adapter::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onScanStartCbRef.Reset(info[0].As<Napi::Function>(), 1);
+  this->onScanStartFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onScanStartFn", 0, 1);
+  this->onScanStartFn.Unref(env);
 
-  auto callback = [](simpleble_adapter_t handle, void *userdata) {
-    auto adapter = reinterpret_cast<Adapter *>(userdata);
-    Napi::Function jsCallback = adapter->onScanStartCbRef.Value();
-    jsCallback.Call({});
-  };
-
-  const auto ret = simpleble_adapter_set_callback_on_scan_start(this->handle,
-                                                                callback, this);
+  const auto ret = simpleble_adapter_set_callback_on_scan_start(
+      this->handle, onScanStart, this);
 
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
@@ -196,6 +192,7 @@ Napi::Value Adapter::SetCallbackOnScanStart(const Napi::CallbackInfo &info) {
 
 Napi::Value Adapter::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "No callback given").ThrowAsJavaScriptException();
@@ -206,16 +203,12 @@ Napi::Value Adapter::SetCallbackOnScanStop(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onScanStopCbRef.Reset(info[0].As<Napi::Function>(), 1);
+  this->onScanStopFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onScanStopFn", 0, 1);
+  this->onScanStopFn.Unref(env);
 
-  const auto callback = [](simpleble_adapter_t handle, void *userdata) {
-    auto adapter = reinterpret_cast<Adapter *>(userdata);
-    Napi::Function jsCallback = adapter->onScanStopCbRef.Value();
-    jsCallback.Call({});
-  };
-
-  const auto ret =
-      simpleble_adapter_set_callback_on_scan_stop(this->handle, callback, this);
+  const auto ret = simpleble_adapter_set_callback_on_scan_stop(
+      this->handle, onScanStop, this);
 
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
@@ -236,19 +229,12 @@ Napi::Value Adapter::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onScanUpdatedCbRef.Reset(info[0].As<Napi::Function>(), 1);
-
-  const auto callback = [](simpleble_adapter_t handle,
-                           simpleble_peripheral_t peripheral, void *userdata) {
-    auto adapter = reinterpret_cast<Adapter *>(userdata);
-
-    Napi::Function jsCallback = adapter->onScanUpdatedCbRef.Value();
-    Napi::HandleScope scope(jsCallback.Env());
-    adapter->onPeripheralFound(jsCallback.Env(), jsCallback, peripheral);
-  };
+  this->onScanUpdatedFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onScanUpdatedFn", 0, 1);
+  this->onScanUpdatedFn.Unref(env);
 
   const auto ret = simpleble_adapter_set_callback_on_scan_updated(
-      this->handle, callback, this);
+      this->handle, onScanUpdated, this);
 
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
@@ -259,6 +245,7 @@ Napi::Value Adapter::SetCallbackOnScanUpdated(const Napi::CallbackInfo &info) {
 
 Napi::Value Adapter::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "No callback given").ThrowAsJavaScriptException();
@@ -269,19 +256,12 @@ Napi::Value Adapter::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
     return Napi::Boolean::New(env, false);
   }
 
-  this->onScanFoundCbRef.Reset(info[0].As<Napi::Function>(), 1);
+  this->onScanFoundFn = Napi::ThreadSafeFunction::New(
+      env, info[0].As<Napi::Function>(), "onScanFoundFn", 0, 1);
+  this->onScanFoundFn.Unref(env);
 
-  const auto callback = [](simpleble_adapter_t handle,
-                           simpleble_peripheral_t peripheral, void *userdata) {
-    auto adapter = reinterpret_cast<Adapter *>(userdata);
-
-    Napi::Function jsCallback = adapter->onScanFoundCbRef.Value();
-    Napi::HandleScope scope(jsCallback.Env());
-    adapter->onPeripheralFound(jsCallback.Env(), jsCallback, peripheral);
-  };
-
-  const auto ret = simpleble_adapter_set_callback_on_scan_found(this->handle,
-                                                                callback, this);
+  const auto ret = simpleble_adapter_set_callback_on_scan_found(
+      this->handle, onScanFound, this);
 
   if (ret != SIMPLEBLE_SUCCESS) {
     return Napi::Boolean::New(env, false);
@@ -290,17 +270,50 @@ Napi::Value Adapter::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, true);
 }
 
-void Adapter::onPeripheralFound(Napi::Env env, Napi::Function jsCallback,
-                                simpleble_peripheral_t peripheral) {
-  Napi::Value peripheralInstance = Peripheral::constructor.New(
-      {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
-  jsCallback.Call({peripheralInstance});
-}
-
 Napi::Value Adapter::Release(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
   delete this;
 
   return env.Null();
+}
+
+void Adapter::onScanStart(simpleble_adapter_t handle, void *userdata) {
+  auto adapter = reinterpret_cast<Adapter *>(userdata);
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
+    jsCallback.Call({});
+  };
+  adapter->onScanStartFn.NonBlockingCall(callback);
+}
+
+void Adapter::onScanStop(simpleble_adapter_t handle, void *userdata) {
+  auto adapter = reinterpret_cast<Adapter *>(userdata);
+  auto callback = [](Napi::Env env, Napi::Function jsCallback) {
+    jsCallback.Call({});
+  };
+  adapter->onScanStopFn.NonBlockingCall(callback);
+}
+
+void Adapter::onScanUpdated(simpleble_adapter_t handle,
+                            simpleble_peripheral_t peripheral, void *userdata) {
+  auto adapter = reinterpret_cast<Adapter *>(userdata);
+  auto callback = [](Napi::Env env, Napi::Function jsCallback,
+                     simpleble_peripheral_t peripheral) {
+    Napi::Value peripheralInstance = Peripheral::constructor.New(
+        {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
+    jsCallback.Call({peripheralInstance});
+  };
+  adapter->onScanUpdatedFn.NonBlockingCall(peripheral, callback);
+}
+
+void Adapter::onScanFound(simpleble_adapter_t handle,
+                          simpleble_peripheral_t peripheral, void *userdata) {
+  auto adapter = reinterpret_cast<Adapter *>(userdata);
+  auto callback = [](Napi::Env env, Napi::Function jsCallback,
+                     simpleble_peripheral_t peripheral) {
+    Napi::Value peripheralInstance = Peripheral::constructor.New(
+        {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
+    jsCallback.Call({peripheralInstance});
+  };
+  adapter->onScanFoundFn.NonBlockingCall(peripheral, callback);
 }
