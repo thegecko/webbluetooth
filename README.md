@@ -187,8 +187,6 @@ https://webbluetoothcg.github.io/web-bluetooth/
 ### Other
 
 - [x] Device selector hook
-- [x] Lookups for known services, characteristics and descriptors
-- [x] Canonical UUID helper
 - [x] Examples
 - [x] API Documentation
 
