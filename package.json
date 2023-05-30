@@ -39,7 +39,7 @@
     "prebuild-install": "^7.1.1"
   },
   "devDependencies": {
-    "@types/node": "^10.16.0",
+    "@types/node": "^20.2.5",
     "@types/web-bluetooth": "^0.0.17",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
