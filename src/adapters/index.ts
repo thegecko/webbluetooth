@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { NobleAdapter } from './noble-adapter';
+import { SimplebleAdapter } from './simpleble-adapter';
 
 export const EVENT_ENABLED = 'enabledchanged';
-export const adapter = new NobleAdapter();
+export const adapter = new SimplebleAdapter();

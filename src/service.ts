@@ -23,18 +23,16 @@
 * SOFTWARE.
 */
 
-import { EventDispatcher, TypedDispatcher } from './dispatcher';
-import { BluetoothDevice } from './device';
-import { BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTCharacteristicEvents } from './characteristic';
-import { getCharacteristicUUID, getServiceUUID } from './helpers';
 import { adapter } from './adapters';
-import { W3CBluetoothRemoteGATTService } from './interfaces';
-import { DOMEvent } from './events';
+import { BluetoothDeviceImpl } from './device';
+import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
+import { BluetoothUUID } from './uuid';
+import { EventDispatcher, DOMEvent } from './events';
 
 /**
  * @hidden
  */
-export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCharacteristicEvents {
+export interface ServiceEvents extends CharacteristicEvents {
     /**
      * Service added event
      */
@@ -52,12 +50,12 @@ export interface BluetoothRemoteGATTServiceEvents extends BluetoothRemoteGATTCha
 /**
  * Bluetooth Remote GATT Service class
  */
-export class BluetoothRemoteGATTService extends (EventDispatcher as new() => TypedDispatcher<BluetoothRemoteGATTServiceEvents>) implements W3CBluetoothRemoteGATTService {
+export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvents> implements BluetoothRemoteGATTService {
 
     /**
      * The device the service is related to
      */
-    public readonly device: BluetoothDevice = undefined;
+    public readonly device: BluetoothDeviceImpl = undefined;
 
     /**
      * The unique identifier of the service
@@ -77,43 +75,55 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+            this._oncharacteristicvaluechanged = undefined;
         }
-        this._oncharacteristicvaluechanged = fn;
-        this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        if (fn) {
+            this._oncharacteristicvaluechanged = fn;
+            this.addEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
+        }
     }
 
     private _onserviceadded: (ev: Event) => void;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
+            this._onserviceadded = undefined;
         }
-        this._onserviceadded = fn;
-        this.addEventListener('serviceadded', this._onserviceadded);
+        if (fn) {
+            this._onserviceadded = fn;
+            this.addEventListener('serviceadded', this._onserviceadded);
+        }
     }
 
     private _onservicechanged: (ev: Event) => void;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
+            this._onservicechanged = undefined;
         }
-        this._onservicechanged = fn;
-        this.addEventListener('servicechanged', this._onservicechanged);
+        if (fn) {
+            this._onservicechanged = fn;
+            this.addEventListener('servicechanged', this._onservicechanged);
+        }
     }
 
     private _onserviceremoved: (ev: Event) => void;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
+            this._onserviceremoved = undefined;
         }
-        this._onserviceremoved = fn;
-        this.addEventListener('serviceremoved', this._onserviceremoved);
+        if (fn) {
+            this._onserviceremoved = fn;
+            this.addEventListener('serviceremoved', this._onserviceremoved);
+        }
     }
 
     /**
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTService>) {
+    constructor(init: Partial<BluetoothRemoteGATTServiceImpl>) {
         super();
 
         this.device = init.device;
@@ -165,7 +175,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
                 Object.assign(characteristicInfo, {
                     service: this
                 });
-                return new BluetoothRemoteGATTCharacteristic(characteristicInfo);
+                return new BluetoothRemoteGATTCharacteristicImpl(characteristicInfo);
             });
         }
 
@@ -174,7 +184,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
         }
 
         // Canonical-ize characteristic
-        characteristic = getCharacteristicUUID(characteristic);
+        characteristic = BluetoothUUID.getCharacteristic(characteristic);
 
         const filtered = this.characteristics.filter(characteristicObject => characteristicObject.uuid === characteristic);
 
@@ -223,7 +233,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
                 Object.assign(serviceInfo, {
                     device: this.device
                 });
-                return new BluetoothRemoteGATTService(serviceInfo);
+                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
             });
         }
 
@@ -231,7 +241,7 @@ export class BluetoothRemoteGATTService extends (EventDispatcher as new() => Typ
             return this.services;
         }
 
-        const filtered = this.services.filter(serviceObject => serviceObject.uuid === getServiceUUID(service));
+        const filtered = this.services.filter(serviceObject => serviceObject.uuid === BluetoothUUID.getService(service));
 
         if (filtered.length !== 1) {
             throw new Error('getIncludedServices error: service not found');

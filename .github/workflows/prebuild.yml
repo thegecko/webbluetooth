@@ -1,0 +1,75 @@
+name: prebuild
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  prebuild:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: darwin
+            os: macos-latest
+            node: x64
+          - name: win32-x86
+            os: windows-latest
+            node: x86
+          - name: win32-x64
+            os: windows-latest
+            node: x64
+          - name: linux-x64
+            os: ubuntu-latest
+            node: x64
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - if: matrix.node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          architecture: ${{ matrix.node }}
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - if: contains(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libdbus-1-dev
+      - if: contains(matrix.os, 'macos')
+        uses: jwlawson/actions-setup-cmake@v1.12
+        with:
+          cmake-version: '3.21.x'
+      - if: contains(matrix.os, 'windows')
+        uses: microsoft/setup-msbuild@v1.0.2
+      - run: yarn install --ignore-scripts
+      - run: yarn prebuild
+      - run: tar -zcvf ${{ matrix.name }}.tar.gz -C prebuilds .
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}.tar.gz
+          retention-days: 1
+  release:
+    needs: prebuild
+    name: Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: artifacts/*/*.tar.gz

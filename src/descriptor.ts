@@ -24,12 +24,11 @@
 */
 
 import { adapter } from './adapters';
-import { W3CBluetoothRemoteGATTDescriptor } from './interfaces';
 
 /**
  * Bluetooth Remote GATT Descriptor class
  */
-export class BluetoothRemoteGATTDescriptor implements W3CBluetoothRemoteGATTDescriptor {
+export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor {
 
     /**
      * The characteristic the descriptor is related to

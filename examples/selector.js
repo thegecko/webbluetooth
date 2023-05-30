@@ -94,7 +94,7 @@ console.log("scanning...");
         console.log("connected");
 
         await enumerateGatt(server);
-        await server.disconnect();
+        server.disconnect();
 
         console.log("\ndisconnected");
     } catch (error) {

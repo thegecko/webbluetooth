@@ -23,6 +23,8 @@
 * SOFTWARE.
 */
 
+// TODO: this example needs updating to use watchadvertisements
+
 const webbluetooth = require("../");
 
 const eddystoneUUID = 0xFEAA;
@@ -58,8 +60,8 @@ const expansions = {
 }
 
 const deviceFound = bluetoothDevice => {
-    const uuid = webbluetooth.getServiceUUID(eddystoneUUID);
-    const eddyData = bluetoothDevice.adData.serviceData.get(uuid);
+    const uuid = webbluetooth.BluetoothUUID.getService(eddystoneUUID);
+    const eddyData = bluetoothDevice._adData.serviceData.get(uuid);
     if (eddyData) {
         const decoded = decodeEddystone(eddyData);
         if (decoded) {
