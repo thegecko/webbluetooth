@@ -17,9 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: darwin
+          - name: darwin-x64
             os: macos-latest
             node: x64
+          - name: darwin-arm64
+            os: macos-latest
+            node: x64
+            args: --arch arm64
           - name: win32-x86
             os: windows-latest
             node: x86
@@ -51,7 +55,7 @@ jobs:
       - if: contains(matrix.os, 'windows')
         uses: microsoft/setup-msbuild@v1.3.1
       - run: yarn install --ignore-scripts
-      - run: yarn prebuild
+      - run: yarn prebuild ${{ matrix.args }}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
