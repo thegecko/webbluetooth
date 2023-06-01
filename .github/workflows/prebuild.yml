@@ -52,11 +52,10 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3.1
       - run: yarn install --ignore-scripts
       - run: yarn prebuild
-      - run: tar -zcvf ${{ matrix.name }}.tar.gz -C prebuilds .
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
-          path: ${{ matrix.name }}.tar.gz
+          path: prebuilds/*.tar.gz
           retention-days: 1
   release:
     needs: prebuild

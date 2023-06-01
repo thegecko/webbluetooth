@@ -4,4 +4,5 @@
 node_modules
 index.html
 build
+prebuilds
 src
