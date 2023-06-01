@@ -3,3 +3,5 @@
 .gitignore
 node_modules
 index.html
+build
+src
