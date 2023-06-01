@@ -1,7 +1,12 @@
 # Changelog
 
+## [3.0.3] - 2023-06-01
+
+### Added
+- Added prebuild for Arm-based MacOS - [55](https://github.com/thegecko/webbluetooth/pull/55) ([Rob Moran](https://github.com/thegecko))
+
 ## [3.0.2] - 2023-06-01
 
 ### Changed
-- Backend changed from noble to use SimpleBLE v0.6.1 - [`46`](https://github.com/thegecko/webbluetooth/pull/46) ([Alex Shaw](https://github.com/Symbitic))
-- TypeScript adapter added to use SimpleBLE - [`46`](https://github.com/thegecko/webbluetooth/pull/46) ([Rob Moran](https://github.com/thegecko))
+- Backend changed from noble to use SimpleBLE v0.6.1 - [46](https://github.com/thegecko/webbluetooth/pull/46) ([Alex Shaw](https://github.com/Symbitic))
+- TypeScript adapter added to use SimpleBLE - [46](https://github.com/thegecko/webbluetooth/pull/46) ([Rob Moran](https://github.com/thegecko))

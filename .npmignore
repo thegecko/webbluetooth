@@ -1,8 +1,8 @@
 .DS_Store
 .vscode
 .gitignore
+SimpleBLE
 node_modules
-index.html
 build
-prebuilds
 src
+index.html
