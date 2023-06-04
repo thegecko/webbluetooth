@@ -12,7 +12,12 @@ Napi::Value GetAdapters(const Napi::CallbackInfo &info) {
   // Respect `SIMPLEBLE_ADAPTER` if it exists.
   const char* adapterIndexEnv = std::getenv("SIMPLEBLE_ADAPTER");
   if (adapterIndexEnv) {
-    const int adapterIndex = std::atoi(adapterIndexEnv);
+    int adapterIndex = -1;
+    char* end;
+    long index = std::strtol(adapterIndexEnv, &end, 10);
+    if (end != adapterIndexEnv && *end == '\0') {
+      adapterIndex = static_cast<int>(index);
+    }
     if (adapterIndex < 0 || adapterIndex >= count) {
       Napi::RangeError::New(env, "SIMPLEBLE_ADAPTER is out of range")
         .ThrowAsJavaScriptException();
