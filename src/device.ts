@@ -23,52 +23,83 @@
 * SOFTWARE.
 */
 
-import { BluetoothRemoteGATTServerImpl } from './server';
-import { ServiceEvents } from './service';
-import { EventDispatcher } from './events';
+import { BluetoothRemoteGATTServer } from './server';
+import type { BluetoothRemoteGATTServiceEventMap } from './service';
 
-/**
- * @hidden
- */
-export interface BluetoothDeviceEvents extends ServiceEvents {
-    /**
-     * GATT server disconnected event
-     */
+/** @hidden Interface for creating an Advertisement event. */
+export interface BluetoothAdvertisingEventInit extends EventInit {
+    device: BluetoothDevice;
+    uuids: BluetoothServiceUUID[];
+    name?: string;
+    appearance?: number;
+    txPower?: number;
+    rssi?: number;
+    manufacturerData: BluetoothManufacturerData;
+    serviceData: BluetoothServiceData;
+}
+
+/** Bluetooth Advertisement event. */
+export class BluetoothAdvertisingEvent extends Event {
+    readonly device: BluetoothDevice;
+    readonly uuids: BluetoothServiceUUID[];
+    readonly name?: string | undefined;
+    readonly appearance?: number | undefined;
+    readonly txPower?: number | undefined;
+    readonly rssi?: number | undefined;
+    readonly manufacturerData: BluetoothManufacturerData;
+    readonly serviceData: BluetoothServiceData;
+
+    constructor(dict: BluetoothAdvertisingEventInit) {
+        super("advertisementreceived", dict);
+        this.device = dict.device;
+        this.uuids = dict.uuids;
+        this.name = dict.name;
+        this.appearance = dict.appearance;
+        this.txPower = dict.txPower;
+        this.rssi = dict.rssi;
+        this.manufacturerData = dict.manufacturerData;
+        this.serviceData = dict.serviceData;
+    }
+}
+
+/** @hidden Events for {@link BluetoothDevice} */
+export interface BluetoothDeviceEventMap extends BluetoothRemoteGATTServiceEventMap {
+    advertisementreceived: BluetoothAdvertisingEvent;
     gattserverdisconnected: Event;
-    /**
-     * Advertisement received event
-     */
-    advertisementreceived: Event;
 }
 
 /**
- * Bluetooth Device class
+ * Bluetooth Device class.
  */
-export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
+export class BluetoothDevice extends EventTarget {
+    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _onserviceadded: (ev: Event) => void;
+    private _onservicechanged: (ev: Event) => void;
+    private _onserviceremoved: (ev: Event) => void;
+    private _ongattserverdisconnected: (ev: Event) => void;
+    private _onadvertisementreceived: (ev: Event) => void;
 
     /**
-     * The unique identifier of the device
+     * The unique identifier of the device.
      */
     public readonly id: string = undefined;
 
     /**
-     * The name of the device
+     * The name of the device.
      */
     public readonly name: string = undefined;
 
     /**
-     * The gatt server of the device
+     * The gatt server of the device.
      */
     public readonly gatt: BluetoothRemoteGATTServer = undefined;
 
     /**
-     * Whether adverts are being watched (not implemented)
+     * Whether advertisements are being watched (not implemented)
      */
     public readonly watchingAdvertisements: boolean = false;
 
-    /**
-     * @hidden
-     */
+    /** @hidden Advertisement data. */
     public readonly _adData: {
         rssi?: number;
         txPower?: number;
@@ -76,22 +107,16 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         manufacturerData?: BluetoothManufacturerData;
     };
 
-    /**
-     * @hidden
-     */
+    /** @hidden Root Bluetooth instance. */
     public readonly _bluetooth: Bluetooth = undefined;
 
-    /**
-     * @hidden
-     */
+    /** @hidden Allowed services */
     public readonly _allowedServices: Array<string> = [];
 
-    /**
-     * @hidden
-     */
+    /** @hidden List of Service UUIDs. */
     public readonly _serviceUUIDs: Array<string> = [];
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    /** A listener for the `characteristicvaluechanged` event. */
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -103,7 +128,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onserviceadded: (ev: Event) => void;
+    /** A listener for the `serviceadded` event. */
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
@@ -115,7 +140,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onservicechanged: (ev: Event) => void;
+    /** A listener for the `servicechanged` event. */
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
@@ -127,7 +152,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onserviceremoved: (ev: Event) => void;
+    /** A listener for the `serviceremoved` event. */
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
@@ -139,7 +164,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _ongattserverdisconnected: (ev: Event) => void;
+    /** A listener for the `gattserverdisconnected` event. */
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
@@ -151,7 +176,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onadvertisementreceived: (ev: Event) => void;
+    /** A listener for the `advertisementreceived` event. */
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
@@ -164,10 +189,10 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     }
 
     /**
-     * Device constructor
-     * @param init A partial class to initialise values
+     * Device constructor.
+     * @param init A partial class to initialise values.
      */
-    constructor(init: Partial<BluetoothDeviceImpl>, private forgetFn: () => void) {
+    constructor(init: Partial<BluetoothDevice>, private forgetFn: () => void) {
         super();
 
         this.id = init.id;
@@ -180,7 +205,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this._serviceUUIDs = init._serviceUUIDs;
 
         if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServerImpl(this);
+        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServer(this);
     }
 
     /**
@@ -198,7 +223,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     }
 
     /**
-     * Forget this device
+     * Forget this device.
      */
     public async forget(): Promise<void> {
         this.forgetFn();

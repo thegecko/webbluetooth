@@ -23,63 +23,69 @@
 * SOFTWARE.
 */
 
-import { adapter, EVENT_ENABLED } from './adapters';
-import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { adapter } from './adapter/adapter';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher, DOMEvent } from './events';
+import { DOMEvent } from './events';
+import {
+    BluetoothDeviceEventMap,
+    BluetoothDevice,
+} from './device';
 
 /**
- * Bluetooth Options interface
+ * Bluetooth options.
  */
 export interface BluetoothOptions {
     /**
-     * A `device found` callback function to allow the user to select a device
+     * A `device found` callback function to allow the user to select a device.
      */
     deviceFound?: (device: BluetoothDevice, selectFn: () => void) => boolean;
 
     /**
-     * The amount of seconds to scan for the device (default is 10)
+     * The amount of seconds to scan for the device (default is 10).
      */
     scanTime?: number;
 
     /**
-     * Optional flag to automatically allow all devices
+     * Optional flag to automatically allow all devices.
      */
     allowAllDevices?: boolean;
 
     /**
-     * An optional referring device
+     * An optional referring device.
      */
     referringDevice?: BluetoothDevice;
 }
 
-/**
- * @hidden
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents {
-    /**
-     * Bluetooth Availability Changed event
-     */
+/** @hidden Events for {@link BluetoothDevice} */
+export interface BluetoothEventMap extends BluetoothDeviceEventMap {
+    /** Bluetooth Availability Changed event. */
     availabilitychanged: Event;
 }
 
 /**
- * Bluetooth class
+ * Bluetooth class.
  */
-export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
-    /**
-     * Referring device for the bluetooth instance
-     */
-    public readonly referringDevice?: BluetoothDevice;
-
+export class Bluetooth extends EventTarget {
     private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
     private scanTime: number = 10.24 * 1000;
     private scanner = undefined;
     private allowedDevices = new Set<string>();
+    private _oncharacteristicvaluechanged: EventListenerOrEventListenerObject;
+    private _onserviceadded?: EventListenerOrEventListenerObject;
+    private _onservicechanged?: EventListenerOrEventListenerObject;
+    private _onserviceremoved?: EventListenerOrEventListenerObject;
+    private _ongattserverdisconnected?: EventListenerOrEventListenerObject;
+    private _onadvertisementreceived?: EventListenerOrEventListenerObject;
+    private _onavailabilitychanged?: EventListenerOrEventListenerObject;
 
     /**
-     * Bluetooth constructor
-     * @param options Bluetooth initialisation options
+     * Referring device for the bluetooth instance.
+     */
+    public readonly referringDevice?: BluetoothDevice;
+
+    /**
+     * Bluetooth constructor.
+     * @param options Bluetooth initialisation options.
      */
     constructor(private options: BluetoothOptions = {}) {
         super();
@@ -89,13 +95,13 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             this.scanTime = options.scanTime * 1000;
         }
 
-        adapter.on(EVENT_ENABLED, _value => {
+        adapter.addEventListener("enabledchanged", (_) => {
+            // TODO: WebBluetooth says e.value should be a boolean.
             this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
         });
     }
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
-    public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
+    public set oncharacteristicvaluechanged(fn: EventListenerOrEventListenerObject) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
             this._oncharacteristicvaluechanged = undefined;
@@ -106,8 +112,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onserviceadded: (ev: Event) => void;
-    public set onserviceadded(fn: (ev: Event) => void) {
+    public set onserviceadded(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
             this._onserviceadded = undefined;
@@ -118,8 +123,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onservicechanged: (ev: Event) => void;
-    public set onservicechanged(fn: (ev: Event) => void) {
+    public set onservicechanged(fn: EventListenerOrEventListenerObject) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
             this._onservicechanged = undefined;
@@ -130,8 +134,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onserviceremoved: (ev: Event) => void;
-    public set onserviceremoved(fn: (ev: Event) => void) {
+    public set onserviceremoved(fn: EventListenerOrEventListenerObject) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
             this._onserviceremoved = undefined;
@@ -142,8 +145,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _ongattserverdisconnected: (ev: Event) => void;
-    public set ongattserverdisconnected(fn: (ev: Event) => void) {
+    public set ongattserverdisconnected(fn: EventListenerOrEventListenerObject) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
             this._ongattserverdisconnected = undefined;
@@ -154,8 +156,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onadvertisementreceived: (ev: Event) => void;
-    public set onadvertisementreceived(fn: (ev: Event) => void) {
+    public set onadvertisementreceived(fn: EventListenerOrEventListenerObject) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
             this._onadvertisementreceived = undefined;
@@ -166,8 +167,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onavailabilitychanged: (ev: Event) => void;
-    public set onavailabilitychanged(fn: (ev: Event) => void) {
+    public set onavailabilitychanged(fn: EventListenerOrEventListenerObject) {
         if (this._onavailabilitychanged) {
             this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
             this._onavailabilitychanged = undefined;
@@ -178,7 +178,11 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
+    private filterDevice(
+        filters: Array<BluetoothLEScanFilter>,
+        deviceInfo: Partial<BluetoothDevice>,
+        validServices: BluetoothServiceUUID[]
+    ): Partial<BluetoothDevice> | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -341,7 +345,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -379,7 +383,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });

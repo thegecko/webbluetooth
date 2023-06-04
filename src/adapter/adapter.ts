@@ -1,48 +1,72 @@
 /*
-* Node Web Bluetooth
-* Copyright (c) 2023 Rob Moran
-*
-* The MIT License (MIT)
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
-
-import { EventEmitter } from 'events';
-import { Adapter as BluetoothAdapter } from './adapter';
+ * Node Web Bluetooth
+ * Copyright (c) 2017-2023 Rob Moran
+ *
+ * The MIT License (MIT)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { adapters, isEnabled } from "./adapters";
 import { BluetoothUUID } from '../uuid';
-import { BluetoothDeviceImpl } from '../device';
-import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import { BluetoothRemoteGATTServiceImpl } from '../service';
-import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
-import {
-    isEnabled,
-    getAdapters,
+import type { BluetoothDevice } from '../device';
+import type { BluetoothRemoteGATTService } from '../service';
+import type { BluetoothRemoteGATTCharacteristic } from '../characteristic';
+import type { BluetoothRemoteGATTDescriptor } from '../descriptor';
+import type { CustomEventListener } from "../common";
+import type {
     Adapter,
     Peripheral,
     Service,
     Characteristic
 } from './simpleble';
 
-/**
- * @hidden
- */
-export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
+/** @hidden BluetoothAdapter event map. */
+export interface BluetoothAdapterEventMap {
+    enabledchanged: Event;
+}
+
+/** @hidden Type-safe BluetoothAdapter events. */
+export interface BluetoothAdapter extends EventTarget {
+    addEventListener<K extends keyof BluetoothAdapterEventMap>(
+        type: K,
+        listener: CustomEventListener<BluetoothAdapter, BluetoothAdapterEventMap[K]>,
+        options?: boolean | AddEventListenerOptions,
+    ): void;
+    addEventListener(
+        type: string,
+        listener: CustomEventListener<BluetoothAdapter, Event>,
+        options?: boolean | AddEventListenerOptions,
+    ): void;
+    removeEventListener<K extends keyof BluetoothAdapterEventMap>(
+        type: K,
+        listener: CustomEventListener<BluetoothAdapter, BluetoothAdapterEventMap[K]>,
+        options?: boolean | EventListenerOptions,
+    ): void;
+    removeEventListener(
+        type: string,
+        listener: CustomEventListener<BluetoothAdapter, Event>,
+        options?: boolean | EventListenerOptions,
+    ): void;
+}
+
+/** @hidden Wrapper around SimpleBLE. */
+export class BluetoothAdapter extends EventTarget {
     private adapter: Adapter;
     private peripherals = new Map<string, Peripheral>();
     private servicesByPeripheral = new Map<Peripheral, Service[]>();
@@ -53,7 +77,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private descriptors = new Map<string, string[]>();
     private charEvents = new Map<string, (value: DataView) => void>();
 
-    private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
@@ -70,7 +94,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
-    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDeviceImpl> {
+    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDevice> {
         const name = device.identifier;
         const address = device.address;
         const rssi = device.rssi;
@@ -147,11 +171,12 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
 
     public async startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void): Promise<void> {
         if (this.state === false) {
-            throw new Error('adapter not enabled');
+            // TODO: DOMException("Adapter not enabled", "NotFoundError") was added in Node 17.
+            throw new Error('Adapter not enabled');
         }
 
         if (!this.adapter) {
-            this.adapter = getAdapters()[0];
+            this.adapter = adapters[0];
         }
 
         this.adapter.setCallbackOnScanFound(peripheral => {
@@ -168,7 +193,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         this.peripherals.clear();
         const success = this.adapter.scanStart();
         if (!success) {
-            throw new Error('scan start failed');
+            throw new Error('Scan start failed');
         }
     }
 
@@ -176,7 +201,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         if (this.adapter) {
             const success = this.adapter.scanStop();
             if (!success) {
-                throw new Error('scan stop failed');
+                throw new Error('Scan stop failed');
             }
         }
     }
@@ -215,7 +240,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         }
     }
 
-    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         const peripheral = this.peripherals.get(id);
         if (!peripheral) {
             throw new Error('Peripheral not found');
@@ -234,12 +259,12 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         // Currently not implemented
         return [];
     }
 
-    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
+    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
         const peripheral = this.peripheralByService.get(serviceUuid);
         const characteristics = this.characteristicsByService.get(serviceUuid);
         const discovered = [];
@@ -288,7 +313,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
+    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
         const descriptors = this.descriptors.get(charUuid);
         const discovered = [];
 
@@ -360,3 +385,5 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         }
     }
 }
+
+export const adapter = new BluetoothAdapter();

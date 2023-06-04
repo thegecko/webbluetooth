@@ -23,45 +23,45 @@
 * SOFTWARE.
 */
 
+import { adapter } from './adapter/adapter';
 import { BluetoothUUID } from './uuid';
-import { adapter } from './adapters';
-import { BluetoothRemoteGATTServiceImpl } from './service';
+import { BluetoothRemoteGATTService } from './service';
 import { DOMEvent } from './events';
-import { BluetoothDeviceImpl } from './device';
+import type { BluetoothDevice } from './device';
 
 /**
- * Bluetooth Remote GATT Server class
+ * Bluetooth Remote GATT Server class.
  */
-export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
-
-    /**
-     * The device the gatt server is related to
-     */
-    public readonly device: BluetoothDeviceImpl = undefined;
-
+export class BluetoothRemoteGATTServer extends EventTarget {
     private _connected = false;
+    private handle: string = undefined;
+    private services: BluetoothRemoteGATTService[] = undefined;
+
     /**
-     * Whether the gatt server is connected
+     * The device the gatt server is related to.
+     */
+    public readonly device: BluetoothDevice = undefined;
+
+    /**
+     * Whether the gatt server is connected.
      */
     public get connected(): boolean {
         return this._connected;
     }
 
-    private handle: string = undefined;
-    private services: Array<BluetoothRemoteGATTService> = undefined;
-
     /**
-     * Server constructor
-     * @param device Device the gatt server relates to
+     * Server constructor.
+     * @param device Device the gatt server relates to.
      */
-    constructor(device: BluetoothDeviceImpl) {
+    constructor(device: BluetoothDevice) {
+        super();
         this.device = device;
         this.handle = this.device.id;
     }
 
     /**
-     * Connect the gatt server
-     * @returns Promise containing the gatt server
+     * Connect the gatt server.
+     * @returns Promise containing the gatt server.
      */
     public async connect(): Promise<BluetoothRemoteGATTServer> {
         if (this.connected) {
@@ -80,7 +80,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     }
 
     /**
-     * Disconnect the gatt server
+     * Disconnect the gatt server.
      */
     public disconnect(): void {
         adapter.disconnect(this.handle);
@@ -88,9 +88,9 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     }
 
     /**
-     * Gets a single primary service contained in the gatt server
-     * @param service service UUID
-     * @returns Promise containing the service
+     * Gets a single primary service contained in the gatt server.
+     * @param service Service UUID.
+     * @returns Promise containing the service.
      */
     public async getPrimaryService(service: BluetoothServiceUUID): Promise<BluetoothRemoteGATTService> {
         if (!this.connected) {
@@ -110,9 +110,9 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     }
 
     /**
-     * Gets a list of primary services contained in the gatt server
-     * @param service service UUID
-     * @returns Promise containing an array of services
+     * Gets a list of primary services contained in the gatt server.
+     * @param service Service UUID.
+     * @returns Promise containing an array of services.
      */
     public async getPrimaryServices(service?: BluetoothServiceUUID): Promise<Array<BluetoothRemoteGATTService>> {
         if (!this.connected) {
@@ -125,7 +125,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
                 Object.assign(serviceInfo, {
                     device: this.device
                 });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTService(serviceInfo);
             });
         }
 

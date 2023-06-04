@@ -23,47 +23,10 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from 'events';
-
-/**
- * @hidden
- */
-export class EventDispatcher<T> {
-    protected emitter = new EventEmitter();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private isEventListenerObject = (listener: any): listener is EventListenerObject => (listener as EventListenerObject).handleEvent !== undefined;
-
-    public addEventListener<K extends keyof T>(type: K, listener: (this: this, ev: T[K]) => void): void;
-    public addEventListener<K extends keyof T>(type: K, listener: EventListener): void;
-    public addEventListener<K extends keyof T>(type: string, listener: EventListener | ((ev: T[K]) => void)): void {
-        if (listener) {
-            const handler = this.isEventListenerObject(listener) ? listener.handleEvent : listener;
-            this.emitter.addListener(type, handler);
-        }
-    }
-
-    public removeEventListener<K extends keyof T>(type: K, callback: (this: this, ev: T[K]) => void): void;
-    public removeEventListener<K extends keyof T>(type: K, callback: EventListener): void;
-    public removeEventListener<K extends keyof T>(type: K, callback: EventListener | ((ev: T[K]) => void)): void {
-        if (callback) {
-            const handler = this.isEventListenerObject(callback) ? callback.handleEvent : callback;
-            this.emitter.removeListener(type as string, handler);
-        }
-    }
-
-    public dispatchEvent(event: Event): boolean {
-        return this.emitter.emit(event.type, event);
-    }
-}
-
-/**
- * @hidden
- */
+/** @hidden Custom event. */
 export class DOMEvent implements Event {
-
     /**
-     * Type of the event
+     * Type of the event.
      */
     public type: string;
 
@@ -130,22 +93,22 @@ export class DOMEvent implements Event {
     /**
      * @hidden
      */
-    public AT_TARGET: number;
+    public AT_TARGET: 2 = 2;
 
     /**
      * @hidden
      */
-    public BUBBLING_PHASE: number;
+    public BUBBLING_PHASE: 3 = 3;
 
     /**
      * @hidden
      */
-    public CAPTURING_PHASE: number;
+    public CAPTURING_PHASE: 1 = 1;
 
     /**
      * @hidden
      */
-    public NONE: number;
+    public NONE: 0 = 0;
 
     constructor(target: EventTarget, type: string) {
         this.target = target;

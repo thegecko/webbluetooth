@@ -7,8 +7,22 @@
 
 Napi::Value GetAdapters(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-
   const size_t count = simpleble_adapter_get_count();
+
+  // Respect `SIMPLEBLE_ADAPTER` if it exists.
+  const char* adapterIndexEnv = std::getenv("SIMPLEBLE_ADAPTER");
+  if (adapterIndexEnv) {
+    const int adapterIndex = std::atoi(adapterIndexEnv);
+    if (adapterIndex < 0 || adapterIndex >= count) {
+      Napi::RangeError::New(env, "SIMPLEBLE_ADAPTER is out of range")
+        .ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    Napi::Value adapterInstance = Adapter::constructor.New({Napi::Number::New(env, adapterIndex)});
+    Napi::Array adapters = Napi::Array::New(env, 1);
+    adapters.Set(0u, adapterInstance);
+    return adapters;
+  }
 
   Napi::Array adapters = Napi::Array::New(env, count);
 
