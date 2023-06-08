@@ -31,6 +31,16 @@ import {
     BluetoothDevice,
 } from './device';
 
+interface Filtered {
+    filters: Array<BluetoothLEScanFilter>;
+    optionalServices?: Array<BluetoothServiceUUID>;
+}
+
+interface AcceptAll {
+    acceptAllDevices: boolean;
+    optionalServices?: Array<BluetoothServiceUUID>;
+}
+
 /**
  * Bluetooth options.
  */
@@ -253,16 +263,6 @@ export class Bluetooth extends EventTarget {
             throw new Error('requestDevice error: request in progress');
         }
 
-        interface Filtered {
-            filters: Array<BluetoothLEScanFilter>;
-            optionalServices?: Array<BluetoothServiceUUID>;
-        }
-
-        interface AcceptAll {
-            acceptAllDevices: boolean;
-            optionalServices?: Array<BluetoothServiceUUID>;
-        }
-
         const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
             (maybeFiltered as Filtered).filters !== undefined;
 
@@ -358,6 +358,112 @@ export class Bluetooth extends EventTarget {
                 }
             });
         });
+    }
+
+    /**
+     * Scans for multiple devices.
+     * @param options Options to use when scanning.
+     */
+    async *requestLEDevices(options: RequestDeviceOptions = { filters: [] }): AsyncIterableIterator<BluetoothDevice> {
+        if (this.scanner !== undefined) {
+            throw new Error('requestDevices error: request in progress');
+        }
+
+        const isFiltered = (maybeFiltered: RequestDeviceOptions): maybeFiltered is Filtered =>
+            (maybeFiltered as Filtered).filters !== undefined;
+
+        const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
+            (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
+
+        let searchUUIDs = [];
+
+        if (isFiltered(options)) {
+            // Must have a filter
+            if (options.filters.length === 0) {
+                throw new TypeError('requestDevices error: no filters specified');
+            }
+
+            // Don't allow empty filters
+            const emptyFilter = options.filters.some(filter => {
+                return (Object.keys(filter).length === 0);
+            });
+            if (emptyFilter) {
+                throw new TypeError('requestDevices error: empty filter specified');
+            }
+
+            // Don't allow empty namePrefix
+            const emptyPrefix = options.filters.some(filter => {
+                return (typeof filter.namePrefix !== 'undefined' && filter.namePrefix === '');
+            });
+            if (emptyPrefix) {
+                throw new TypeError('requestDevices error: empty namePrefix specified');
+            }
+
+            options.filters.forEach(filter => {
+                if (filter.services) searchUUIDs = searchUUIDs.concat(filter.services.map(BluetoothUUID.getService));
+
+                // Unique-ify
+                searchUUIDs = searchUUIDs.filter((item, index, array) => {
+                    return array.indexOf(item) === index;
+                });
+            });
+        } else if (!isAcceptAll(options)) {
+            throw new TypeError('requestDevices error: specify filters or acceptAllDevices');
+        }
+
+        const queue: Array<{resolve: (data: BluetoothDevice) => void}> = [];
+
+        adapter.startScan(searchUUIDs, deviceInfo => {
+            let validServices = [];
+
+            const complete = (bluetoothDevice: BluetoothDevice) => {
+                this.allowedDevices.add(bluetoothDevice.id);
+                //this.cancelRequest();
+                if (queue.length) {
+                    const next = queue.shift()!;
+                    next.resolve(bluetoothDevice);
+                }
+            };
+
+            // filter devices if filters specified
+            if (isFiltered(options)) {
+                deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
+            }
+
+            if (deviceInfo) {
+                // Add additional services
+                if (options.optionalServices) {
+                    validServices = validServices.concat(options.optionalServices.map(BluetoothUUID.getService));
+                }
+
+                // Set unique list of allowed services
+                const allowedServices = validServices.filter((item, index, array) => {
+                    return array.indexOf(item) === index;
+                });
+                Object.assign(deviceInfo, {
+                    _bluetooth: this,
+                    _allowedServices: allowedServices
+                });
+
+                const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+
+                const selectFn = () => {
+                    complete.call(this, bluetoothDevice);
+                };
+
+                if (!this.deviceFound || this.deviceFound(bluetoothDevice, selectFn.bind(this)) === true) {
+                    complete.call(this, bluetoothDevice);
+                }
+            }
+        });
+
+        while (true) {
+            const promise = new Promise<any>((resolve) => {
+              queue.push({resolve});
+            });
+            const data = await promise;
+            yield data;
+        }
     }
 
     /**
