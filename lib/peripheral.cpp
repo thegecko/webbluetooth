@@ -395,8 +395,8 @@ Napi::Value Peripheral::WriteCommand(const Napi::CallbackInfo &info) {
   simpleble_uuid_t characteristic;
   const Napi::String cbService = info[0].As<Napi::String>();
   const Napi::String cbChar = info[1].As<Napi::String>();
-  const uint8_t *data = info[3].As<Napi::Uint8Array>().Data();
-  const size_t data_size = info[3].As<Napi::Uint8Array>().ByteLength();
+  const uint8_t *data = info[2].As<Napi::Uint8Array>().Data();
+  const size_t data_size = info[2].As<Napi::Uint8Array>().ByteLength();
 
   memcpy(service.value, cbService.Utf8Value().c_str(), SIMPLEBLE_UUID_STR_LEN);
   memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
