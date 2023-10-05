@@ -1,9 +1,10 @@
 #pragma once
 
+#include <map>
 #include <napi.h>
 #include <simpleble_c/peripheral.h>
 
-#define SIMPLEBLE_UUID_STR_LEN_TS SIMPLEBLE_UUID_STR_LEN - 1 // remove null terminator
+#define SIMPLEBLE_UUID_STR_LEN_TS (SIMPLEBLE_UUID_STR_LEN - 1) // remove null terminator
 
 class Peripheral : public Napi::ObjectWrap<Peripheral> {
 public:
@@ -15,8 +16,8 @@ public:
 
 private:
   simpleble_peripheral_t handle;
-  Napi::ThreadSafeFunction notifyFn;
-  Napi::ThreadSafeFunction indicateFn;
+  std::map<std::string, Napi::ThreadSafeFunction> notifyFns;
+  std::map<std::string, Napi::ThreadSafeFunction> indicateFns;
   Napi::ThreadSafeFunction onConnectedFn;
   Napi::ThreadSafeFunction onDisconnectedFn;
 

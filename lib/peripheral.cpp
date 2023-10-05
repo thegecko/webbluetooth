@@ -70,13 +70,8 @@ Peripheral::~Peripheral() {
     simpleble_peripheral_release_handle(this->handle);
   }
 
-  if (this->notifyFn) {
-    this->notifyFn.Release();
-  }
-
-  if (this->indicateFn) {
-    this->indicateFn.Release();
-  }
+  for (auto [k, fn] : notifyFns) fn.Release();
+  for (auto [k, fn] : indicateFns) fn.Release();
 
   if (this->onConnectedFn) {
     this->onConnectedFn.Release();
@@ -606,8 +601,8 @@ Napi::Value Peripheral::Notify(const Napi::CallbackInfo &info) {
   memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
          SIMPLEBLE_UUID_STR_LEN);
 
-  this->notifyFn = Napi::ThreadSafeFunction::New(env, cbFn, "onNotify", 0, 1);
-  this->notifyFn.Unref(env);
+  const auto [it, _] = notifyFns.emplace(std::string(characteristic.value), Napi::ThreadSafeFunction::New(env, cbFn, "onNotify", 0, 1));
+  it->second.Unref(env);
 
   const auto ret = simpleble_peripheral_notify(this->handle, service,
                                                characteristic, onNotify, this);
@@ -657,9 +652,8 @@ Napi::Value Peripheral::Indicate(const Napi::CallbackInfo &info) {
   memcpy(characteristic.value, cbChar.Utf8Value().c_str(),
          SIMPLEBLE_UUID_STR_LEN);
 
-  this->indicateFn =
-      Napi::ThreadSafeFunction::New(env, cbFn, "onIndicate", 0, 1);
-  this->indicateFn.Unref(env);
+  const auto [it, _] = indicateFns.emplace(std::string(characteristic.value), Napi::ThreadSafeFunction::New(env, cbFn, "onIndicate", 0, 1));
+    it->second.Unref(env);
 
   const auto ret = simpleble_peripheral_indicate(
       this->handle, service, characteristic, onIndicate, this);
@@ -742,7 +736,10 @@ void Peripheral::onNotify(simpleble_uuid_t service,
         Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
     jsCallback.Call({uint8Array});
   };
-  peripheral->notifyFn.NonBlockingCall(callback);
+
+  auto& notifyFns = peripheral->notifyFns;
+  if (const auto it = notifyFns.find(std::string(characteristic.value)); it != notifyFns.end())
+    it->second.NonBlockingCall(callback);
 }
 
 void Peripheral::onIndicate(simpleble_uuid_t service,
@@ -758,5 +755,8 @@ void Peripheral::onIndicate(simpleble_uuid_t service,
         Napi::Uint8Array::New(env, vecData.size(), arrayBuffer, 0);
     jsCallback.Call({uint8Array});
   };
-  peripheral->indicateFn.NonBlockingCall(callback);
+
+  auto& indicateFns = peripheral->indicateFns;
+  if (const auto it = indicateFns.find(std::string(characteristic.value)); it != indicateFns.end())
+    it->second.NonBlockingCall(callback);
 }
