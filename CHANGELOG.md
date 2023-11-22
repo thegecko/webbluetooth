@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.1.0] - 2023-08-22
+
+### Fixed
+- Fixed write without response - [91](https://github.com/thegecko/webbluetooth/pull/91) ([Rob Moran](https://github.com/thegecko))
+
 ## [3.0.3] - 2023-06-01
 
 ### Added

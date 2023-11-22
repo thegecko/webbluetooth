@@ -218,7 +218,7 @@ The tests are set up to use a BBC micro:bit in range with the following services
 - LED Service (e95dd91d-251d-470a-a062-fa1922dfa9a8)
 - Button Service (e95d9882-251d-470a-a062-fa1922dfa9a8)
 
-Firmware for this hardware including the services can be found here: https://microbit.org/get-started/user-guide/firmware/
+Sample code and hex file for the v2 micro:bit can be found in the [firmware folder](https://github.com/thegecko/webbluetooth/tree/master/firmware).
 
 To run the tests:
 

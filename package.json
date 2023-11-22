@@ -2,7 +2,7 @@
   "name": "webbluetooth",
   "description": "Node.js implementation of the Web Bluetooth Specification",
   "license": "MIT",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "main": "dist/index.js",
   "author": "Rob Moran <rob@thegecko.org>",
   "engines": {
@@ -35,18 +35,18 @@
   "dependencies": {
     "bindings": "^1.5.0",
     "cmake-js": "^7.0.0",
-    "node-addon-api": "^6.1.0",
+    "node-addon-api": "^7.0.0",
     "prebuild-install": "^7.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.2.5",
-    "@types/web-bluetooth": "^0.0.17",
+    "@types/web-bluetooth": "^0.0.20",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
     "eslint": "^8.29.0",
     "mocha": "^10.2.0",
-    "prebuild": "^11.0.4",
-    "typedoc": "^0.24.7",
+    "prebuild": "^12.0.0",
+    "typedoc": "^0.25.1",
     "typescript": "^4.9.4"
   },
   "binary": {
