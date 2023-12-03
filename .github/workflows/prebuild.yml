@@ -17,22 +17,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: darwin-x64
-            os: macos-latest
+          - name: darwin
+            os: macos-11
             node: x64
-          - name: darwin-arm64
-            os: macos-latest
-            node: x64
-            args: --arch arm64
+            command: prebuild --arch x64+arm64
           - name: win32-x86
-            os: windows-latest
+            os: windows-2019
             node: x86
+            command: prebuild
           - name: win32-x64
-            os: windows-latest
+            os: windows-2019
             node: x64
+            command: prebuild
           - name: linux-x64
-            os: ubuntu-latest
-            node: x64
+            os: ubuntu-20.04
+            command: prebuild-cross --tag-libc -i centos7-devtoolset7 -i alpine
+          - name: linux-arm
+            os: ubuntu-20.04
+            command: prebuild-cross --tag-armv -i linux-arm64 -i linux-armv7 -i linux-armv6
+          - name: android-arm
+            os: ubuntu-20.04
+            command: prebuild-cross --tag-armv -i android-arm64 -i android-armv7
+          - name: linux-x86
+            os: ubuntu-20.04
+            command: prebuild-cross -i linux-x86
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -55,11 +63,12 @@ jobs:
       - if: contains(matrix.os, 'windows')
         uses: microsoft/setup-msbuild@v1.3.1
       - run: yarn install --ignore-scripts
-      - run: yarn prebuild ${{ matrix.args }}
+      - run: yarn ${{ matrix.command }}
+      - run: tar -zcvf ${{ matrix.name }}.tar.gz -C prebuilds .
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
-          path: prebuilds/*.tar.gz
+          path: ${{ matrix.name }}.tar.gz
           retention-days: 1
   release:
     needs: prebuild

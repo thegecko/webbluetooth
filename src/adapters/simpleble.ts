@@ -23,8 +23,10 @@
 * SOFTWARE.
 */
 
+import { join } from 'path';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const simpleble = require('bindings')('simpleble.node');
+const simpleble = require('node-gyp-build')(join(__dirname, '..', '..'));
 module.exports = simpleble;
 
 /** SimpleBLE address type. */

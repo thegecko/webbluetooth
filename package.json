@@ -19,7 +19,7 @@
     "bluetooth"
   ],
   "scripts": {
-    "install": "prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
+    "rebuild": "cmake-js rebuild",
     "clean": "yarn clean:cpp && yarn clean:ts",
     "clean:cpp": "cmake-js clean && git clean -fx ./prebuilds",
     "clean:ts": "git clean -fx ./dist ./docs",
@@ -29,23 +29,27 @@
     "watch": "tsc -w --preserveWatchOutput",
     "lint": "eslint . --ext .ts",
     "test": "mocha --timeout 10000 test/*.test.js",
-    "prebuild": "prebuild --backend cmake-js --runtime napi --all --strip --verbose",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "prebuild": "prebuildify --backend cmake-js --napi --strip",
+    "prebuild-cross": "prebuildify-cross --backend cmake-js --napi --strip",
+    "prepublishOnly": "prebuildify-ci download",
+    "prebuild-download": "prebuildify-ci download"
   },
   "dependencies": {
-    "bindings": "^1.5.0",
-    "cmake-js": "^7.0.0",
-    "node-addon-api": "^7.0.0",
-    "prebuild-install": "^7.1.1"
+    "node-gyp-build": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.2.5",
     "@types/web-bluetooth": "^0.0.20",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
+    "cmake-js": "^7.0.0",
     "eslint": "^8.29.0",
     "mocha": "^10.2.0",
-    "prebuild": "^12.0.0",
+    "node-addon-api": "^7.0.0",
+    "prebuildify": "^5.0.1",
+    "prebuildify-ci": "^1.0.5",
+    "prebuildify-cross": "^5.0.0",
     "typedoc": "^0.25.1",
     "typescript": "^4.9.4"
   },
