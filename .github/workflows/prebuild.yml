@@ -56,7 +56,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3.1
       - run: yarn install --ignore-scripts
       - run: yarn prebuild ${{ matrix.args }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: prebuilds/*.tar.gz
@@ -68,7 +68,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
       - uses: softprops/action-gh-release@v1
