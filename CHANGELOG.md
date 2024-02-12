@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.2.0] - 2024-02-12
+## [3.2.1] - 2024-02-12
 
 ### Fixed
-- Updated SimpleBLE to 6b83bea2, fixing service adverts [131](https://github.com/thegecko/webbluetooth/pull/131) ([Rob Moran](https://github.com/thegecko))
 - Fixed having separate notifications for characteristics [109](https://github.com/thegecko/webbluetooth/pull/109) ([Daníel Grétarsson](https://github.com/dingari))
 - Updated multiple dependant packages including cmakejs and prebuild
 
