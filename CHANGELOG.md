@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.1] - 2024-02-12
+
+### Fixed
+- Fixed having separate notifications for characteristics [109](https://github.com/thegecko/webbluetooth/pull/109) ([Daníel Grétarsson](https://github.com/dingari))
+- Updated multiple dependant packages including cmakejs and prebuild
+
 ## [3.1.0] - 2023-08-22
 
 ### Fixed

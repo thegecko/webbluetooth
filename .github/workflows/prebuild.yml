@@ -49,11 +49,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libdbus-1-dev
       - if: contains(matrix.os, 'macos')
-        uses: jwlawson/actions-setup-cmake@v1.14
+        uses: jwlawson/actions-setup-cmake@v2.0
         with:
           cmake-version: '3.21.x'
       - if: contains(matrix.os, 'windows')
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@v2.0.0
       - run: yarn install --ignore-scripts
       - run: yarn prebuild ${{ matrix.args }}
       - uses: actions/upload-artifact@v4
