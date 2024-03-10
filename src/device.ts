@@ -50,7 +50,7 @@ export class BluetoothAdvertisingEvent extends Event {
     readonly serviceData: BluetoothServiceData;
 
     constructor(dict: BluetoothAdvertisingEventInit) {
-        super("advertisementreceived", dict);
+        super('advertisementreceived', dict);
         this.device = dict.device;
         this.uuids = dict.uuids;
         this.name = dict.name;
@@ -227,5 +227,11 @@ export class BluetoothDevice extends EventTarget {
      */
     public async forget(): Promise<void> {
         this.forgetFn();
+    }
+
+    /** @hidden Handle a disconnect. */
+    public _handleDisconnect() {
+        this.dispatchEvent(new Event('gattserverdisconnected', { bubbles: true }));
+        this._bluetooth.dispatchEvent(new Event('gattserverdisconnected', { bubbles: true }));
     }
 }

@@ -26,7 +26,6 @@
 import { adapter } from './adapter/adapter';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTService } from './service';
-import { DOMEvent } from './events';
 import type { BluetoothDevice } from './device';
 
 /**
@@ -71,8 +70,7 @@ export class BluetoothRemoteGATTServer extends EventTarget {
         await adapter.connect(this.handle, () => {
             this.services = undefined;
             this._connected = false;
-            this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
-            this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
+            this.device._handleDisconnect();
         });
 
         this._connected = true;

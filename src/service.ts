@@ -25,13 +25,12 @@
 
 import { adapter } from './adapter/adapter';
 import { BluetoothUUID } from './uuid';
-import { DOMEvent } from './events';
 import {
     BluetoothRemoteGATTCharacteristicEventMap,
     BluetoothRemoteGATTCharacteristic,
 } from './characteristic';
 import type { BluetoothDevice } from './device';
-import type { CustomEventListener } from "./common";
+import type { CustomEventListener } from './common';
 
 /** @hidden Events for {@link BluetoothRemoteGATTService} */
 export interface BluetoothRemoteGATTServiceEventMap extends BluetoothRemoteGATTCharacteristicEventMap {
@@ -155,9 +154,10 @@ export class BluetoothRemoteGATTService extends EventTarget {
 
         this.handle = this.uuid;
 
-        this.dispatchEvent(new DOMEvent(this, 'serviceadded'));
-        this.device.dispatchEvent(new DOMEvent(this, 'serviceadded'));
-        this.device._bluetooth.dispatchEvent(new DOMEvent(this, 'serviceadded'));
+        // TODO: When is serviceremoved fired?
+        this.dispatchEvent(new Event('serviceadded', { bubbles: true }));
+        this.device.dispatchEvent(new Event('serviceadded', { bubbles: true }));
+        this.device._bluetooth.dispatchEvent(new Event('serviceadded', { bubbles: true }));
     }
 
     /**

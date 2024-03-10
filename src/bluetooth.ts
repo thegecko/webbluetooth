@@ -23,9 +23,8 @@
 * SOFTWARE.
 */
 
-import { adapter } from './adapter/adapter';
+import { adapter, type BluetoothAdapter } from './adapter/adapter';
 import { BluetoothUUID } from './uuid';
-import { DOMEvent } from './events';
 import {
     BluetoothDeviceEventMap,
     BluetoothDevice,
@@ -39,6 +38,28 @@ interface Filtered {
 interface AcceptAll {
     acceptAllDevices: boolean;
     optionalServices?: Array<BluetoothServiceUUID>;
+}
+
+/** @hidden Interface for creating an availability event. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ValueEventInit<T = any> extends EventInit {
+    value?: T | null;
+}
+
+/**
+ * Bluetooth availability event.
+ *
+ * @privateRemarks
+ * As the spec notes, this is generic and likely to be moved to HTML or DOM.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class ValueEvent<T = any> extends Event {
+    readonly value: T | null;
+
+    constructor(type: string, initDict: ValueEventInit<T> | undefined = {}) {
+        super(type, initDict);
+        this.value = initDict.value;
+    }
 }
 
 /**
@@ -69,7 +90,7 @@ export interface BluetoothOptions {
 /** @hidden Events for {@link BluetoothDevice} */
 export interface BluetoothEventMap extends BluetoothDeviceEventMap {
     /** Bluetooth Availability Changed event. */
-    availabilitychanged: Event;
+    availabilitychanged: ValueEvent<boolean>;
 }
 
 /**
@@ -105,9 +126,12 @@ export class Bluetooth extends EventTarget {
             this.scanTime = options.scanTime * 1000;
         }
 
-        adapter.addEventListener("enabledchanged", (_) => {
-            // TODO: WebBluetooth says e.value should be a boolean.
-            this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
+        adapter.addEventListener('enabledchanged', (evt) => {
+            this.dispatchEvent(
+                new ValueEvent('availabilitychanged', {
+                    value: (evt.target as BluetoothAdapter).state
+                })
+            );
         });
     }
 
@@ -420,7 +444,7 @@ export class Bluetooth extends EventTarget {
                 this.allowedDevices.add(bluetoothDevice.id);
                 //this.cancelRequest();
                 if (queue.length) {
-                    const next = queue.shift()!;
+                    const next = queue.shift();
                     next.resolve(bluetoothDevice);
                 }
             };
@@ -458,8 +482,8 @@ export class Bluetooth extends EventTarget {
         });
 
         while (true) {
-            const promise = new Promise<any>((resolve) => {
-              queue.push({resolve});
+            const promise = new Promise<BluetoothDevice>((resolve) => {
+                queue.push({ resolve });
             });
             const data = await promise;
             yield data;

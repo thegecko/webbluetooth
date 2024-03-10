@@ -22,13 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { adapters, isEnabled } from "./adapters";
+import { adapters, isEnabled } from './adapters';
 import { BluetoothUUID } from '../uuid';
 import type { BluetoothDevice } from '../device';
 import type { BluetoothRemoteGATTService } from '../service';
 import type { BluetoothRemoteGATTCharacteristic } from '../characteristic';
 import type { BluetoothRemoteGATTDescriptor } from '../descriptor';
-import type { CustomEventListener } from "../common";
+import type { CustomEventListener } from '../common';
 import type {
     Adapter,
     Peripheral,
@@ -160,7 +160,7 @@ export class BluetoothAdapter extends EventTarget {
         this.servicesByPeripheral.set(peripheral, services);
     }
 
-    private get state(): boolean {
+    public get state(): boolean {
         const adapterEnabled = isEnabled();
         return !!adapterEnabled;
     }

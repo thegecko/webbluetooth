@@ -26,8 +26,7 @@
 import { adapter } from './adapter/adapter';
 import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
-import { DOMEvent } from './events';
-import { CustomEventListener, isView } from "./common";
+import { CustomEventListener, isView } from './common';
 import type { BluetoothRemoteGATTService } from './service';
 
 /** @hidden Events for {@link BluetoothRemoteGATTCharacteristic} */
@@ -124,10 +123,10 @@ export class BluetoothRemoteGATTCharacteristic extends EventTarget {
     private setValue(value?: DataView, emit?: boolean) {
         this._value = value;
         if (emit) {
-            this.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+            this.dispatchEvent(new Event('characteristicvaluechanged', { bubbles: true }));
+            this.service.dispatchEvent(new Event('characteristicvaluechanged', { bubbles: true }));
+            this.service.device.dispatchEvent(new Event('characteristicvaluechanged', { bubbles: true }));
+            this.service.device._bluetooth.dispatchEvent(new Event('characteristicvaluechanged', { bubbles: true }));
         }
     }
 
