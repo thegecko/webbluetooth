@@ -19,7 +19,7 @@
     "bluetooth"
   ],
   "scripts": {
-    "install": "prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
+    "install": "ls -la SimpleBLE && ls -la SimpleBLE/simpleble && prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
     "clean": "yarn clean:cpp && yarn clean:ts",
     "clean:cpp": "cmake-js clean && git clean -fx ./prebuilds",
     "clean:ts": "git clean -fx ./dist ./docs",
