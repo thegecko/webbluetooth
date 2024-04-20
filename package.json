@@ -34,20 +34,20 @@
   },
   "dependencies": {
     "bindings": "^1.5.0",
-    "cmake-js": "^7.0.0",
-    "node-addon-api": "^7.0.0",
-    "prebuild-install": "^7.1.1"
+    "cmake-js": "^7.3.0",
+    "node-addon-api": "^8.0.0",
+    "prebuild-install": "^7.1.2"
   },
   "devDependencies": {
-    "@types/node": "^20.2.5",
+    "@types/node": "^20.12.7",
     "@types/web-bluetooth": "^0.0.20",
-    "@typescript-eslint/eslint-plugin": "^5.46.1",
-    "@typescript-eslint/parser": "^5.46.1",
-    "eslint": "^8.29.0",
-    "mocha": "^10.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.4.0",
     "prebuild": "^13.0.0",
-    "typedoc": "^0.25.1",
-    "typescript": "^4.9.4"
+    "typedoc": "^0.25.13",
+    "typescript": "^5.4.5"
   },
   "binary": {
     "napi_versions": [
