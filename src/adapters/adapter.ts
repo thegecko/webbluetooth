@@ -48,6 +48,9 @@ export interface Adapter extends EventEmitter {
     disableNotify: (handle: string) => Promise<void>;
     readDescriptor: (handle: string) => Promise<DataView>;
     writeDescriptor: (handle: string, value: DataView) => Promise<void>;
+    useHardwareAdapter: (adapterIndex: number) => void;
+    getHardwareAdapters: () => Array<HardwareAdapterDetails>;
+}
 
 /** Basic Hardware Details for an Hardware adapter. */
 export interface HardwareAdapterDetails {
