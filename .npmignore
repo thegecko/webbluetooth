@@ -1,9 +1,8 @@
-/.DS_Store
+.DS_Store
 .vscode
 .idea
 .gitignore
-/node_modules
-/build
-/src
-/index.html
-/firmware
+node_modules
+build
+index.html
+firmware
