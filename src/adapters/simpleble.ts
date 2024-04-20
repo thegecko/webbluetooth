@@ -85,10 +85,7 @@ export interface Peripheral {
 }
 
 /** SimpleBLE Adapter. */
-export interface Adapter {
-    identifier: string;
-    address: string;
-    active: boolean;
+export interface Adapter extends HardwareAdapterDetails {
     peripherals: Peripheral[];
     pairedPeripherals: Peripheral[];
     scanFor(ms: number): boolean;
