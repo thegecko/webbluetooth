@@ -2293,9 +2293,9 @@ prebuild-install@^7.1.1:
     tunnel-agent "^0.6.0"
 
 prebuild@^13.0.0:
-  version "13.0.0"
-  resolved "https://registry.yarnpkg.com/prebuild/-/prebuild-13.0.0.tgz#f156d103403a22726d1e28748e102a21512d02dd"
-  integrity sha512-KCcbv2keUKwcBxyRUdNNyk/iEInTTR6cDXfPCKy0ESz5l4KRe/q7vNzy5MmIb1ELDQQNCO5YfChHqTLOt/x8Eg==
+  version "13.0.1"
+  resolved "https://registry.yarnpkg.com/prebuild/-/prebuild-13.0.1.tgz#6e554d9e1b232044d4a26115ef8c8e088ad85d25"
+  integrity sha512-AR+ZoFfG2qQM5iCtNNBWlueuzlBWQdeiU+fBF7ZwbW2w5p/2Ep1+3G4AtAymrMfZn0yg3DoF+xCorh5hHOJY/Q==
   dependencies:
     cmake-js "^7.3.0"
     detect-libc "^2.0.2"
