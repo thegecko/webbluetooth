@@ -39,13 +39,13 @@
     "prebuild-install": "^7.1.2"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.12.12",
     "@types/web-bluetooth": "^0.0.20",
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
-    "@typescript-eslint/parser": "^7.7.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
     "eslint": "^8.57.0",
     "mocha": "^10.4.0",
-    "prebuild": "^13.0.0",
+    "prebuild": "^13.0.1",
     "typedoc": "^0.25.13",
     "typescript": "^5.4.5"
   },
