@@ -130,22 +130,22 @@ export class DOMEvent implements Event {
     /**
      * @hidden
      */
-    public AT_TARGET: number;
+    public AT_TARGET: 2;
 
     /**
      * @hidden
      */
-    public BUBBLING_PHASE: number;
+    public BUBBLING_PHASE: 3;
 
     /**
      * @hidden
      */
-    public CAPTURING_PHASE: number;
+    public CAPTURING_PHASE: 1;
 
     /**
      * @hidden
      */
-    public NONE: number;
+    public NONE: 0;
 
     constructor(target: EventTarget, type: string) {
         this.target = target;
