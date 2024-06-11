@@ -24,9 +24,9 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
-import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { BluetoothDevice, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher, DOMEvent } from './events';
+import { DOMEvent } from './events';
 
 /**
  * Bluetooth Options interface
@@ -54,7 +54,7 @@ export interface BluetoothOptions {
 }
 
 /**
- * @hidden
+ * Events for {@link Bluetooth}.
  */
 export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
@@ -64,9 +64,15 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
 }
 
 /**
- * Bluetooth class
+ * Bluetooth class.
+ * 
+ * ### Events
+ * 
+ * - `availabilitychanged` {@link Event} Bluetooth availability has changed.
+ * - `advertisementreceived` {@link Event} An advertisement has been received.
+ * - `gattserverdisconnected` {@link Event} GATT server has been disconnected.
  */
-export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
+export class Bluetooth extends EventTarget {
     /**
      * Referring device for the bluetooth instance
      */
@@ -76,6 +82,28 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
     private scanTime: number = 10.24 * 1000;
     private scanner = undefined;
     private allowedDevices = new Set<string>();
+
+    /**
+     * Bluetooth events.
+     *
+     * | Event | Description |
+     * | ----- | ----------- |
+     * | `availabilitychanged` | Bluetooth availability changed. |
+     * | `advertisementreceived` | Advertisement received. |
+     */
+    public addEventListener<K extends keyof BluetoothEvents>(
+        type: K,
+        callback: (this: this, event: BluetoothEvents[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @hidden */
+    public addEventListener(
+        type: string,
+        callback: EventListenerOrEventListenerObject | null,
+        options?: EventListenerOptions | boolean
+    ): void {
+        super.addEventListener(type, callback, options);
+    }
 
     /**
      * Bluetooth constructor
@@ -89,7 +117,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             this.scanTime = options.scanTime * 1000;
         }
 
-        adapter.on(EVENT_ENABLED, _value => {
+        adapter.addEventListener(EVENT_ENABLED, _value => {
             this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
         });
     }
@@ -178,7 +206,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDevice>, validServices): Partial<BluetoothDevice> | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -310,7 +338,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                 }
             }, this.scanTime);
 
-            adapter.startScan(searchUUIDs, deviceInfo => {
+            adapter.startScan(searchUUIDs, (deviceInfo: BluetoothDevice) => {
                 let validServices = [];
 
                 const complete = (bluetoothDevice: BluetoothDevice) => {
@@ -321,7 +349,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
-                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
+                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices) as BluetoothDevice;
                 }
 
                 if (deviceInfo) {
@@ -341,7 +369,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -372,14 +400,14 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                 resolve(devices);
             }, this.scanTime);
 
-            adapter.startScan([], deviceInfo => {
+            adapter.startScan([], (deviceInfo: BluetoothDevice) => {
                 if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
                     Object.assign(deviceInfo, {
                         _bluetooth: this,
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });

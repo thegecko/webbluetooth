@@ -23,12 +23,11 @@
 * SOFTWARE.
 */
 
-import { BluetoothRemoteGATTServerImpl } from './server';
+import { BluetoothRemoteGATTServer } from './server';
 import { ServiceEvents } from './service';
-import { EventDispatcher } from './events';
 
 /**
- * @hidden
+ * Events for {@link BluetoothDevice}.
  */
 export interface BluetoothDeviceEvents extends ServiceEvents {
     /**
@@ -44,7 +43,7 @@ export interface BluetoothDeviceEvents extends ServiceEvents {
 /**
  * Bluetooth Device class
  */
-export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
+export class BluetoothDevice extends EventTarget {
 
     /**
      * The unique identifier of the device
@@ -90,6 +89,21 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
      * @hidden
      */
     public readonly _serviceUUIDs: Array<string> = [];
+
+    /** Events. */
+    public addEventListener<K extends keyof BluetoothDeviceEvents>(
+        type: K,
+        callback: (this: this, event: BluetoothDeviceEvents[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @hidden */
+    public addEventListener(
+        type: string,
+        callback: EventListenerOrEventListenerObject | null,
+        options?: EventListenerOptions | boolean
+    ): void {
+        super.addEventListener(type, callback, options);
+    }
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
@@ -167,7 +181,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
      * Device constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothDeviceImpl>, private forgetFn: () => void) {
+    constructor(init: Partial<BluetoothDevice>, private forgetFn: () => void) {
         super();
 
         this.id = init.id;
@@ -180,7 +194,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this._serviceUUIDs = init._serviceUUIDs;
 
         if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServerImpl(this);
+        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServer(this);
     }
 
     /**

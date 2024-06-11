@@ -24,15 +24,15 @@
 */
 
 import { adapter } from './adapters';
-import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
+import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
-import { BluetoothRemoteGATTServiceImpl } from './service';
-import { EventDispatcher, DOMEvent } from './events';
+import { BluetoothRemoteGATTService } from './service';
+import { DOMEvent } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
- * @hidden
+ * Events for {@link BluetoothRemoteGATTCharacteristic}.
  */
 export interface CharacteristicEvents {
     /**
@@ -42,14 +42,18 @@ export interface CharacteristicEvents {
 }
 
 /**
- * Bluetooth Remote GATT Characteristic class
+ * Bluetooth Remote GATT Characteristic class.
+ * 
+ * ## Events
+ * 
+ * - "characteristicvaluechanged" {@link Event} The characteristic value has been changed.
  */
-export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
+export class BluetoothRemoteGATTCharacteristic extends EventTarget {
 
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTServiceImpl = undefined;
+    public readonly service: BluetoothRemoteGATTService = undefined;
 
     /**
      * The unique identifier of the characteristic
@@ -88,7 +92,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTCharacteristicImpl>) {
+    constructor(init: Partial<BluetoothRemoteGATTCharacteristic>) {
         super();
 
         this.service = init.service;
@@ -97,6 +101,28 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         this._value = init.value;
 
         this.handle = this.uuid;
+    }
+
+    /**
+     * Bluetooth events.
+     *
+     * | Event | Description |
+     * | ----- | ----------- |
+     * | `availabilitychanged` | Bluetooth availability changed. |
+     * | `advertisementreceived` | Advertisement received. |
+     */
+    public addEventListener<K extends keyof CharacteristicEvents>(
+        type: K,
+        callback: (this: this, event: CharacteristicEvents[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @hidden */
+    public addEventListener(
+        type: string,
+        callback: EventListenerOrEventListenerObject | null,
+        options?: EventListenerOptions | boolean
+    ): void {
+        super.addEventListener(type, callback, options);
     }
 
     private setValue(value?: DataView, emit?: boolean) {
@@ -147,7 +173,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
                 Object.assign(descriptorInfo, {
                     characteristic: this
                 });
-                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo);
+                return new BluetoothRemoteGATTDescriptor(descriptorInfo);
             });
         }
 
