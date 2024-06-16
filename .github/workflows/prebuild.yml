@@ -39,7 +39,7 @@ jobs:
       - if: matrix.node
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
           architecture: ${{ matrix.node }}
       - uses: actions/checkout@v4
         with:
