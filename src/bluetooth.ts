@@ -86,10 +86,11 @@ export class Bluetooth extends EventTarget {
     /**
      * Bluetooth events.
      *
-     * | Event | Description |
-     * | ----- | ----------- |
-     * | `availabilitychanged` | Bluetooth availability changed. |
-     * | `advertisementreceived` | Advertisement received. |
+     * | Name | Event | Description |
+     * | ---- | ----- | ----------- |
+     * | `availabilitychanged` | {@link Event} | Bluetooth availability changed. |
+     * | `advertisementreceived` | {@link Event} | Advertisement received. |
+     * | `gattserverdisconnected` | {@link Event} | GATT server has been disconnected. |
      */
     public addEventListener<K extends keyof BluetoothEvents>(
         type: K,
