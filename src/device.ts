@@ -42,9 +42,9 @@ export interface BluetoothDeviceEvents extends ServiceEvents {
 
 /**
  * Bluetooth Device class.
- * 
+ *
  * ### Events
- * 
+ *
  * | Name | Event | Description |
  * | ---- | ----- | ----------- |
  * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |

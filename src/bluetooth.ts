@@ -67,7 +67,7 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
  * Bluetooth class.
  *
  * ### Events
- * 
+ *
  * | Name | Event | Description |
  * | ---- | ----- | ----------- |
  * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
