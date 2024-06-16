@@ -44,9 +44,11 @@ export interface CharacteristicEvents {
 /**
  * Bluetooth Remote GATT Characteristic class.
  *
- * ## Events
- *
- * - "characteristicvaluechanged" {@link Event} The characteristic value has been changed.
+ * ### Events
+ * 
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
  */
 export class BluetoothRemoteGATTCharacteristic extends EventTarget {
 

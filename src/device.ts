@@ -41,7 +41,18 @@ export interface BluetoothDeviceEvents extends ServiceEvents {
 }
 
 /**
- * Bluetooth Device class
+ * Bluetooth Device class.
+ * 
+ * ### Events
+ * 
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | {@link Event} | GATT server has been disconnected. |
+ * | `serviceadded` | {@link Event} | A new service is available. |
+ * | `servicechanged` | {@link Event} | An existing service has changed. |
+ * | `serviceremoved` | {@link Event} | A service is unavailable. |
  */
 export class BluetoothDevice extends EventTarget {
 

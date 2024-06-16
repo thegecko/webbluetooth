@@ -48,7 +48,16 @@ export interface ServiceEvents extends CharacteristicEvents {
 }
 
 /**
- * Bluetooth Remote GATT Service class
+ * Bluetooth Remote GATT Service class.
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
+ * | `serviceadded` | {@link Event} | A new service is available. |
+ * | `servicechanged` | {@link Event} | An existing service has changed. |
+ * | `serviceremoved` | {@link Event} | A service is unavailable. |
  */
 export class BluetoothRemoteGATTService extends EventTarget {
 

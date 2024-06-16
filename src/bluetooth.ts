@@ -60,17 +60,23 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
      * Bluetooth Availability Changed event
      */
-    availabilitychanged: Event;
+    availabilitychanged: BluetoothAdvertisingEvent;
 }
 
 /**
  * Bluetooth class.
  *
  * ### Events
- *
- * - `availabilitychanged` {@link Event} Bluetooth availability has changed.
- * - `advertisementreceived` {@link Event} An advertisement has been received.
- * - `gattserverdisconnected` {@link Event} GATT server has been disconnected.
+ * 
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `availabilitychanged` | {@link Event} | Bluetooth availability changed. |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | {@link Event} | GATT server has been disconnected. |
+ * | `serviceadded` | {@link Event} | A new service is available. |
+ * | `servicechanged` | {@link Event} | An existing service has changed. |
+ * | `serviceremoved` | {@link Event} | A service is unavailable. |
  */
 export class Bluetooth extends EventTarget {
     /**
@@ -83,15 +89,6 @@ export class Bluetooth extends EventTarget {
     private scanner = undefined;
     private allowedDevices = new Set<string>();
 
-    /**
-     * Bluetooth events.
-     *
-     * | Name | Event | Description |
-     * | ---- | ----- | ----------- |
-     * | `availabilitychanged` | {@link Event} | Bluetooth availability changed. |
-     * | `advertisementreceived` | {@link Event} | Advertisement received. |
-     * | `gattserverdisconnected` | {@link Event} | GATT server has been disconnected. |
-     */
     public addEventListener<K extends keyof BluetoothEvents>(
         type: K,
         callback: (this: this, event: BluetoothEvents[K]) => void,
@@ -195,8 +192,8 @@ export class Bluetooth extends EventTarget {
         }
     }
 
-    private _onavailabilitychanged: (ev: Event) => void;
-    public set onavailabilitychanged(fn: (ev: Event) => void) {
+    private _onavailabilitychanged: (ev: BluetoothAdvertisingEvent) => void;
+    public set onavailabilitychanged(fn: (ev: BluetoothAdvertisingEvent) => void) {
         if (this._onavailabilitychanged) {
             this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
             this._onavailabilitychanged = undefined;
