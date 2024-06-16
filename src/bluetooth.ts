@@ -65,9 +65,9 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
 
 /**
  * Bluetooth class.
- * 
+ *
  * ### Events
- * 
+ *
  * - `availabilitychanged` {@link Event} Bluetooth availability has changed.
  * - `advertisementreceived` {@link Event} An advertisement has been received.
  * - `gattserverdisconnected` {@link Event} GATT server has been disconnected.
