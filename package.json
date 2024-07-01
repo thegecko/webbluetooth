@@ -44,7 +44,7 @@
     "@types/web-bluetooth": "^0.0.20",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "^7.10.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.6.0",
     "mocha": "^10.4.0",
     "prebuild": "^13.0.1",
     "typedoc": "^0.26.2",
