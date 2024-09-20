@@ -23,6 +23,8 @@
 * SOFTWARE.
 */
 
+import { HardwareAdapterDetails } from './adapter';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const simpleble = require('bindings')('simpleble.node');
 module.exports = simpleble;
@@ -85,10 +87,7 @@ export interface Peripheral {
 }
 
 /** SimpleBLE Adapter. */
-export interface Adapter {
-    identifier: string;
-    address: string;
-    active: boolean;
+export interface Adapter extends HardwareAdapterDetails {
     peripherals: Peripheral[];
     pairedPeripherals: Peripheral[];
     scanFor(ms: number): boolean;
