@@ -21,6 +21,14 @@ See the [examples](https://github.com/thegecko/webbluetooth/tree/master/examples
 
 https://thegecko.github.io/webbluetooth/
 
+## Supported Platforms
+
+Binaries are built to support the following platforms:
+
+- MacOS (x64 and arm64)
+- Windows (x86 and x64)
+- Linux (x64 glibc)
+
 ## Usage
 
 The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and the Bluetooth helper methods:
