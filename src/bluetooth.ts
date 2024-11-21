@@ -27,6 +27,7 @@ import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
 import { EventDispatcher, DOMEvent } from './events';
+import { HardwareAdapterDetails } from './adapters/adapter';
 
 /**
  * Bluetooth Options interface
@@ -51,6 +52,11 @@ export interface BluetoothOptions {
      * An optional referring device
      */
     referringDevice?: BluetoothDevice;
+
+    /**
+     * An optional BLE Hardware Adapter index to use
+     */
+    hardwareAdapterIndex?: number;
 }
 
 /**
@@ -87,6 +93,9 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         this.deviceFound = options.deviceFound;
         if (options.scanTime) {
             this.scanTime = options.scanTime * 1000;
+        }
+        if (typeof options.hardwareAdapterIndex === 'number') {
+            adapter.useHardwareAdapter(options.hardwareAdapterIndex);
         }
 
         adapter.on(EVENT_ENABLED, _value => {
@@ -404,4 +413,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
     public requestLEScan(_options?: BluetoothLEScanOptions): Promise<BluetoothLEScan> {
         throw new Error('requestLEScan error: method not implemented.');
     }
+}
+
+export function getHardwareAdapters(): HardwareAdapterDetails[] {
+    return adapter.getHardwareAdapters();
 }
