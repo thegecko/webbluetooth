@@ -24,13 +24,13 @@
 */
 
 import { adapter } from './adapters';
-import { BluetoothDeviceImpl } from './device';
-import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
+import { BluetoothDevice } from './device';
+import { BluetoothRemoteGATTCharacteristic, CharacteristicEvents } from './characteristic';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher, DOMEvent } from './events';
+import { DOMEvent } from './events';
 
 /**
- * @hidden
+ * Events for {@link BluetoothRemoteGATTService}.
  */
 export interface ServiceEvents extends CharacteristicEvents {
     /**
@@ -48,14 +48,23 @@ export interface ServiceEvents extends CharacteristicEvents {
 }
 
 /**
- * Bluetooth Remote GATT Service class
+ * Bluetooth Remote GATT Service class.
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
+ * | `serviceadded` | {@link Event} | A new service is available. |
+ * | `servicechanged` | {@link Event} | An existing service has changed. |
+ * | `serviceremoved` | {@link Event} | A service is unavailable. |
  */
-export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvents> implements BluetoothRemoteGATTService {
+export class BluetoothRemoteGATTService extends EventTarget {
 
     /**
      * The device the service is related to
      */
-    public readonly device: BluetoothDeviceImpl = undefined;
+    public readonly device: BluetoothDevice = undefined;
 
     /**
      * The unique identifier of the service
@@ -70,6 +79,20 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
     private handle: string = undefined;
     private services: Array<BluetoothRemoteGATTService> = undefined;
     private characteristics: Array<BluetoothRemoteGATTCharacteristic> = undefined;
+
+    public addEventListener<K extends keyof ServiceEvents>(
+        type: K,
+        callback: (this: this, event: ServiceEvents[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @hidden */
+    public addEventListener(
+        type: string,
+        callback: EventListenerOrEventListenerObject | null,
+        options?: EventListenerOptions | boolean
+    ): void {
+        super.addEventListener(type, callback, options);
+    }
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
@@ -123,7 +146,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTServiceImpl>) {
+    constructor(init: Partial<BluetoothRemoteGATTService>) {
         super();
 
         this.device = init.device;
@@ -175,7 +198,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
                 Object.assign(characteristicInfo, {
                     service: this
                 });
-                return new BluetoothRemoteGATTCharacteristicImpl(characteristicInfo);
+                return new BluetoothRemoteGATTCharacteristic(characteristicInfo);
             });
         }
 
@@ -233,7 +256,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
                 Object.assign(serviceInfo, {
                     device: this.device
                 });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTService(serviceInfo);
             });
         }
 
