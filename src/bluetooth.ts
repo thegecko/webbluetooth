@@ -24,9 +24,9 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
-import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { BluetoothDevice, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher, DOMEvent } from './events';
+import { DOMEvent } from './events';
 
 /**
  * Bluetooth Options interface
@@ -54,19 +54,31 @@ export interface BluetoothOptions {
 }
 
 /**
- * @hidden
+ * Events for {@link Bluetooth}.
  */
 export interface BluetoothEvents extends BluetoothDeviceEvents {
     /**
      * Bluetooth Availability Changed event
      */
-    availabilitychanged: Event;
+    availabilitychanged: BluetoothAdvertisingEvent;
 }
 
 /**
- * Bluetooth class
+ * Bluetooth class.
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `availabilitychanged` | {@link Event} | Bluetooth availability changed. |
+ * | `characteristicvaluechanged` | {@link Event} | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | {@link Event} | GATT server has been disconnected. |
+ * | `serviceadded` | {@link Event} | A new service is available. |
+ * | `servicechanged` | {@link Event} | An existing service has changed. |
+ * | `serviceremoved` | {@link Event} | A service is unavailable. |
  */
-export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
+export class Bluetooth extends EventTarget {
     /**
      * Referring device for the bluetooth instance
      */
@@ -76,6 +88,20 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
     private scanTime: number = 10.24 * 1000;
     private scanner = undefined;
     private allowedDevices = new Set<string>();
+
+    public addEventListener<K extends keyof BluetoothEvents>(
+        type: K,
+        callback: (this: this, event: BluetoothEvents[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @hidden */
+    public addEventListener(
+        type: string,
+        callback: EventListenerOrEventListenerObject | null,
+        options?: EventListenerOptions | boolean
+    ): void {
+        super.addEventListener(type, callback, options);
+    }
 
     /**
      * Bluetooth constructor
@@ -89,7 +115,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             this.scanTime = options.scanTime * 1000;
         }
 
-        adapter.on(EVENT_ENABLED, _value => {
+        adapter.addEventListener(EVENT_ENABLED, _value => {
             this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
         });
     }
@@ -166,8 +192,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onavailabilitychanged: (ev: Event) => void;
-    public set onavailabilitychanged(fn: (ev: Event) => void) {
+    private _onavailabilitychanged: (ev: BluetoothAdvertisingEvent) => void;
+    public set onavailabilitychanged(fn: (ev: BluetoothAdvertisingEvent) => void) {
         if (this._onavailabilitychanged) {
             this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
             this._onavailabilitychanged = undefined;
@@ -178,7 +204,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDevice>, validServices): Partial<BluetoothDevice> | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -310,7 +336,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                 }
             }, this.scanTime);
 
-            adapter.startScan(searchUUIDs, deviceInfo => {
+            adapter.startScan(searchUUIDs, (deviceInfo: BluetoothDevice) => {
                 let validServices = [];
 
                 const complete = (bluetoothDevice: BluetoothDevice) => {
@@ -321,7 +347,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
-                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
+                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices) as BluetoothDevice;
                 }
 
                 if (deviceInfo) {
@@ -341,7 +367,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -372,14 +398,14 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                 resolve(devices);
             }, this.scanTime);
 
-            adapter.startScan([], deviceInfo => {
+            adapter.startScan([], (deviceInfo: BluetoothDevice) => {
                 if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
                     Object.assign(deviceInfo, {
                         _bluetooth: this,
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });
