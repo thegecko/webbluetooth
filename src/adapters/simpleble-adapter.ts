@@ -23,13 +23,12 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from 'events';
 import { Adapter as BluetoothAdapter } from './adapter';
 import { BluetoothUUID } from '../uuid';
-import { BluetoothDeviceImpl } from '../device';
-import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import { BluetoothRemoteGATTServiceImpl } from '../service';
-import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
+import { BluetoothDevice } from '../device';
+import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
+import { BluetoothRemoteGATTService } from '../service';
+import { BluetoothRemoteGATTDescriptor } from '../descriptor';
 import {
     isEnabled,
     getAdapters,
@@ -42,7 +41,7 @@ import {
 /**
  * @hidden
  */
-export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
+export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
     private adapter: Adapter;
     private peripherals = new Map<string, Peripheral>();
     private servicesByPeripheral = new Map<Peripheral, Service[]>();
@@ -53,7 +52,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private descriptors = new Map<string, string[]>();
     private charEvents = new Map<string, (value: DataView) => void>();
 
-    private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
@@ -70,7 +69,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
-    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDeviceImpl> {
+    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDevice> {
         const name = device.identifier;
         const address = device.address;
         const rssi = device.rssi;
@@ -215,7 +214,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         }
     }
 
-    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         const peripheral = this.peripherals.get(id);
         if (!peripheral) {
             throw new Error('Peripheral not found');
@@ -234,12 +233,12 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         // Currently not implemented
         return [];
     }
 
-    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
+    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
         const peripheral = this.peripheralByService.get(serviceUuid);
         const characteristics = this.characteristicsByService.get(serviceUuid);
         const discovered = [];
@@ -288,7 +287,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
+    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
         const descriptors = this.descriptors.get(charUuid);
         const discovered = [];
 
