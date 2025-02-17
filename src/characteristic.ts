@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -69,7 +69,10 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         return this._value;
     }
 
-    private handle: string = undefined;
+    /**
+     * @hidden
+     */
+    public _handle: string = undefined;
     private descriptors: Array<BluetoothRemoteGATTDescriptor> = undefined;
 
     private _oncharacteristicvaluechanged: (ev: Event) => void;
@@ -95,8 +98,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         this.uuid = init.uuid;
         this.properties = init.properties;
         this._value = init.value;
-
-        this.handle = this.uuid;
+        this._handle = init._handle;
     }
 
     private setValue(value?: DataView, emit?: boolean) {
@@ -142,7 +144,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         }
 
         if (!this.descriptors) {
-            const descriptors = await adapter.discoverDescriptors(this.handle);
+            const descriptors = await adapter.discoverDescriptors(this._handle);
             this.descriptors = descriptors.map(descriptorInfo => {
                 Object.assign(descriptorInfo, {
                     characteristic: this
@@ -172,7 +174,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
             throw new Error('readValue error: device not connected');
         }
 
-        const dataView = await adapter.readCharacteristic(this.handle);
+        const dataView = await adapter.readCharacteristic(this._handle);
         this.setValue(dataView, true);
         return dataView;
     }
@@ -189,7 +191,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         const arrayBuffer = isView(value) ? value.buffer : value;
         const dataView = new DataView(arrayBuffer);
 
-        await adapter.writeCharacteristic(this.handle, dataView);
+        await adapter.writeCharacteristic(this._handle, dataView);
         this.setValue(dataView);
     }
 
@@ -205,7 +207,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         const arrayBuffer = isView(value) ? value.buffer : value;
         const dataView = new DataView(arrayBuffer);
 
-        await adapter.writeCharacteristic(this.handle, dataView, false);
+        await adapter.writeCharacteristic(this._handle, dataView, false);
         this.setValue(dataView);
     }
 
@@ -221,7 +223,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         const arrayBuffer = isView(value) ? value.buffer : value;
         const dataView = new DataView(arrayBuffer);
 
-        await adapter.writeCharacteristic(this.handle, dataView, true);
+        await adapter.writeCharacteristic(this._handle, dataView, true);
         this.setValue(dataView);
     }
 
@@ -234,7 +236,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
             throw new Error('startNotifications error: device not connected');
         }
 
-        await adapter.enableNotify(this.handle, dataView => {
+        await adapter.enableNotify(this._handle, dataView => {
             this.setValue(dataView, true);
         });
 
@@ -250,7 +252,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
             throw new Error('stopNotifications error: device not connected');
         }
 
-        await adapter.disableNotify(this.handle);
+        await adapter.disableNotify(this._handle);
         return this;
     }
 }

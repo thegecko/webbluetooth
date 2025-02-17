@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -47,7 +47,10 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         return this._connected;
     }
 
-    private handle: string = undefined;
+    /**
+    * @hidden
+    */
+    public _handle: string = undefined;
     private services: Array<BluetoothRemoteGATTService> = undefined;
 
     /**
@@ -56,7 +59,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
      */
     constructor(device: BluetoothDeviceImpl) {
         this.device = device;
-        this.handle = this.device.id;
+        this._handle = this.device.id;
     }
 
     /**
@@ -68,7 +71,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
             throw new Error('connect error: device already connected');
         }
 
-        await adapter.connect(this.handle, () => {
+        await adapter.connect(this._handle, () => {
             this.services = undefined;
             this._connected = false;
             this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
@@ -83,7 +86,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
      * Disconnect the gatt server
      */
     public disconnect(): void {
-        adapter.disconnect(this.handle);
+        adapter.disconnect(this._handle);
         this._connected = false;
     }
 
@@ -120,7 +123,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         }
 
         if (!this.services) {
-            const services = await adapter.discoverServices(this.handle, this.device._allowedServices);
+            const services = await adapter.discoverServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
                 Object.assign(serviceInfo, {
                     device: this.device
