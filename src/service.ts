@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -67,7 +67,11 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
      */
     public readonly isPrimary: boolean = false;
 
-    private handle: string = undefined;
+
+    /**
+     * @hidden
+     */
+    public _handle: string = undefined;
     private services: Array<BluetoothRemoteGATTService> = undefined;
     private characteristics: Array<BluetoothRemoteGATTCharacteristic> = undefined;
 
@@ -129,8 +133,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         this.device = init.device;
         this.uuid = init.uuid;
         this.isPrimary = init.isPrimary;
-
-        this.handle = this.uuid;
+        this._handle = init._handle;
 
         this.dispatchEvent(new DOMEvent(this, 'serviceadded'));
         this.device.dispatchEvent(new DOMEvent(this, 'serviceadded'));
@@ -170,7 +173,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
 
         if (!this.characteristics) {
-            const characteristics = await adapter.discoverCharacteristics(this.handle);
+            const characteristics = await adapter.discoverCharacteristics(this._handle);
             this.characteristics = characteristics.map(characteristicInfo => {
                 Object.assign(characteristicInfo, {
                     service: this
@@ -228,7 +231,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
 
         if (!this.services) {
-            const services = await adapter.discoverIncludedServices(this.handle, this.device._allowedServices);
+            const services = await adapter.discoverIncludedServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
                 Object.assign(serviceInfo, {
                     device: this.device
