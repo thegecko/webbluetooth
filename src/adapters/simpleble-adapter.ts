@@ -73,8 +73,11 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDeviceImpl> {
         const name = device.identifier;
         const address = device.address;
+
         const rssi = device.rssi;
         const txPower = device.txPower;
+        const mtu = device.mtu;
+
         const id = address || `${name}`;
 
         const serviceUUIDs: string[] = [];
@@ -99,6 +102,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             _adData: {
                 rssi,
                 txPower,
+                mtu,
                 serviceData,
                 manufacturerData
             }

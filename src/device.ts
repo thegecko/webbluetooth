@@ -72,6 +72,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     public readonly _adData: {
         rssi?: number;
         txPower?: number;
+        mtu?: number;
         serviceData?: BluetoothServiceData;
         manufacturerData?: BluetoothManufacturerData;
     };
