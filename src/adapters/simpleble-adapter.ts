@@ -53,6 +53,24 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private descriptors = new Map<string, string[]>();
     private charEvents = new Map<string, (value: DataView) => void>();
 
+    getHardwareAdapters() {
+        return getAdapters().map(
+            ({ identifier, address, active }) =>
+                ({ identifier, address, active })
+        );
+    }
+
+    useHardwareAdapter(adapterIndex: number) {
+        if (this.adapter !== undefined) {
+            throw new Error('Can not change adapter after already used.');
+        }
+        const adapter = getAdapters()[adapterIndex];
+        if (adapter === undefined) {
+            throw new Error(`Adapter ${adapterIndex} not found.`);
+        }
+        this.adapter = getAdapters()[adapterIndex];
+    }
+
     private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
