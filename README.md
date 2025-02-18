@@ -17,9 +17,17 @@ $ npm install webbluetooth
 
 ## Getting Started
 
-See the [examples](https://github.com/thegecko/webbluetooth/tree/master/examples/) or view the API documentation at:
+See the [examples](https://github.com/thegecko/webbluetooth/tree/main/examples/) or view the API documentation at:
 
 https://thegecko.github.io/webbluetooth/
+
+## Supported Platforms
+
+Binaries are built to support the following platforms:
+
+- MacOS (x64 and arm64)
+- Windows (x86 and x64)
+- Linux (x64 glibc)
 
 ## Usage
 
@@ -218,7 +226,7 @@ The tests are set up to use a BBC micro:bit in range with the following services
 - LED Service (e95dd91d-251d-470a-a062-fa1922dfa9a8)
 - Button Service (e95d9882-251d-470a-a062-fa1922dfa9a8)
 
-Sample code and hex file for the v2 micro:bit can be found in the [firmware folder](https://github.com/thegecko/webbluetooth/tree/master/firmware).
+Sample code and hex file for the v2 micro:bit can be found in the [firmware folder](https://github.com/thegecko/webbluetooth/tree/main/firmware).
 
 To run the tests:
 

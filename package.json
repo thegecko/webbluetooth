@@ -40,14 +40,14 @@
     "prebuild-install": "^7.1.2"
   },
   "devDependencies": {
-    "@types/node": "^20.12.12",
+    "@types/node": "^22.0.0",
     "@types/web-bluetooth": "^0.0.20",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "^7.10.0",
     "eslint": "^8.57.0",
-    "mocha": "^10.4.0",
+    "mocha": "^11.0.1",
     "prebuild": "^13.0.1",
-    "typedoc": "^0.26.2",
+    "typedoc": "^0.27.2",
     "typescript": "^5.4.5"
   },
   "binary": {
