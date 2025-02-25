@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2022 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,11 +23,11 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from 'events';
-import { BluetoothDeviceImpl } from '../device';
-import { BluetoothRemoteGATTServiceImpl } from '../service';
-import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
+import type { EventEmitter } from 'events';
+import type { BluetoothDeviceImpl } from '../device';
+import type { BluetoothRemoteGATTServiceImpl } from '../service';
+import type { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
+import type { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
 
 /**
  * @hidden
@@ -44,7 +44,7 @@ export interface Adapter extends EventEmitter {
     discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>>;
     readCharacteristic: (handle: string) => Promise<DataView>;
     writeCharacteristic: (handle: string, value: DataView, withoutResponse?: boolean) => Promise<void>;
-    enableNotify: (handle: string, notifyFn: () => void) => Promise<void>;
+    enableNotify: (handle: string, notifyFn: (value: DataView) => void) => Promise<void>;
     disableNotify: (handle: string) => Promise<void>;
     readDescriptor: (handle: string) => Promise<DataView>;
     writeDescriptor: (handle: string, value: DataView) => Promise<void>;
