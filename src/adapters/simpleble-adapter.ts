@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2023 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -36,8 +36,135 @@ import {
     Adapter,
     Peripheral,
     Service,
-    Characteristic
+    Characteristic,
+    Descriptor
 } from './simpleble';
+
+/**
+ * @hidden
+ */
+class PeripheralHandles {
+    private handleCounter = 0;
+    private peripheralChildren = new Map<Peripheral, string[]>();
+
+    private children = new Map<string, string[]>();
+    private parents = new Map<string, string>();
+
+    private services = new Map<string, Service>();
+    private characteristics = new Map<string, Characteristic>();
+    private descriptors = new Map<string, Descriptor>();
+
+    public constructor(private peripherals: Map<string, Peripheral>) {
+    }
+
+    public characteristicEvents = new Map<string, (value: DataView) => void>();
+
+    public createHandles(peripheral: Peripheral): void {
+        const services: string[] = [];
+        for (const service of peripheral.services) {
+            const serviceHandle = `${this.handleCounter++}`;
+            this.parents.set(serviceHandle, peripheral.address);
+            this.services.set(serviceHandle, service);
+            services.push(serviceHandle);
+
+            const characteristics: string[] = [];
+            for (const characteristic of service.characteristics) {
+                const characteristicHandle = `${this.handleCounter++}`;
+                this.parents.set(characteristicHandle, serviceHandle);
+                this.characteristics.set(characteristicHandle, characteristic);
+                characteristics.push(characteristicHandle);
+
+                const descriptors: string[] = [];
+                for (const descriptor of characteristic.descriptors) {
+                    const descHandle = `${this.handleCounter++}`;
+                    this.parents.set(descHandle, characteristicHandle);
+                    this.descriptors.set(descHandle, descriptor);
+                    descriptors.push(descHandle);
+                }
+                this.children.set(characteristicHandle, descriptors);
+            }
+            this.children.set(serviceHandle, characteristics);
+        }
+
+        this.children.set(peripheral.address, services);
+    }
+
+    public deleteHandles(peripheral: Peripheral): void {
+        const children = this.peripheralChildren.get(peripheral);
+        for (const child of children) {
+            this.children.delete(child);
+            this.parents.delete(child);
+            this.services.delete(child);
+            this.characteristics.delete(child);
+            this.descriptors.delete(child);
+            this.characteristicEvents.delete(child);
+        }
+        this.peripheralChildren.delete(peripheral);
+    }
+
+    public getServices(deviceHandle: string): { [key: string]: Service } {
+        const children = this.children.get(deviceHandle);
+        const services: { [key: string]: Service } = {};
+
+        for (const child of children) {
+            services[child] = this.services.get(child);
+        }
+
+        return services;
+    }
+
+    public getCharacteristics(serviceHandle: string): { peripheral: Peripheral, service: Service, characteristics: { [key: string]: Characteristic } } {
+        const children = this.children.get(serviceHandle);
+        const characteristics: { [key: string]: Characteristic } = {};
+
+        for (const child of children) {
+            characteristics[child] = this.characteristics.get(child);
+        }
+
+        const peripheralHandle = this.parents.get(serviceHandle);
+
+        return {
+            peripheral: this.peripherals.get(peripheralHandle),
+            service: this.services.get(serviceHandle),
+            characteristics
+        };
+    }
+
+    public getDescriptors(characteristicHandle: string): { [key: string]: Descriptor } {
+        const children = this.children.get(characteristicHandle);
+        const descriptors: { [key: string]: Descriptor } = {};
+
+        for (const child of children) {
+            descriptors[child] = this.descriptors.get(child);
+        }
+
+        return descriptors;
+    }
+
+    public getCharacteristicGraph(characteristicHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic } {
+        const serviceHandle = this.parents.get(characteristicHandle);
+        const peripheralHandle = this.parents.get(serviceHandle);
+
+        return {
+            peripheral: this.peripherals.get(peripheralHandle),
+            service: this.services.get(serviceHandle),
+            characteristic: this.characteristics.get(characteristicHandle)
+        };
+    }
+
+    public getDescriptorGraph(descriptorHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic, descriptor: Descriptor } {
+        const characteristicHandle = this.parents.get(descriptorHandle);
+        const serviceHandle = this.parents.get(characteristicHandle);
+        const peripheralHandle = this.parents.get(serviceHandle);
+
+        return {
+            peripheral: this.peripherals.get(peripheralHandle),
+            service: this.services.get(serviceHandle),
+            characteristic: this.characteristics.get(characteristicHandle),
+            descriptor: this.descriptors.get(descriptorHandle)
+        };
+    }
+}
 
 /**
  * @hidden
@@ -45,13 +172,7 @@ import {
 export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private adapter: Adapter;
     private peripherals = new Map<string, Peripheral>();
-    private servicesByPeripheral = new Map<Peripheral, Service[]>();
-    private peripheralByService = new Map<string, Peripheral>();
-    private serviceByCharacteristic = new Map<string, string>();
-    private characteristicsByService = new Map<string, Characteristic[]>();
-    private characteristicByDescriptor = new Map<string, { char: string, desc: string }>();
-    private descriptors = new Map<string, string[]>();
-    private charEvents = new Map<string, (value: DataView) => void>();
+    private handles = new PeripheralHandles(this.peripherals);
 
     getHardwareAdapters() {
         return getAdapters().map(
@@ -91,8 +212,11 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDeviceImpl> {
         const name = device.identifier;
         const address = device.address;
+
         const rssi = device.rssi;
         const txPower = device.txPower;
+        const mtu = device.mtu;
+
         const id = address || `${name}`;
 
         const serviceUUIDs: string[] = [];
@@ -117,41 +241,11 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             _adData: {
                 rssi,
                 txPower,
+                mtu,
                 serviceData,
                 manufacturerData
             }
         };
-    }
-
-    private enumerate(peripheral: Peripheral): void {
-        this.servicesByPeripheral.clear();
-        this.peripheralByService.clear();
-        this.serviceByCharacteristic.clear();
-        this.characteristicsByService.clear();
-        this.characteristicByDescriptor.clear();
-        this.descriptors.clear();
-        this.charEvents.clear();
-
-        const services: Service[] = [];
-        for (const service of peripheral.services) {
-            const serviceUUID = BluetoothUUID.canonicalUUID(service.uuid);
-
-            this.characteristicsByService.set(serviceUUID, service.characteristics);
-
-            for (const char of service.characteristics) {
-                this.serviceByCharacteristic.set(char.uuid, serviceUUID);
-                this.descriptors.set(char.uuid, char.descriptors);
-
-                for (const desc of char.descriptors) {
-                    this.characteristicByDescriptor.set(`${char.uuid}-${desc}`, { char: char.uuid, desc });
-                }
-            }
-
-            this.peripheralByService.set(service.uuid, peripheral);
-            services.push(service);
-        }
-
-        this.servicesByPeripheral.set(peripheral, services);
     }
 
     private get state(): boolean {
@@ -172,10 +266,12 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             this.adapter = getAdapters()[0];
         }
 
+        const foundPeripherals: string[] = [];
         this.adapter.setCallbackOnScanFound(peripheral => {
             const device = this.buildBluetoothDevice(peripheral);
             if (this.validDevice(device, serviceUUIDs)) {
-                if (!this.peripherals.has(device.id)) {
+                if (!foundPeripherals.includes(device.id)) {
+                    foundPeripherals.push(device.id);
                     this.peripherals.set(device.id, peripheral);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
@@ -183,7 +279,6 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             }
         });
 
-        this.peripherals.clear();
         const success = this.adapter.scanStart();
         if (!success) {
             throw new Error('scan start failed');
@@ -199,8 +294,8 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         }
     }
 
-    public async connect(id: string, disconnectFn?: () => void): Promise<void> {
-        const peripheral = this.peripherals.get(id);
+    public async connect(handle: string, disconnectFn?: () => void): Promise<void> {
+        const peripheral = this.peripherals.get(handle);
         if (!peripheral) {
             throw new Error('Peripheral not found');
         }
@@ -214,35 +309,36 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
             throw new Error('Connect failed');
         }
 
-        this.enumerate(peripheral);
-
         if (disconnectFn) {
             peripheral.setCallbackOnDisconnected(() => disconnectFn());
         }
+
+        this.handles.createHandles(peripheral);
     }
 
-    public async disconnect(id: string): Promise<void> {
-        const peripheral = this.peripherals.get(id);
+    public async disconnect(handle: string): Promise<void> {
+        const peripheral = this.peripherals.get(handle);
         if (!peripheral) {
             throw new Error('Peripheral not found');
         }
 
         const success = peripheral.disconnect();
+
         if (!success) {
             throw new Error('Disconnect failed');
         }
+
+        this.handles.deleteHandles(peripheral);
     }
 
-    public async discoverServices(id: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
-        const peripheral = this.peripherals.get(id);
-        if (!peripheral) {
-            throw new Error('Peripheral not found');
-        }
+    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+        const services = this.handles.getServices(handle);
 
-        const discovered = [];
-        for (const service of peripheral.services) {
+        const discovered: Partial<BluetoothRemoteGATTServiceImpl>[] = [];
+        for (const [handle, service] of Object.entries(services)) {
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(service.uuid) >= 0) {
                 discovered.push({
+                    _handle: handle,
                     uuid: service.uuid,
                     isPrimary: true
                 });
@@ -257,46 +353,47 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return [];
     }
 
-    public async discoverCharacteristics(serviceUuid: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
-        const peripheral = this.peripheralByService.get(serviceUuid);
-        const characteristics = this.characteristicsByService.get(serviceUuid);
-        const discovered = [];
+    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
+        const { peripheral, service, characteristics } = this.handles.getCharacteristics(handle);
 
-        for (const characteristic of characteristics) {
+        const discovered: Partial<BluetoothRemoteGATTCharacteristicImpl>[] = [];
+
+        for (const [handle, characteristic] of Object.entries(characteristics)) {
             const charUUID = BluetoothUUID.canonicalUUID(characteristic.uuid);
 
             if (!characteristicUUIDs || characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(charUUID) >= 0) {
 
                 discovered.push({
+                    _handle: handle,
                     uuid: charUUID,
                     properties: {
                         // Not all of these are supported in SimpleBle
-                        // broadcast: characteristic.capabilities.includes('???'),
+                        broadcast: false, // characteristic.capabilities.includes('???'),
                         read: characteristic.canRead,
                         writeWithoutResponse: characteristic.canWriteRequest,
                         write: characteristic.canWriteCommand,
                         notify: characteristic.canNotify,
                         indicate: characteristic.canIndicate,
-                        // authenticatedSignedWrites: characteristic.capabilities.includes('???'),
-                        // reliableWrite: characteristic.capabilities.includes('???'),
-                        // writableAuxiliaries: characteristic.capabilities.includes('???'),
+                        authenticatedSignedWrites: false, // characteristic.capabilities.includes('???'),
+                        reliableWrite: false, // characteristic.capabilities.includes('???'),
+                        writableAuxiliaries: false // characteristic.capabilities.includes('???'),
                     }
                 });
 
                 if (characteristic.canIndicate) {
-                    peripheral.indicate(serviceUuid, charUUID, data => {
-                        if (this.charEvents.has(charUUID)) {
+                    peripheral.indicate(service.uuid, charUUID, data => {
+                        if (this.handles.characteristicEvents.has(handle)) {
                             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            this.charEvents.get(charUUID)!(new DataView(data.buffer));
+                            this.handles.characteristicEvents.get(handle)!(new DataView(data.buffer));
                         }
                     });
                 }
 
                 if (characteristic.canNotify) {
-                    peripheral.notify(serviceUuid, charUUID, data => {
-                        if (this.charEvents.has(charUUID)) {
+                    peripheral.notify(service.uuid, charUUID, data => {
+                        if (this.handles.characteristicEvents.has(handle)) {
                             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            this.charEvents.get(charUUID)!(new DataView(data.buffer));
+                            this.handles.characteristicEvents.get(handle)!(new DataView(data.buffer));
                         }
                     });
                 }
@@ -306,15 +403,16 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverDescriptors(charUuid: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
-        const descriptors = this.descriptors.get(charUuid);
+    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
+        const descriptors = this.handles.getDescriptors(handle);
         const discovered = [];
 
-        for (const descriptor of descriptors) {
+        for (const [handle, descriptor] of Object.entries(descriptors)) {
             const descUUID = BluetoothUUID.canonicalUUID(descriptor);
 
             if (!descriptorUUIDs || descriptorUUIDs.length === 0 || descriptorUUIDs.indexOf(descUUID) >= 0) {
                 discovered.push({
+                    _handle: handle,
                     uuid: descUUID
                 });
             }
@@ -323,22 +421,20 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async readCharacteristic(charUuid: string): Promise<DataView> {
-        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const peripheral = this.peripheralByService.get(serviceUuid);
-        const data = peripheral.read(serviceUuid, charUuid);
+    public async readCharacteristic(handle: string): Promise<DataView> {
+        const { peripheral, service, characteristic } = this.handles.getCharacteristicGraph(handle);
+        const data = peripheral.read(service.uuid, characteristic.uuid);
         return new DataView(data.buffer);
     }
 
-    public async writeCharacteristic(charUuid: string, value: DataView, withoutResponse = false): Promise<void> {
-        const serviceUuid = this.serviceByCharacteristic.get(charUuid);
-        const peripheral = this.peripheralByService.get(serviceUuid);
+    public async writeCharacteristic(handle: string, value: DataView, withoutResponse = false): Promise<void> {
+        const { peripheral, service, characteristic } = this.handles.getCharacteristicGraph(handle);
         let success = false;
 
         if (withoutResponse) {
-            success = peripheral.writeCommand(serviceUuid, charUuid, new Uint8Array(value.buffer));
+            success = peripheral.writeCommand(service.uuid, characteristic.uuid, new Uint8Array(value.buffer));
         } else {
-            success = peripheral.writeRequest(serviceUuid, charUuid, new Uint8Array(value.buffer));
+            success = peripheral.writeRequest(service.uuid, characteristic.uuid, new Uint8Array(value.buffer));
         }
 
         if (!success) {
@@ -347,19 +443,16 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     }
 
     public async enableNotify(handle: string, notifyFn: (value: DataView) => void): Promise<void> {
-        this.charEvents.set(handle, notifyFn);
+        this.handles.characteristicEvents.set(handle, notifyFn);
     }
 
     public async disableNotify(handle: string): Promise<void> {
-        this.charEvents.delete(handle);
+        this.handles.characteristicEvents.delete(handle);
     }
 
     public async readDescriptor(handle: string): Promise<DataView> {
-        const { char, desc } = this.characteristicByDescriptor.get(handle);
-        const serviceUuid = this.serviceByCharacteristic.get(char);
-        const peripheral = this.peripheralByService.get(serviceUuid);
-
-        const data = peripheral.readDescriptor(serviceUuid, char, desc);
+        const { peripheral, service, characteristic, descriptor } = this.handles.getDescriptorGraph(handle);
+        const data = peripheral.readDescriptor(service.uuid, characteristic.uuid, descriptor);
         if (!data) {
             throw new Error('Read failed');
         }
@@ -367,11 +460,8 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
     }
 
     public async writeDescriptor(handle: string, value: DataView): Promise<void> {
-        const { char, desc } = this.characteristicByDescriptor.get(handle);
-        const serviceUuid = this.serviceByCharacteristic.get(char);
-        const peripheral = this.peripheralByService.get(serviceUuid);
-
-        const success = peripheral.writeDescriptor(serviceUuid, char, desc, new Uint8Array(value.buffer));
+        const { peripheral, service, characteristic, descriptor } = this.handles.getDescriptorGraph(handle);
+        const success = peripheral.writeDescriptor(service.uuid, characteristic.uuid, descriptor, new Uint8Array(value.buffer));
 
         if (!success) {
             throw new Error('Write failed');
