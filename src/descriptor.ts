@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -48,18 +48,20 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
         return this._value;
     }
 
-    private handle: string = undefined;
+    /**
+     * @hidden
+     */
+    public _handle: string = undefined;
 
     /**
      * Descriptor constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTDescriptor>) {
+    constructor(init: Partial<BluetoothRemoteGATTDescriptorImpl>) {
         this.characteristic = init.characteristic;
         this.uuid = init.uuid;
         this._value = init.value;
-
-        this.handle = `${this.characteristic.uuid}-${this.uuid}`;
+        this._handle = init._handle;
     }
 
     /**
@@ -71,7 +73,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
             throw new Error('readValue error: device not connected');
         }
 
-        const dataView = await adapter.readDescriptor(this.handle);
+        const dataView = await adapter.readDescriptor(this._handle);
         this._value = dataView;
         return dataView;
     }
@@ -89,7 +91,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
         const arrayBuffer = isView(value) ? value.buffer : value;
         const dataView = new DataView(arrayBuffer);
 
-        await adapter.writeDescriptor(this.handle, dataView);
+        await adapter.writeDescriptor(this._handle, dataView);
         this._value = dataView;
     }
 }

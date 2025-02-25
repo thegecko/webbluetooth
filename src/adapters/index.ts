@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2022 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,7 +23,8 @@
 * SOFTWARE.
 */
 
+import type { Adapter } from './adapter';
 import { SimplebleAdapter } from './simpleble-adapter';
 
 export const EVENT_ENABLED = 'enabledchanged';
-export const adapter = new SimplebleAdapter();
+export const adapter = new SimplebleAdapter() as Adapter;
