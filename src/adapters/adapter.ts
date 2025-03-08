@@ -34,6 +34,8 @@ import type { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
  */
 export interface Adapter extends EventEmitter {
     getEnabled: () => Promise<boolean>;
+    getAdapters: () => Array<{ index: number, address: string, active: boolean}>;
+    useAdapter: (index: number) => void;
     startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDeviceImpl>) => void) => Promise<void>;
     stopScan: () => void;
     connect: (handle: string, disconnectFn?: () => void) => Promise<void>;

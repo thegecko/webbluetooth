@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.2.2] - 2025-03-08
+
+### Added
+- Added ability to list and select bluetooth adapter - [189](https://github.com/thegecko/webbluetooth/pull/189) ([Ingo Fischer](https://github.com/Apollon77))
+
 ## [3.2.1] - 2024-02-12
 
 ### Fixed
