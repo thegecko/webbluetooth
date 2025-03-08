@@ -51,6 +51,11 @@ export interface BluetoothOptions {
      * An optional referring device
      */
     referringDevice?: BluetoothDevice;
+
+    /**
+     * An optional index of bluetooth adapter to use
+     */
+    adapterIndex?: number;
 }
 
 /**
@@ -87,6 +92,10 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         this.deviceFound = options.deviceFound;
         if (options.scanTime) {
             this.scanTime = options.scanTime * 1000;
+        }
+
+        if (typeof options.adapterIndex === 'number') {
+            adapter.useAdapter(options.adapterIndex);
         }
 
         adapter.on(EVENT_ENABLED, _value => {
@@ -405,3 +414,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         throw new Error('requestLEScan error: method not implemented.');
     }
 }
+
+/**
+ * List available bluetooth adapters
+ */
+export const getAdapters = adapter.getAdapters;

@@ -2,10 +2,23 @@ const assert = require('assert');
 const bluetooth = require('../').bluetooth;
 const Bluetooth = require('../').Bluetooth;
 const BluetoothUUID = require('../').BluetoothUUID;
+const getAdapters = require('../').getAdapters;
 
 describe('bluetooth module', () => {
     it('should describe basic constants', () => {
         assert.notEqual(bluetooth, undefined, 'bluetooth must not be undefined');
+    });
+});
+
+describe('adapter', () => {
+    it('should have availability', async () => {
+        const available = await bluetooth.getAvailability();
+        assert.equal(available, true);
+    });
+
+    it('should list adapters', () => {
+        const adapters = getAdapters();
+        assert.equal(adapters.length > 0, true);
     });
 });
 
