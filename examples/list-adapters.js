@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2025 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,19 +23,7 @@
 * SOFTWARE.
 */
 
-import { BluetoothImpl, BluetoothOptions, getAdapters } from './bluetooth';
+const webbluetooth = require("../");
 
-/**
- * Default bluetooth instance synonymous with `navigator.bluetooth`
- */
-export const bluetooth = new BluetoothImpl();
-
-/**
- * Bluetooth class for creating new instances
- */
-export { BluetoothImpl as Bluetooth, BluetoothOptions, getAdapters };
-
-/**
- * Helper methods and enums
- */
-export * from './uuid';
+const adapters = webbluetooth.getAdapters();
+console.log(adapters);

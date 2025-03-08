@@ -89,9 +89,19 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ## Implementation Status
 
+### Functions
+- [x] getAdapters() - list available bluetooth adapters
+
+### new Bluetooth options
+- [x] deviceFound - A `device found` callback function to allow the user to select a device
+- [x] scanTime - The amount of seconds to scan for the device (default is 10)
+- [x] allowAllDevices - Optional flag to automatically allow all devices
+- [x] referringDevice - An optional referring device
+- [x] adapterIndex - An optional index of bluetooth adapter to use (default is 0)
+
 ### bluetooth
 
-- [ ] getAvailability() - unsupported in adapter
+- [x] getAvailability()
 - [x] referringDevice
 - [x] requestDevice()
 - [x] getDevices()

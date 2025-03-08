@@ -32,7 +32,7 @@ import { BluetoothRemoteGATTServiceImpl } from '../service';
 import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
 import {
     isEnabled,
-    getAdapters,
+    getAdapters as simpleBleAdapters,
     Adapter,
     Peripheral,
     Service,
@@ -239,13 +239,27 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return this.state;
     }
 
+    public getAdapters(): Array<{ index: number; address: string; active: boolean; }> {
+        const adapters = simpleBleAdapters();
+        return adapters.map(({ address, active }, index) => ({ index, address, active }));
+    }
+
+    public useAdapter(index: number): void {
+        const adapters = simpleBleAdapters();
+        const selected = adapters[index];
+        if (!selected) {
+            throw new Error(`Adapter ${index} not found.`);
+        }
+        this.adapter = selected;
+    }
+
     public async startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void): Promise<void> {
         if (this.state === false) {
             throw new Error('adapter not enabled');
         }
 
         if (!this.adapter) {
-            this.adapter = getAdapters()[0];
+            this.adapter = simpleBleAdapters()[0];
         }
 
         const foundPeripherals: string[] = [];
