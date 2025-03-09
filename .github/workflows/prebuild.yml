@@ -17,22 +17,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: darwin-x64
-            os: macos-latest
+          - name: darwin
+            os: macos-11
             node: x64
-          - name: darwin-arm64
-            os: macos-latest
-            node: x64
-            args: --arch arm64
+            arch: x64+arm64
           - name: win32-x86
-            os: windows-latest
+            os: windows-2022
             node: x86
+            arch: ia32
           - name: win32-x64
-            os: windows-latest
+            os: windows-2022
             node: x64
+            arch: x64
           - name: linux-x64
-            os: ubuntu-latest
+            os: ubuntu-20.04
             node: x64
+            arch: x64
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -55,11 +55,11 @@ jobs:
       - if: contains(matrix.os, 'windows')
         uses: microsoft/setup-msbuild@v2.0.0
       - run: yarn install --ignore-scripts
-      - run: yarn prebuild ${{ matrix.args }}
+      - run: yarn prebuild --arch=${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
-          path: prebuilds/*.tar.gz
+          path: prebuilds
           retention-days: 1
   release:
     needs: prebuild

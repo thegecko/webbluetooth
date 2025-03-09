@@ -23,8 +23,15 @@
 * SOFTWARE.
 */
 
+import { join } from 'path';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const simpleble = require('bindings')('simpleble.node');
+const simpleble = require('pkg-prebuilds')(
+    join (__dirname, '..', '..'),
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('../../binding-options')
+);
+
 module.exports = simpleble;
 
 /** SimpleBLE address type. */
