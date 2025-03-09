@@ -9,11 +9,36 @@
 <a id="getting-started" class="tsd-anchor"></a><h2 class="tsd-anchor-link">Getting Started<a href="#getting-started" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p>See the <a href="https://github.com/thegecko/webbluetooth/tree/main/examples/">examples</a> or view the API documentation at:</p>
 <p><a href="https://thegecko.github.io/webbluetooth/">https://thegecko.github.io/webbluetooth/</a></p>
 <a id="supported-platforms" class="tsd-anchor"></a><h2 class="tsd-anchor-link">Supported Platforms<a href="#supported-platforms" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Binaries are built to support the following platforms:</p>
-<ul>
-<li>MacOS (x64 and arm64)</li>
-<li>Windows (x86 and x64)</li>
-<li>Linux (x64 glibc)</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th>OS</th>
+<th>x86</th>
+<th>x64</th>
+<th>arm64</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td>X</td>
+<td>X</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MacOS</td>
+<td>-</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Linux (glibc)</td>
+<td>-</td>
+<td>X</td>
+<td>X</td>
+</tr>
+</tbody>
+</table>
 <a id="usage" class="tsd-anchor"></a><h2 class="tsd-anchor-link">Usage<a href="#usage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p>The module exports a default <code>navigator.bluetooth</code> instance, the <code>Bluetooth</code> class to allow you to instantiate your own bluetooth instances and the Bluetooth helper methods:</p>
 <ul>
 <li><a href="globals.html#bluetooth">bluetooth</a></li>
