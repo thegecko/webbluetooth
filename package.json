@@ -20,24 +20,26 @@
     "bluetooth"
   ],
   "scripts": {
-    "install": "prebuild-install --backend cmake-js --runtime napi || cmake-js rebuild",
+    "install": "pkg-prebuilds-verify ./binding-options.js || cmake-js compile",
     "clean": "yarn clean:cpp && yarn clean:ts",
     "clean:cpp": "cmake-js clean && git clean -fx ./prebuilds",
     "clean:ts": "git clean -fx ./dist ./docs",
     "build:all": "yarn build:cpp && yarn build:ts",
     "build:cpp": "cmake-js compile",
     "build:ts": "tsc && yarn lint && yarn docs",
+    "rebuild": "cmake-js rebuild",
     "watch": "tsc -w --preserveWatchOutput",
     "lint": "eslint . --ext .ts",
     "test": "mocha --timeout 10000 test/*.test.js",
-    "prebuild": "prebuild --backend cmake-js --runtime napi --all --strip --verbose",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "prebuild": "pkg-prebuilds-copy --baseDir build/Release --source simpleble.node --name=simpleble --strip --napi_version=6",
+    "prepublishOnly": "prebuildify-ci download",
+    "prebuild-download": "prebuildify-ci download"
   },
   "dependencies": {
-    "bindings": "^1.5.0",
     "cmake-js": "^7.3.0",
     "node-addon-api": "^8.0.0",
-    "prebuild-install": "^7.1.2"
+    "pkg-prebuilds": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -46,7 +48,7 @@
     "@typescript-eslint/parser": "^7.10.0",
     "eslint": "^8.57.0",
     "mocha": "^11.0.1",
-    "prebuild": "^13.0.1",
+    "prebuildify-ci": "^1.0.5",
     "typedoc": "^0.27.2",
     "typescript": "^5.4.5"
   },
