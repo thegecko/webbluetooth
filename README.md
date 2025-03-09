@@ -25,9 +25,11 @@ https://thegecko.github.io/webbluetooth/
 
 Binaries are built to support the following platforms:
 
-- MacOS (x64 and arm64)
-- Windows (x86 and x64)
-- Linux (x64 glibc)
+OS | x86 | x64 | arm64
+--- | --- | --- | ---
+Windows         | X | X | -
+MacOS           | - | X | X 
+Linux (glibc)   | - | X | X
 
 ## Usage
 

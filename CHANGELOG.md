@@ -1,9 +1,15 @@
 # Changelog
 
-## [3.2.2] - 2025-03-08
+## [3.3.0] - 2025-03-08
+
+### Fixed
+- Fixed connecting to multiple devices - [299](https://github.com/thegecko/webbluetooth/pull/299) ([Rob Moran](https://github.com/thegecko))
 
 ### Added
 - Added ability to list and select bluetooth adapter - [189](https://github.com/thegecko/webbluetooth/pull/189) ([Ingo Fischer](https://github.com/Apollon77))
+- Added Linux arm64 support - [309](https://github.com/thegecko/webbluetooth/pull/309) ([Rob Moran](https://github.com/thegecko))
+- Added prebuild binaries to npm package - [309](https://github.com/thegecko/webbluetooth/pull/309) ([Rob Moran](https://github.com/thegecko))
+- Exposed MTU in `_adData` - [300](https://github.com/thegecko/webbluetooth/pull/300) ([Rob Moran](https://github.com/thegecko))
 
 ## [3.2.1] - 2024-02-12
 
