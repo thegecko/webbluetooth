@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.3.0] - 2025-03-08
+## [3.3.1] - 2025-03-08
 
 ### Fixed
 - Fixed connecting to multiple devices - [299](https://github.com/thegecko/webbluetooth/pull/299) ([Rob Moran](https://github.com/thegecko))
