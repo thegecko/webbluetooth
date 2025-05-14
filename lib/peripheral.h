@@ -48,6 +48,6 @@ private:
 
   static void onConnected(simpleble_peripheral_t peripheral, void *userdata);
   static void onDisconnected(simpleble_peripheral_t peripheral, void *userdata);
-  static void onNotify(simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata);
-  static void onIndicate(simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata);
+  static void onNotify(simpleble_peripheral_t peripheral, simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata);
+  static void onIndicate(simpleble_peripheral_t peripheral, simpleble_uuid_t service, simpleble_uuid_t characteristic, const uint8_t* data, size_t data_length, void* userdata);
 };
