@@ -54,7 +54,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid: string | undefined = undefined;
+    public readonly uuid: string = undefined;
 
     /**
      * The properties of the characteristic
