@@ -31,7 +31,7 @@ jobs:
             os: windows-2022
             arch: x64
           - name: linux-x64
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             arch: x64
           - name: linux-arm64
             os: ubuntu-22.04-arm
