@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: 18
           architecture: ${{ matrix.node }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - if: contains(matrix.os, 'ubuntu')
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
