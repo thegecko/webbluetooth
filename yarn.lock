@@ -547,9 +547,9 @@ cliui@^8.0.1:
     wrap-ansi "^7.0.0"
 
 cmake-js@^7.3.0:
-  version "7.3.1"
-  resolved "https://registry.yarnpkg.com/cmake-js/-/cmake-js-7.3.1.tgz#ed661eebd22a56d4743d7d2106a56fe50aa4355c"
-  integrity sha512-aJtHDrTFl8qovjSSqXT9aC2jdGfmP8JQsPtjdLAXFfH1BF4/ImZ27Jx0R61TFg8Apc3pl6e2yBKMveAeRXx2Rw==
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/cmake-js/-/cmake-js-7.4.0.tgz#eb175b8abb97c86e4ba92ca7c22f5c9588b5a0ac"
+  integrity sha512-Lw0JxEHrmk+qNj1n9W9d4IvkDdYTBn7l2BW6XmtLj7WPpIo2shvxUy+YokfjMxAAOELNonQwX3stkPhM5xSC2Q==
   dependencies:
     axios "^1.6.5"
     debug "^4"
