@@ -42,7 +42,7 @@
     "pkg-prebuilds": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@types/node": "^25.0.2",
     "@types/web-bluetooth": "^0.0.21",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "^7.10.0",
