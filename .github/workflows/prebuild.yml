@@ -52,7 +52,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libdbus-1-dev
       - if: contains(matrix.os, 'macos')
-        uses: jwlawson/actions-setup-cmake@v2.0
+        uses: jwlawson/actions-setup-cmake@v2.1
         with:
           cmake-version: '3.21.x'
       - if: contains(matrix.os, 'windows')
