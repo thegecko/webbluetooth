@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -24,44 +24,39 @@
 */
 
 import { adapter } from './adapters';
-import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
+import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
-import { BluetoothRemoteGATTServiceImpl } from './service';
-import { EventDispatcher, DOMEvent } from './events';
+import { BluetoothRemoteGATTService } from './service';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
- * @hidden
- */
-export interface CharacteristicEvents {
-    /**
-     * Characteristic value changed event
-     */
-    characteristicvaluechanged: Event;
-}
-
-/**
  * Bluetooth Remote GATT Characteristic class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
  */
-export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
+class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTServiceImpl = undefined;
+    public readonly service: BluetoothRemoteGATTService;
 
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid: string = undefined;
+    public readonly uuid: string;
 
     /**
      * The properties of the characteristic
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView = undefined;
+    private _value: DataView;
     /**
      * The value of the characteristic
      */
@@ -72,10 +67,10 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     /**
      * @hidden
      */
-    public _handle: string = undefined;
-    private descriptors: Array<BluetoothRemoteGATTDescriptor> = undefined;
+    public _handle: string;
+    private descriptors: Array<BluetoothRemoteGATTDescriptor> | undefined;
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -94,20 +89,22 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     constructor(init: Partial<BluetoothRemoteGATTCharacteristicImpl>) {
         super();
 
-        this.service = init.service;
-        this.uuid = init.uuid;
-        this.properties = init.properties;
-        this._value = init.value;
-        this._handle = init._handle;
+        this.service = init.service!;
+        this.uuid = init.uuid!;
+        this.properties = init.properties!;
+        this._value = init.value!;
+        this._handle = init._handle!;
     }
 
     private setValue(value?: DataView, emit?: boolean) {
-        this._value = value;
-        if (emit) {
-            this.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+        if (value) {
+            this._value = value;
+            if (emit) {
+                this.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
+                this.service.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
+                this.service.device.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
+                this.service.device._bluetooth.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
+            }
         }
     }
 
@@ -149,7 +146,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
                 Object.assign(descriptorInfo, {
                     characteristic: this
                 });
-                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo);
+                return new BluetoothRemoteGATTDescriptor(descriptorInfo);
             });
         }
 
@@ -231,7 +228,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public async startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+    public async startNotifications(): Promise<BluetoothRemoteGATTCharacteristicImpl> {
         if (!this.service.device.gatt.connected) {
             throw new Error('startNotifications error: device not connected');
         }
@@ -247,7 +244,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      * Stop notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public async stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
+    public async stopNotifications(): Promise<BluetoothRemoteGATTCharacteristicImpl> {
         if (!this.service.device.gatt.connected) {
             throw new Error('stopNotifications error: device not connected');
         }
@@ -256,3 +253,5 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         return this;
     }
 }
+
+export { BluetoothRemoteGATTCharacteristicImpl as BluetoothRemoteGATTCharacteristic };

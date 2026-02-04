@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,43 +23,38 @@
 * SOFTWARE.
 */
 
-import { BluetoothRemoteGATTServerImpl } from './server';
-import { ServiceEvents } from './service';
-import { EventDispatcher } from './events';
-
-/**
- * @hidden
- */
-export interface BluetoothDeviceEvents extends ServiceEvents {
-    /**
-     * GATT server disconnected event
-     */
-    gattserverdisconnected: Event;
-    /**
-     * Advertisement received event
-     */
-    advertisementreceived: Event;
-}
+import { BluetoothRemoteGATTServer } from './server';
 
 /**
  * Bluetooth Device class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | Event | GATT server has been disconnected. |
+ * | `serviceadded` | Event | A new service is available. |
+ * | `servicechanged` | Event | An existing service has changed. |
+ * | `serviceremoved` | Event | A service is unavailable. |
  */
-export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
+class BluetoothDeviceImpl extends EventTarget implements BluetoothDevice {
 
     /**
      * The unique identifier of the device
      */
-    public readonly id: string = undefined;
+    public readonly id: string;
 
     /**
      * The name of the device
      */
-    public readonly name: string = undefined;
+    public readonly name: string;
 
     /**
      * The gatt server of the device
      */
-    public readonly gatt: BluetoothRemoteGATTServer = undefined;
+    public readonly gatt: BluetoothRemoteGATTServer;
 
     /**
      * Whether adverts are being watched (not implemented)
@@ -80,7 +75,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     /**
      * @hidden
      */
-    public readonly _bluetooth: Bluetooth = undefined;
+    public readonly _bluetooth: Bluetooth;
 
     /**
      * @hidden
@@ -92,7 +87,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
      */
     public readonly _serviceUUIDs: Array<string> = [];
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -104,7 +99,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onserviceadded: (ev: Event) => void;
+    private _onserviceadded: ((ev: Event) => void) | undefined;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
@@ -116,7 +111,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onservicechanged: (ev: Event) => void;
+    private _onservicechanged: ((ev: Event) => void) | undefined;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
@@ -128,7 +123,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onserviceremoved: (ev: Event) => void;
+    private _onserviceremoved: ((ev: Event) => void) | undefined;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
@@ -140,7 +135,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _ongattserverdisconnected: (ev: Event) => void;
+    private _ongattserverdisconnected: ((ev: Event) => void) | undefined;
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
@@ -152,7 +147,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         }
     }
 
-    private _onadvertisementreceived: (ev: Event) => void;
+    private _onadvertisementreceived: ((ev: Event) => void) | undefined;
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
@@ -171,17 +166,17 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
     constructor(init: Partial<BluetoothDeviceImpl>, private forgetFn: () => void) {
         super();
 
-        this.id = init.id;
-        this.name = init.name;
-        this.gatt = init.gatt;
+        this.id = init.id!;
+        this.name = init.name!;
+        this.gatt = init.gatt!;
 
-        this._adData = init._adData;
-        this._bluetooth = init._bluetooth;
-        this._allowedServices = init._allowedServices;
-        this._serviceUUIDs = init._serviceUUIDs;
+        this._adData = init._adData!;
+        this._bluetooth = init._bluetooth!;
+        this._allowedServices = init._allowedServices!;
+        this._serviceUUIDs = init._serviceUUIDs!;
 
         if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServerImpl(this);
+        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServer(this);
     }
 
     /**
@@ -205,3 +200,5 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this.forgetFn();
     }
 }
+
+export { BluetoothDeviceImpl as BluetoothDevice };

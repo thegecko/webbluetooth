@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,27 +23,26 @@
 * SOFTWARE.
 */
 
-import type { EventEmitter } from 'events';
-import type { BluetoothDeviceImpl } from '../device';
-import type { BluetoothRemoteGATTServiceImpl } from '../service';
-import type { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import type { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
+import type { BluetoothDevice } from '../device';
+import type { BluetoothRemoteGATTService } from '../service';
+import type { BluetoothRemoteGATTCharacteristic } from '../characteristic';
+import type { BluetoothRemoteGATTDescriptor } from '../descriptor';
 
 /**
  * @hidden
  */
-export interface Adapter extends EventEmitter {
+export interface Adapter extends EventTarget {
     getEnabled: () => Promise<boolean>;
     getAdapters: () => Array<{ index: number, address: string, active: boolean}>;
     useAdapter: (index: number) => void;
-    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDeviceImpl>) => void) => Promise<void>;
+    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void) => Promise<void>;
     stopScan: () => void;
     connect: (handle: string, disconnectFn?: () => void) => Promise<void>;
     disconnect: (handle: string) => Promise<void>;
-    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>>;
-    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>>;
-    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>>;
-    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>>;
+    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
+    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTService>>>;
+    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>>;
+    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>>;
     readCharacteristic: (handle: string) => Promise<DataView>;
     writeCharacteristic: (handle: string, value: DataView, withoutResponse?: boolean) => Promise<void>;
     enableNotify: (handle: string, notifyFn: (value: DataView) => void) => Promise<void>;
