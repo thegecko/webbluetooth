@@ -73,8 +73,8 @@ class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
         await adapter.connect(this._handle, () => {
             this.services = undefined;
             this._connected = false;
-            this.device.dispatchEvent(new CustomEvent('gattserverdisconnected'));
-            this.device._bluetooth.dispatchEvent(new CustomEvent('gattserverdisconnected'));
+            this.device.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
+            this.device._bluetooth.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
         });
 
         this._connected = true;

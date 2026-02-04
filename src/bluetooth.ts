@@ -102,7 +102,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
         }
 
         adapter.addEventListener(EVENT_ENABLED, _value => {
-            this.dispatchEvent(new CustomEvent('availabilitychanged'));
+            this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
         });
     }
 

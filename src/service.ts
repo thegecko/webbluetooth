@@ -125,9 +125,9 @@ class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRem
         this.isPrimary = init.isPrimary!;
         this._handle = init._handle!;
 
-        this.dispatchEvent(new CustomEvent('serviceadded'));
-        this.device.dispatchEvent(new CustomEvent('serviceadded'));
-        this.device._bluetooth.dispatchEvent(new CustomEvent('serviceadded'));
+        this.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
+        this.device.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
+        this.device._bluetooth.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
     }
 
     /**

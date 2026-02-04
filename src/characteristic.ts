@@ -100,10 +100,10 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
         if (value) {
             this._value = value;
             if (emit) {
-                this.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
-                this.service.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
-                this.service.device.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
-                this.service.device._bluetooth.dispatchEvent(new CustomEvent('characteristicvaluechanged'));
+                this.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.device.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.device._bluetooth.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
             }
         }
     }
