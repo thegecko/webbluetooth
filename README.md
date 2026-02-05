@@ -212,6 +212,16 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ## Development
 
+### Prerequisites
+
+A valid make build system
+
+#### Windows
+
+```bash
+choco install python visualstudio2019-workload-vctools -y
+```
+
 ### Cloning
 
 This repository uses a submodule to reference the SimpleBLE library. Clone it as follows:
