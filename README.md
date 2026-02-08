@@ -214,13 +214,18 @@ https://webbluetoothcg.github.io/web-bluetooth/
 
 ### Prerequisites
 
-A valid make build system
+A valid cmake build system
 
 #### Windows
+
+- [chocolatey](https://chocolatey.org/)
+- [cmake](https://cmake.org/download/)
 
 ```bash
 choco install python visualstudio2019-workload-vctools -y
 ```
+
+If the automatic installation of VS Tools fails or pauses, open the installer GUI to resume installation.
 
 ### Cloning
 
