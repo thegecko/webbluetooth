@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -28,19 +28,19 @@ import { adapter } from './adapters';
 /**
  * Bluetooth Remote GATT Descriptor class
  */
-export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor {
+class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor {
 
     /**
      * The characteristic the descriptor is related to
      */
-    public readonly characteristic: BluetoothRemoteGATTCharacteristic = undefined;
+    public readonly characteristic: BluetoothRemoteGATTCharacteristic;
 
     /**
      * The unique identifier of the descriptor
      */
-    public readonly uuid: string = undefined;
+    public readonly uuid: string;
 
-    private _value: DataView = undefined;
+    private _value: DataView;
     /**
      * The value of the descriptor
      */
@@ -51,17 +51,17 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
     /**
      * @hidden
      */
-    public _handle: string = undefined;
+    public _handle: string;
 
     /**
      * Descriptor constructor
      * @param init A partial class to initialise values
      */
     constructor(init: Partial<BluetoothRemoteGATTDescriptorImpl>) {
-        this.characteristic = init.characteristic;
-        this.uuid = init.uuid;
-        this._value = init.value;
-        this._handle = init._handle;
+        this.characteristic = init.characteristic!;
+        this.uuid = init.uuid!;
+        this._value = init.value!;
+        this._handle = init._handle!;
     }
 
     /**
@@ -69,7 +69,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
      * @returns Promise containing the value
      */
     public async readValue(): Promise<DataView> {
-        if (!this.characteristic.service.device.gatt.connected) {
+        if (!this.characteristic.service.device.gatt?.connected) {
             throw new Error('readValue error: device not connected');
         }
 
@@ -83,7 +83,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
      * @param value The value to write
      */
     public async writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        if (!this.characteristic.service.device.gatt.connected) {
+        if (!this.characteristic.service.device.gatt?.connected) {
             throw new Error('writeValue error: device not connected');
         }
 
@@ -95,3 +95,5 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
         this._value = dataView;
     }
 }
+
+export { BluetoothRemoteGATTDescriptorImpl as BluetoothRemoteGATTDescriptor };

@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -23,13 +23,12 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from 'events';
 import { Adapter as BluetoothAdapter } from './adapter';
 import { BluetoothUUID } from '../uuid';
-import { BluetoothDeviceImpl } from '../device';
-import { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import { BluetoothRemoteGATTServiceImpl } from '../service';
-import { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
+import { BluetoothDevice } from '../device';
+import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
+import { BluetoothRemoteGATTService } from '../service';
+import { BluetoothRemoteGATTDescriptor } from '../descriptor';
 import {
     isEnabled,
     getAdapters as simpleBleAdapters,
@@ -91,13 +90,15 @@ class PeripheralHandles {
 
     public deleteHandles(peripheral: Peripheral): void {
         const children = this.peripheralChildren.get(peripheral);
-        for (const child of children) {
-            this.children.delete(child);
-            this.parents.delete(child);
-            this.services.delete(child);
-            this.characteristics.delete(child);
-            this.descriptors.delete(child);
-            this.characteristicEvents.delete(child);
+        if (children) {
+            for (const child of children) {
+                this.children.delete(child);
+                this.parents.delete(child);
+                this.services.delete(child);
+                this.characteristics.delete(child);
+                this.descriptors.delete(child);
+                this.characteristicEvents.delete(child);
+            }
         }
         this.peripheralChildren.delete(peripheral);
     }
@@ -106,8 +107,13 @@ class PeripheralHandles {
         const children = this.children.get(deviceHandle);
         const services: { [key: string]: Service } = {};
 
-        for (const child of children) {
-            services[child] = this.services.get(child);
+        if (children) {
+            for (const child of children) {
+                const service = this.services.get(child);
+                if (service) {
+                    services[child] = service;
+                }
+            }
         }
 
         return services;
@@ -117,15 +123,20 @@ class PeripheralHandles {
         const children = this.children.get(serviceHandle);
         const characteristics: { [key: string]: Characteristic } = {};
 
-        for (const child of children) {
-            characteristics[child] = this.characteristics.get(child);
+        if (children) {
+            for (const child of children) {
+                const characteristic = this.characteristics.get(child);
+                if (characteristic) {
+                    characteristics[child] = characteristic;
+                }
+            }
         }
 
         const peripheralHandle = this.parents.get(serviceHandle);
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle),
-            service: this.services.get(serviceHandle),
+            peripheral: this.peripherals.get(peripheralHandle!)!,
+            service: this.services.get(serviceHandle)!,
             characteristics
         };
     }
@@ -134,8 +145,13 @@ class PeripheralHandles {
         const children = this.children.get(characteristicHandle);
         const descriptors: { [key: string]: Descriptor } = {};
 
-        for (const child of children) {
-            descriptors[child] = this.descriptors.get(child);
+        if (children) {
+            for (const child of children) {
+                const descriptor = this.descriptors.get(child);
+                if (descriptor) {
+                    descriptors[child] = descriptor;
+                }
+            }
         }
 
         return descriptors;
@@ -143,25 +159,25 @@ class PeripheralHandles {
 
     public getCharacteristicGraph(characteristicHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic } {
         const serviceHandle = this.parents.get(characteristicHandle);
-        const peripheralHandle = this.parents.get(serviceHandle);
+        const peripheralHandle = this.parents.get(serviceHandle!);
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle),
-            service: this.services.get(serviceHandle),
-            characteristic: this.characteristics.get(characteristicHandle)
+            peripheral: this.peripherals.get(peripheralHandle!)!,
+            service: this.services.get(serviceHandle!)!,
+            characteristic: this.characteristics.get(characteristicHandle)!
         };
     }
 
     public getDescriptorGraph(descriptorHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic, descriptor: Descriptor } {
         const characteristicHandle = this.parents.get(descriptorHandle);
-        const serviceHandle = this.parents.get(characteristicHandle);
-        const peripheralHandle = this.parents.get(serviceHandle);
+        const serviceHandle = this.parents.get(characteristicHandle!);
+        const peripheralHandle = this.parents.get(serviceHandle!);
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle),
-            service: this.services.get(serviceHandle),
-            characteristic: this.characteristics.get(characteristicHandle),
-            descriptor: this.descriptors.get(descriptorHandle)
+            peripheral: this.peripherals.get(peripheralHandle!)!,
+            service: this.services.get(serviceHandle!)!,
+            characteristic: this.characteristics.get(characteristicHandle!)!,
+            descriptor: this.descriptors.get(descriptorHandle)!
         };
     }
 }
@@ -169,12 +185,12 @@ class PeripheralHandles {
 /**
  * @hidden
  */
-export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
-    private adapter: Adapter;
+export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
+    private adapter: Adapter | undefined;
     private peripherals = new Map<string, Peripheral>();
     private handles = new PeripheralHandles(this.peripherals);
 
-    private validDevice(device: Partial<BluetoothDeviceImpl>, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
@@ -191,7 +207,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
-    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDeviceImpl> {
+    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDevice> {
         const name = device.identifier;
         const address = device.address;
 
@@ -266,9 +282,9 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         this.adapter.setCallbackOnScanFound(peripheral => {
             const device = this.buildBluetoothDevice(peripheral);
             if (this.validDevice(device, serviceUUIDs)) {
-                if (!foundPeripherals.includes(device.id)) {
-                    foundPeripherals.push(device.id);
-                    this.peripherals.set(device.id, peripheral);
+                if (!foundPeripherals.includes(device.id!)) {
+                    foundPeripherals.push(device.id!);
+                    this.peripherals.set(device.id!, peripheral);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
                 }
@@ -327,10 +343,10 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         this.handles.deleteHandles(peripheral);
     }
 
-    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         const services = this.handles.getServices(handle);
 
-        const discovered: Partial<BluetoothRemoteGATTServiceImpl>[] = [];
+        const discovered: Partial<BluetoothRemoteGATTService>[] = [];
         for (const [handle, service] of Object.entries(services)) {
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(service.uuid) >= 0) {
                 discovered.push({
@@ -344,15 +360,15 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>> {
+    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
         // Currently not implemented
         return [];
     }
 
-    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>> {
+    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
         const { peripheral, service, characteristics } = this.handles.getCharacteristics(handle);
 
-        const discovered: Partial<BluetoothRemoteGATTCharacteristicImpl>[] = [];
+        const discovered: Partial<BluetoothRemoteGATTCharacteristic>[] = [];
 
         for (const [handle, characteristic] of Object.entries(characteristics)) {
             const charUUID = BluetoothUUID.canonicalUUID(characteristic.uuid);
@@ -399,7 +415,7 @@ export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>> {
+    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
         const descriptors = this.handles.getDescriptors(handle);
         const discovered = [];
 

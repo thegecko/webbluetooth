@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -258,7 +258,7 @@ const canonicalUUID = (alias: string | number): string => {
     if (typeof alias === 'number') alias = alias.toString(16);
     alias = alias.toLowerCase();
     if (alias.length <= 8) alias = ('00000000' + alias).slice(-8) + '-0000-1000-8000-00805f9b34fb';
-    if (alias.length === 32) alias = alias.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/).splice(1).join('-');
+    if (alias.length === 32) alias = alias.match(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/)!.splice(1).join('-');
     return alias;
 };
 
@@ -269,8 +269,8 @@ const canonicalUUID = (alias: string | number): string => {
  */
 const getService = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof name === 'string' && bluetoothServices[name]) {
-        name = bluetoothServices[name];
+    if (typeof name === 'string' && bluetoothServices[name as keyof typeof bluetoothServices]) {
+        name = bluetoothServices[name as keyof typeof bluetoothServices];
     }
 
     return canonicalUUID(name);
@@ -283,8 +283,8 @@ const getService = (name: string | number): string => {
  */
 const getCharacteristic = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof name === 'string' && bluetoothCharacteristics[name]) {
-        name = bluetoothCharacteristics[name];
+    if (typeof name === 'string' && bluetoothCharacteristics[name as keyof typeof bluetoothCharacteristics]) {
+        name = bluetoothCharacteristics[name as keyof typeof bluetoothCharacteristics];
     }
 
     return canonicalUUID(name);
@@ -297,8 +297,8 @@ const getCharacteristic = (name: string | number): string => {
  */
 const getDescriptor = (name: string | number): string => {
     // Check for string as enums also allow a reverse lookup which will match any numbers passed in
-    if (typeof name === 'string' && bluetoothDescriptors[name]) {
-        name = bluetoothDescriptors[name];
+    if (typeof name === 'string' && bluetoothDescriptors[name as keyof typeof bluetoothDescriptors]) {
+        name = bluetoothDescriptors[name as keyof typeof bluetoothDescriptors];
     }
 
     return canonicalUUID(name);

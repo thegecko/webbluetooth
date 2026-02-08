@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2017 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -24,9 +24,8 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
-import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { BluetoothDevice } from './device';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher, DOMEvent } from './events';
 
 /**
  * Bluetooth Options interface
@@ -59,27 +58,30 @@ export interface BluetoothOptions {
 }
 
 /**
- * @hidden
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents {
-    /**
-     * Bluetooth Availability Changed event
-     */
-    availabilitychanged: Event;
-}
-
-/**
  * Bluetooth class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `availabilitychanged` | Event | Bluetooth availability changed. |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | Event | GATT server has been disconnected. |
+ * | `serviceadded` | Event | A new service is available. |
+ * | `servicechanged` | Event | An existing service has changed. |
+ * | `serviceremoved` | Event | A service is unavailable. |
  */
-export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
+class BluetoothImpl extends EventTarget implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
     public readonly referringDevice?: BluetoothDevice;
 
-    private deviceFound: (device: BluetoothDevice, selectFn: () => void) => boolean = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private scanner: any;
+    private deviceFound: ((device: BluetoothDevice, selectFn: () => void) => boolean) | undefined;
     private scanTime: number = 10.24 * 1000;
-    private scanner = undefined;
     private allowedDevices = new Set<string>();
 
     /**
@@ -88,6 +90,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
      */
     constructor(private options: BluetoothOptions = {}) {
         super();
+
         this.referringDevice = options.referringDevice;
         this.deviceFound = options.deviceFound;
         if (options.scanTime) {
@@ -98,12 +101,12 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             adapter.useAdapter(options.adapterIndex);
         }
 
-        adapter.on(EVENT_ENABLED, _value => {
-            this.dispatchEvent(new DOMEvent(this, 'availabilitychanged'));
+        adapter.addEventListener(EVENT_ENABLED, _value => {
+            this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
         });
     }
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -115,7 +118,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onserviceadded: (ev: Event) => void;
+    private _onserviceadded: ((ev: Event) => void) | undefined;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
@@ -127,7 +130,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onservicechanged: (ev: Event) => void;
+    private _onservicechanged: ((ev: Event) => void) | undefined;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
@@ -139,7 +142,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onserviceremoved: (ev: Event) => void;
+    private _onserviceremoved: ((ev: Event) => void) | undefined;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
@@ -151,7 +154,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _ongattserverdisconnected: (ev: Event) => void;
+    private _ongattserverdisconnected: ((ev: Event) => void) | undefined;
     public set ongattserverdisconnected(fn: (ev: Event) => void) {
         if (this._ongattserverdisconnected) {
             this.removeEventListener('gattserverdisconnected', this._ongattserverdisconnected);
@@ -163,7 +166,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onadvertisementreceived: (ev: Event) => void;
+    private _onadvertisementreceived: ((ev: Event) => void) | undefined;
     public set onadvertisementreceived(fn: (ev: Event) => void) {
         if (this._onadvertisementreceived) {
             this.removeEventListener('advertisementreceived', this._onadvertisementreceived);
@@ -175,7 +178,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private _onavailabilitychanged: (ev: Event) => void;
+    private _onavailabilitychanged: ((ev: Event) => void) | undefined;
     public set onavailabilitychanged(fn: (ev: Event) => void) {
         if (this._onavailabilitychanged) {
             this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
@@ -187,7 +190,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDevice>, validServices: string[]): Partial<BluetoothDevice> | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -204,7 +207,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             if (filter.services) {
                 const serviceUUIDs = filter.services.map(BluetoothUUID.getService);
                 const servicesValid = serviceUUIDs.every(serviceUUID => {
-                    return (deviceInfo._serviceUUIDs.indexOf(serviceUUID) > -1);
+                    return (deviceInfo._serviceUUIDs!.indexOf(serviceUUID) > -1);
                 });
 
                 if (!servicesValid) return;
@@ -213,7 +216,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
             // Service Data
             if (filter.serviceData) {
-                if (!deviceInfo._adData.serviceData) return;
+                if (!deviceInfo._adData?.serviceData) return;
                 const services = [...deviceInfo._adData.serviceData.keys()];
                 for (const entry of filter.serviceData) {
                     if (!services.includes(entry.service)) return;
@@ -222,7 +225,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
             // Manufacturer Data
             if (filter.manufacturerData) {
-                if (!deviceInfo._adData.manufacturerData) return;
+                if (!deviceInfo._adData?.manufacturerData) return;
                 const manufacturers = [...deviceInfo._adData.manufacturerData.keys()];
                 for (const entry of filter.manufacturerData) {
                     if (!manufacturers.includes(entry.companyIdentifier)) return;
@@ -274,7 +277,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         const isAcceptAll = (maybeAcceptAll: RequestDeviceOptions): maybeAcceptAll is AcceptAll =>
             (maybeAcceptAll as AcceptAll).acceptAllDevices === true;
 
-        let searchUUIDs = [];
+        let searchUUIDs: string[] = [];
 
         if (isFiltered(options)) {
             // Must have a filter
@@ -320,7 +323,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             }, this.scanTime);
 
             adapter.startScan(searchUUIDs, deviceInfo => {
-                let validServices = [];
+                let validServices: string[] = [];
 
                 const complete = (bluetoothDevice: BluetoothDevice) => {
                     this.allowedDevices.add(bluetoothDevice.id);
@@ -330,7 +333,10 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
-                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
+                    const filtered = this.filterDevice(options.filters, deviceInfo, validServices);
+                    if (filtered) {
+                        deviceInfo = filtered;
+                    }
                 }
 
                 if (deviceInfo) {
@@ -350,7 +356,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         _allowedServices: allowedServices
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -382,13 +388,13 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             }, this.scanTime);
 
             adapter.startScan([], deviceInfo => {
-                if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
+                if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id!)) {
                     Object.assign(deviceInfo, {
                         _bluetooth: this,
                         _allowedServices: []
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
                     devices.push(bluetoothDevice);
                 }
             });
@@ -414,6 +420,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         throw new Error('requestLEScan error: method not implemented.');
     }
 }
+
+export { BluetoothImpl as Bluetooth };
 
 /**
  * List available bluetooth adapters
