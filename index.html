@@ -181,11 +181,16 @@
 </ul>
 <h2 id="development" class="tsd-anchor-link">Development<a href="#development" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <h3 id="prerequisites-1" class="tsd-anchor-link">Prerequisites<a href="#prerequisites-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p>A valid make build system</p>
+<p>A valid cmake build system</p>
 <h4 id="windows" class="tsd-anchor-link">Windows<a href="#windows" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h4>
+<ul>
+<li><a href="https://chocolatey.org/">chocolatey</a></li>
+<li><a href="https://cmake.org/download/">cmake</a></li>
+</ul>
 <pre><code class="bash"><span class="hl-0">choco</span><span class="hl-1"> </span><span class="hl-2">install</span><span class="hl-1"> </span><span class="hl-2">python</span><span class="hl-1"> </span><span class="hl-2">visualstudio2019-workload-vctools</span><span class="hl-1"> </span><span class="hl-3">-y</span>
 </code><button type="button">Copy</button></pre>
 
+<p>If the automatic installation of VS Tools fails or pauses, open the installer GUI to resume installation.</p>
 <h3 id="cloning" class="tsd-anchor-link">Cloning<a href="#cloning" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>This repository uses a submodule to reference the SimpleBLE library. Clone it as follows:</p>
 <pre><code class="bash"><span class="hl-0">git</span><span class="hl-1"> </span><span class="hl-2">clone</span><span class="hl-1"> </span><span class="hl-2">https://github.com/thegecko/webbluetooth</span><br/><span class="hl-0">cd</span><span class="hl-1"> </span><span class="hl-2">webbluetooth</span><br/><span class="hl-0">git</span><span class="hl-1"> </span><span class="hl-2">submodule</span><span class="hl-1"> </span><span class="hl-2">update</span><span class="hl-1"> </span><span class="hl-3">--init</span>
