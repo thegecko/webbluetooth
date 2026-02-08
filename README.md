@@ -31,17 +31,6 @@ Windows         | X | X | -
 MacOS           | - | X | X 
 Linux (glibc)   | - | X | X
 
-## Usage
-
-The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and the Bluetooth helper methods:
-
-- [bluetooth](globals.html#bluetooth)
-- [Bluetooth()](classes/bluetooth.html)
-- [BluetoothUUID.getService()](globals.html)
-- [BluetoothUUID.getCharacteristic()](globals.html)
-- [BluetoothUUID.getDescriptor()](globals.html)
-- [BluetoothUUID.canonicalUUID()](globals.html)
-
 ### Using the default bluetooth instance
 
 To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
@@ -211,6 +200,21 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] API Documentation
 
 ## Development
+
+### Prerequisites
+
+A valid cmake build system
+
+#### Windows
+
+- [chocolatey](https://chocolatey.org/)
+- [cmake](https://cmake.org/download/)
+
+```bash
+choco install python visualstudio2019-workload-vctools -y
+```
+
+If the automatic installation of VS Tools fails or pauses, open the installer GUI to resume installation.
 
 ### Cloning
 
