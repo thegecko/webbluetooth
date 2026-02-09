@@ -37,7 +37,7 @@
     "prebuild-download": "prebuildify-ci download"
   },
   "dependencies": {
-    "cmake-js": "^7.3.0",
+    "cmake-js": "^8.0.0",
     "node-addon-api": "^8.0.0",
     "pkg-prebuilds": "^1.0.0"
   },

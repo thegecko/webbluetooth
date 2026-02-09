@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -25,19 +25,18 @@
 
 import { BluetoothUUID } from './uuid';
 import { adapter } from './adapters';
-import { BluetoothRemoteGATTServiceImpl } from './service';
-import { DOMEvent } from './events';
-import { BluetoothDeviceImpl } from './device';
+import { BluetoothRemoteGATTService } from './service';
+import { BluetoothDevice } from './device';
 
 /**
  * Bluetooth Remote GATT Server class
  */
-export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
+class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
 
     /**
      * The device the gatt server is related to
      */
-    public readonly device: BluetoothDeviceImpl = undefined;
+    public readonly device: BluetoothDevice;
 
     private _connected = false;
     /**
@@ -50,14 +49,14 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     /**
     * @hidden
     */
-    public _handle: string = undefined;
-    private services: Array<BluetoothRemoteGATTService> = undefined;
+    public _handle: string;
+    private services: Array<BluetoothRemoteGATTService> | undefined;
 
     /**
      * Server constructor
      * @param device Device the gatt server relates to
      */
-    constructor(device: BluetoothDeviceImpl) {
+    constructor(device: BluetoothDevice) {
         this.device = device;
         this._handle = this.device.id;
     }
@@ -74,8 +73,8 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         await adapter.connect(this._handle, () => {
             this.services = undefined;
             this._connected = false;
-            this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
-            this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
+            this.device.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
+            this.device._bluetooth.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
         });
 
         this._connected = true;
@@ -128,7 +127,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
                 Object.assign(serviceInfo, {
                     device: this.device
                 });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTService(serviceInfo);
             });
         }
 
@@ -145,3 +144,5 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         return filtered;
     }
 }
+
+export { BluetoothRemoteGATTServerImpl as BluetoothRemoteGATTServer };

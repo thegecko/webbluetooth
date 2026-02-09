@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.5.0] - 2026-02-08
+
+### Fixed
+- Reworked event system to remove node-specific `EventEmitter` events in favour of `EventTarget` - [400](https://github.com/thegecko/webbluetooth/pull/400) ([Alex](https://github.com/Symbitic))
+
+## [3.4.0] - 2026-01-17
+
+### Fixed
+- Removed erroneous logging - [389](https://github.com/thegecko/webbluetooth/pull/389) ([Rob Moran](https://github.com/thegecko))
+- Fixed characteristic type for TypeScript compatibility - [334](https://github.com/thegecko/webbluetooth/pull/334) ([Rob Moran](https://github.com/thegecko))
+
 ## [3.3.2] - 2025-03-08
 
 ### Fixed
