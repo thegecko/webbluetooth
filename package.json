@@ -23,7 +23,7 @@
     "install": "pkg-prebuilds-verify ./binding-options.js || cmake-js compile",
     "clean": "yarn clean:cpp && yarn clean:ts",
     "clean:cpp": "cmake-js clean && git clean -fx ./prebuilds",
-    "clean:ts": "git clean -fx ./dist ./docs",
+    "clean:ts": "git clean -fx ./dist ./docs ./node_modules",
     "build:all": "yarn build:cpp && yarn build:ts",
     "build:cpp": "cmake-js compile",
     "build:ts": "tsc && yarn lint && yarn docs",
