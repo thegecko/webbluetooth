@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "target": "ES2017",
-        "module": "CommonJS",
+        "target": "es5",
+        "alwaysStrict": true,
         "strict": true,
         "downlevelIteration": true,
         "noImplicitReturns": true,

@@ -24,6 +24,7 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
+import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothDevice } from './device';
 import { BluetoothUUID } from './uuid';
 
@@ -190,7 +191,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDevice>, validServices: string[]): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: BluetoothDeviceInit, validServices: string[]): BluetoothDeviceInit | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -351,12 +352,8 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
                     const allowedServices = validServices.filter((item, index, array) => {
                         return array.indexOf(item) === index;
                     });
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: allowedServices
-                    });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, allowedServices, () => this.forgetDevice(deviceInfo.id!));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -389,12 +386,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
 
             adapter.startScan([], deviceInfo => {
                 if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id!)) {
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: []
-                    });
-
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, [], () => this.forgetDevice(deviceInfo.id!));
                     devices.push(bluetoothDevice);
                 }
             });

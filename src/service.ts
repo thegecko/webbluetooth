@@ -27,6 +27,7 @@ import { adapter } from './adapters';
 import { BluetoothDevice } from './device';
 import { BluetoothRemoteGATTCharacteristic } from './characteristic';
 import { BluetoothUUID } from './uuid';
+import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
 
 /**
  * Bluetooth Remote GATT Service class
@@ -117,13 +118,13 @@ class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRem
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTServiceImpl>) {
+    constructor(init: BluetoothRemoteGATTServiceInit, device: BluetoothDevice) {
         super();
 
-        this.device = init.device!;
-        this.uuid = init.uuid!;
-        this.isPrimary = init.isPrimary!;
-        this._handle = init._handle!;
+        this.device = device;
+        this.uuid = init.uuid;
+        this.isPrimary = init.isPrimary;
+        this._handle = init._handle;
 
         this.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
         this.device.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
@@ -165,10 +166,7 @@ class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRem
         if (!this.characteristics) {
             const characteristics = await adapter.discoverCharacteristics(this._handle);
             this.characteristics = characteristics.map(characteristicInfo => {
-                Object.assign(characteristicInfo, {
-                    service: this
-                });
-                return new BluetoothRemoteGATTCharacteristic(characteristicInfo);
+                return new BluetoothRemoteGATTCharacteristic(characteristicInfo, this);
             });
         }
 
@@ -223,10 +221,7 @@ class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRem
         if (!this.services) {
             const services = await adapter.discoverIncludedServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
-                Object.assign(serviceInfo, {
-                    device: this.device
-                });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTServiceImpl(serviceInfo, this.device);
             });
         }
 

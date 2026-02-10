@@ -23,12 +23,8 @@
 * SOFTWARE.
 */
 
-import { Adapter as BluetoothAdapter } from './adapter';
+import { Adapter as BluetoothAdapter, BluetoothDeviceInit, BluetoothRemoteGATTServiceInit, BluetoothRemoteGATTCharacteristicInit, BluetoothRemoteGATTDescriptorInit } from './adapter';
 import { BluetoothUUID } from '../uuid';
-import { BluetoothDevice } from '../device';
-import { BluetoothRemoteGATTCharacteristic } from '../characteristic';
-import { BluetoothRemoteGATTService } from '../service';
-import { BluetoothRemoteGATTDescriptor } from '../descriptor';
 import {
     isEnabled,
     getAdapters as simpleBleAdapters,
@@ -190,7 +186,7 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
     private peripherals = new Map<string, Peripheral>();
     private handles = new PeripheralHandles(this.peripherals);
 
-    private validDevice(device: Partial<BluetoothDevice>, serviceUUIDs: Array<string>): boolean {
+    private validDevice(device: BluetoothDeviceInit, serviceUUIDs: Array<string>): boolean {
         if (serviceUUIDs.length === 0) {
             // Match any device
             return true;
@@ -207,13 +203,12 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         return serviceUUIDs.some(serviceUUID => advertisedUUIDs.indexOf(serviceUUID) >= 0);
     }
 
-    private buildBluetoothDevice(device: Peripheral): Partial<BluetoothDevice> {
+    private buildBluetoothDevice(device: Peripheral): BluetoothDeviceInit {
         const name = device.identifier;
         const address = device.address;
 
         const rssi = device.rssi;
         const txPower = device.txPower;
-        const mtu = device.mtu;
 
         const id = address || `${name}`;
 
@@ -239,7 +234,6 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
             _adData: {
                 rssi,
                 txPower,
-                mtu,
                 serviceData,
                 manufacturerData
             }
@@ -269,7 +263,7 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         this.adapter = selected;
     }
 
-    public async startScan(serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDevice>) => void): Promise<void> {
+    public async startScan(serviceUUIDs: Array<string>, foundFn: (device: BluetoothDeviceInit) => void): Promise<void> {
         if (this.state === false) {
             throw new Error('adapter not enabled');
         }
@@ -343,10 +337,10 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         this.handles.deleteHandles(peripheral);
     }
 
-    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+    public async discoverServices(handle: string, serviceUUIDs?: Array<string>): Promise<Array<BluetoothRemoteGATTServiceInit>> {
         const services = this.handles.getServices(handle);
 
-        const discovered: Partial<BluetoothRemoteGATTService>[] = [];
+        const discovered: BluetoothRemoteGATTServiceInit[] = [];
         for (const [handle, service] of Object.entries(services)) {
             if (!serviceUUIDs || serviceUUIDs.length === 0 || serviceUUIDs.indexOf(service.uuid) >= 0) {
                 discovered.push({
@@ -360,15 +354,15 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTService>>> {
+    public async discoverIncludedServices(_handle: string, _serviceUUIDs?: Array<string>): Promise<Array<BluetoothRemoteGATTServiceInit>> {
         // Currently not implemented
         return [];
     }
 
-    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTCharacteristic>>> {
+    public async discoverCharacteristics(handle: string, characteristicUUIDs?: Array<string>): Promise<Array<BluetoothRemoteGATTCharacteristicInit>> {
         const { peripheral, service, characteristics } = this.handles.getCharacteristics(handle);
 
-        const discovered: Partial<BluetoothRemoteGATTCharacteristic>[] = [];
+        const discovered: BluetoothRemoteGATTCharacteristicInit[] = [];
 
         for (const [handle, characteristic] of Object.entries(characteristics)) {
             const charUUID = BluetoothUUID.canonicalUUID(characteristic.uuid);
@@ -395,8 +389,10 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
                 if (characteristic.canIndicate) {
                     peripheral.indicate(service.uuid, charUUID, data => {
                         if (this.handles.characteristicEvents.has(handle)) {
-                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            this.handles.characteristicEvents.get(handle)!(new DataView(data.buffer));
+                            const event = this.handles.characteristicEvents.get(handle);
+                            if (event) {
+                                event(new DataView(data.buffer));
+                            }
                         }
                     });
                 }
@@ -404,8 +400,10 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
                 if (characteristic.canNotify) {
                     peripheral.notify(service.uuid, charUUID, data => {
                         if (this.handles.characteristicEvents.has(handle)) {
-                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            this.handles.characteristicEvents.get(handle)!(new DataView(data.buffer));
+                            const event = this.handles.characteristicEvents.get(handle);
+                            if (event) {
+                                event(new DataView(data.buffer));
+                            }
                         }
                     });
                 }
@@ -415,9 +413,9 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         return discovered;
     }
 
-    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<Partial<BluetoothRemoteGATTDescriptor>>> {
+    public async discoverDescriptors(handle: string, descriptorUUIDs?: Array<string>): Promise<Array<BluetoothRemoteGATTDescriptorInit>> {
         const descriptors = this.handles.getDescriptors(handle);
-        const discovered = [];
+        const discovered = new Array<BluetoothRemoteGATTDescriptorInit>();
 
         for (const [handle, descriptor] of Object.entries(descriptors)) {
             const descUUID = BluetoothUUID.canonicalUUID(descriptor);
