@@ -129,10 +129,23 @@ class PeripheralHandles {
         }
 
         const peripheralHandle = this.parents.get(serviceHandle);
+        if (!peripheralHandle) {
+            throw new Error('Peripheral not found for service');
+        }
+
+        const peripheral = this.peripherals.get(peripheralHandle);
+        if (!peripheral) {
+            throw new Error('Peripheral not found for service');
+        }
+
+        const service = this.services.get(serviceHandle);
+        if (!service) {
+            throw new Error('Service not found');
+        }
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle!)!,
-            service: this.services.get(serviceHandle)!,
+            peripheral,
+            service,
             characteristics
         };
     }
@@ -155,25 +168,78 @@ class PeripheralHandles {
 
     public getCharacteristicGraph(characteristicHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic } {
         const serviceHandle = this.parents.get(characteristicHandle);
-        const peripheralHandle = this.parents.get(serviceHandle!);
+        if (!serviceHandle) {
+            throw new Error('Service not found for characteristic');
+        }
+
+        const peripheralHandle = this.parents.get(serviceHandle);
+        if (!peripheralHandle) {
+            throw new Error('Peripheral not found for characteristic');
+        }
+
+        const peripheral = this.peripherals.get(peripheralHandle);
+        if (!peripheral) {
+            throw new Error('Peripheral not found for characteristic');
+        }
+
+        const service = this.services.get(serviceHandle);
+        if (!service) {
+            throw new Error('Service not found for characteristic');
+        }
+
+        const characteristic = this.characteristics.get(characteristicHandle);
+        if (!characteristic) {
+            throw new Error('Characteristic not found');
+        }
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle!)!,
-            service: this.services.get(serviceHandle!)!,
-            characteristic: this.characteristics.get(characteristicHandle)!
+            peripheral,
+            service,
+            characteristic
         };
     }
 
     public getDescriptorGraph(descriptorHandle: string): { peripheral: Peripheral, service: Service, characteristic: Characteristic, descriptor: Descriptor } {
         const characteristicHandle = this.parents.get(descriptorHandle);
-        const serviceHandle = this.parents.get(characteristicHandle!);
-        const peripheralHandle = this.parents.get(serviceHandle!);
+        if (!characteristicHandle) {
+            throw new Error('Characteristic not found for descriptor');
+        }
+
+        const serviceHandle = this.parents.get(characteristicHandle);
+        if (!serviceHandle) {
+            throw new Error('Service not found for descriptor');
+        }
+
+        const peripheralHandle = this.parents.get(serviceHandle);
+        if (!peripheralHandle) {
+            throw new Error('Peripheral not found for descriptor');
+        }
+
+        const peripheral = this.peripherals.get(peripheralHandle);
+        if (!peripheral) {
+            throw new Error('Peripheral not found for descriptor');
+        }
+
+        const service = this.services.get(serviceHandle);
+        if (!service) {
+            throw new Error('Service not found for descriptor');
+        }
+
+        const characteristic = this.characteristics.get(characteristicHandle);
+        if (!characteristic) {
+            throw new Error('Characteristic not found for descriptor');
+        }
+
+        const descriptor = this.descriptors.get(descriptorHandle);
+        if (!descriptor) {
+            throw new Error('Descriptor not found');
+        }
 
         return {
-            peripheral: this.peripherals.get(peripheralHandle!)!,
-            service: this.services.get(serviceHandle!)!,
-            characteristic: this.characteristics.get(characteristicHandle!)!,
-            descriptor: this.descriptors.get(descriptorHandle)!
+            peripheral,
+            service,
+            characteristic,
+            descriptor
         };
     }
 }
@@ -276,9 +342,9 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         this.adapter.setCallbackOnScanFound(peripheral => {
             const device = this.buildBluetoothDevice(peripheral);
             if (this.validDevice(device, serviceUUIDs)) {
-                if (!foundPeripherals.includes(device.id!)) {
-                    foundPeripherals.push(device.id!);
-                    this.peripherals.set(device.id!, peripheral);
+                if (!foundPeripherals.includes(device.id)) {
+                    foundPeripherals.push(device.id);
+                    this.peripherals.set(device.id, peripheral);
                     // Only call the found function the first time we find a valid device
                     foundFn(device);
                 }
