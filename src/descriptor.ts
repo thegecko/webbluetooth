@@ -24,6 +24,7 @@
 */
 
 import { adapter } from './adapters';
+import { BluetoothRemoteGATTDescriptorInit } from './adapters/adapter';
 
 /**
  * Bluetooth Remote GATT Descriptor class
@@ -40,7 +41,7 @@ class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor
      */
     public readonly uuid: string;
 
-    private _value: DataView;
+    private _value: DataView = new DataView(new ArrayBuffer(0));
     /**
      * The value of the descriptor
      */
@@ -57,11 +58,10 @@ class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor
      * Descriptor constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTDescriptorImpl>) {
-        this.characteristic = init.characteristic!;
-        this.uuid = init.uuid!;
-        this._value = init.value!;
-        this._handle = init._handle!;
+    constructor(init: BluetoothRemoteGATTDescriptorInit, characteristic: BluetoothRemoteGATTCharacteristic) {
+        this.characteristic = characteristic;
+        this.uuid = init.uuid;
+        this._handle = init._handle;
     }
 
     /**

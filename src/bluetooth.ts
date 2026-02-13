@@ -24,6 +24,7 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
+import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothDevice } from './device';
 import { BluetoothUUID } from './uuid';
 
@@ -190,7 +191,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDevice>, validServices: string[]): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: BluetoothDeviceInit, validServices: string[]): BluetoothDeviceInit | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -207,7 +208,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
             if (filter.services) {
                 const serviceUUIDs = filter.services.map(BluetoothUUID.getService);
                 const servicesValid = serviceUUIDs.every(serviceUUID => {
-                    return (deviceInfo._serviceUUIDs!.indexOf(serviceUUID) > -1);
+                    return (deviceInfo._serviceUUIDs.indexOf(serviceUUID) > -1);
                 });
 
                 if (!servicesValid) return;
@@ -216,7 +217,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
 
             // Service Data
             if (filter.serviceData) {
-                if (!deviceInfo._adData?.serviceData) return;
+                if (!deviceInfo._adData.serviceData) return;
                 const services = [...deviceInfo._adData.serviceData.keys()];
                 for (const entry of filter.serviceData) {
                     if (!services.includes(entry.service)) return;
@@ -225,7 +226,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
 
             // Manufacturer Data
             if (filter.manufacturerData) {
-                if (!deviceInfo._adData?.manufacturerData) return;
+                if (!deviceInfo._adData.manufacturerData) return;
                 const manufacturers = [...deviceInfo._adData.manufacturerData.keys()];
                 for (const entry of filter.manufacturerData) {
                     if (!manufacturers.includes(entry.companyIdentifier)) return;
@@ -351,12 +352,8 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
                     const allowedServices = validServices.filter((item, index, array) => {
                         return array.indexOf(item) === index;
                     });
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: allowedServices
-                    });
 
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, allowedServices, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -388,13 +385,8 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
             }, this.scanTime);
 
             adapter.startScan([], deviceInfo => {
-                if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id!)) {
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: []
-                    });
-
-                    const bluetoothDevice = new BluetoothDevice(deviceInfo, () => this.forgetDevice(deviceInfo.id!));
+                if (this.options.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, [], () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });
