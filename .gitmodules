@@ -1,3 +1,3 @@
 [submodule "SimpleBLE"]
 	path = SimpleBLE
-	url = https://github.com/SimpleBLE/SimpleBLE
+	url = https://github.com/thegecko/SimpleBLE
