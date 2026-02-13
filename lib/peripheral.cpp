@@ -1,5 +1,5 @@
 #include "peripheral.h"
-#include "simpleble_c/simpleble.h"
+#include "simplecble/simplecble.h"
 
 Napi::FunctionReference Peripheral::constructor;
 
