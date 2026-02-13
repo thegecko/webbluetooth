@@ -27,6 +27,7 @@ import { adapter } from './adapters';
 import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceImpl } from './service';
+import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
 import { EventDispatcher, DOMEvent } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
@@ -61,11 +62,11 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView = undefined;
+    private _value: DataView | undefined;
     /**
      * The value of the characteristic
      */
-    public get value(): DataView {
+    public get value(): DataView | undefined {
         return this._value;
     }
 
@@ -91,14 +92,14 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTCharacteristicImpl>) {
+    constructor(init: BluetoothRemoteGATTCharacteristicInit, service: BluetoothRemoteGATTServiceImpl) {
         super();
 
-        this.service = init.service;
+        this.service = service;
         this.uuid = init.uuid;
         this.properties = init.properties;
-        this._value = init.value;
         this._handle = init._handle;
+        this._value = init.value;
     }
 
     private setValue(value?: DataView, emit?: boolean) {
@@ -146,10 +147,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         if (!this.descriptors) {
             const descriptors = await adapter.discoverDescriptors(this._handle);
             this.descriptors = descriptors.map(descriptorInfo => {
-                Object.assign(descriptorInfo, {
-                    characteristic: this
-                });
-                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo);
+                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo, this);
             });
         }
 

@@ -27,6 +27,7 @@ import { adapter } from './adapters';
 import { BluetoothDeviceImpl } from './device';
 import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
 import { BluetoothUUID } from './uuid';
+import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
 import { EventDispatcher, DOMEvent } from './events';
 
 /**
@@ -127,10 +128,10 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTServiceImpl>) {
+    constructor(init: BluetoothRemoteGATTServiceInit, device: BluetoothDeviceImpl) {
         super();
 
-        this.device = init.device;
+        this.device = device;
         this.uuid = init.uuid;
         this.isPrimary = init.isPrimary;
         this._handle = init._handle;
@@ -175,10 +176,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         if (!this.characteristics) {
             const characteristics = await adapter.discoverCharacteristics(this._handle);
             this.characteristics = characteristics.map(characteristicInfo => {
-                Object.assign(characteristicInfo, {
-                    service: this
-                });
-                return new BluetoothRemoteGATTCharacteristicImpl(characteristicInfo);
+                return new BluetoothRemoteGATTCharacteristicImpl(characteristicInfo, this);
             });
         }
 
@@ -233,10 +231,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         if (!this.services) {
             const services = await adapter.discoverIncludedServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
-                Object.assign(serviceInfo, {
-                    device: this.device
-                });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTServiceImpl(serviceInfo, this.device);
             });
         }
 

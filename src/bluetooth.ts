@@ -24,6 +24,7 @@
 */
 
 import { adapter, EVENT_ENABLED } from './adapters';
+import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
 import { EventDispatcher, DOMEvent } from './events';
@@ -187,7 +188,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         }
     }
 
-    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: Partial<BluetoothDeviceImpl>, validServices): Partial<BluetoothDevice> | undefined {
+    private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: BluetoothDeviceInit, validServices: string[]): BluetoothDeviceInit | undefined {
         let valid = false;
 
         filters.forEach(filter => {
@@ -345,12 +346,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                     const allowedServices = validServices.filter((item, index, array) => {
                         return array.indexOf(item) === index;
                     });
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: allowedServices
-                    });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, this, allowedServices, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -382,13 +379,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
             }, this.scanTime);
 
             adapter.startScan([], deviceInfo => {
-                if (this.options?.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
-                    Object.assign(deviceInfo, {
-                        _bluetooth: this,
-                        _allowedServices: []
-                    });
-
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, () => this.forgetDevice(deviceInfo.id));
+                if (this.options.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
+                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, this, [], () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });

@@ -125,10 +125,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         if (!this.services) {
             const services = await adapter.discoverServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
-                Object.assign(serviceInfo, {
-                    device: this.device
-                });
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo);
+                return new BluetoothRemoteGATTServiceImpl(serviceInfo, this.device);
             });
         }
 

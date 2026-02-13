@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothRemoteGATTServerImpl } from './server';
 import { ServiceEvents } from './service';
 import { EventDispatcher } from './events';
@@ -168,20 +169,18 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
      * Device constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothDeviceImpl>, private forgetFn: () => void) {
+    constructor(init: BluetoothDeviceInit, bluetooth: Bluetooth, allowedServices: string[], private forgetFn: () => void) {
         super();
 
         this.id = init.id;
-        this.name = init.name;
-        this.gatt = init.gatt;
+        this.name = init.name || `Unknown or Unsupported Device (${this.id})`;
 
         this._adData = init._adData;
-        this._bluetooth = init._bluetooth;
-        this._allowedServices = init._allowedServices;
+        this._bluetooth = bluetooth;
+        this._allowedServices = allowedServices;
         this._serviceUUIDs = init._serviceUUIDs;
 
-        if (!this.name) this.name = `Unknown or Unsupported Device (${this.id})`;
-        if (!this.gatt) this.gatt = new BluetoothRemoteGATTServerImpl(this);
+        this.gatt = new BluetoothRemoteGATTServerImpl(this);
     }
 
     /**

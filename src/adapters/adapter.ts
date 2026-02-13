@@ -24,26 +24,48 @@
 */
 
 import type { EventEmitter } from 'events';
-import type { BluetoothDeviceImpl } from '../device';
-import type { BluetoothRemoteGATTServiceImpl } from '../service';
-import type { BluetoothRemoteGATTCharacteristicImpl } from '../characteristic';
-import type { BluetoothRemoteGATTDescriptorImpl } from '../descriptor';
+
+export interface BluetoothDeviceInit {
+    id: string;
+    name: string;
+    _serviceUUIDs: Array<string>;
+    _adData: Partial<BluetoothAdvertisingEvent>;
+}
+
+export interface BluetoothRemoteGATTServiceInit {
+    _handle: string;
+    uuid: string;
+    isPrimary: boolean;
+}
+
+export interface BluetoothRemoteGATTCharacteristicInit {
+    _handle: string;
+    uuid: string;
+    properties: BluetoothCharacteristicProperties;
+    value?: DataView;
+}
+
+export interface BluetoothRemoteGATTDescriptorInit {
+    _handle: string;
+    uuid: string;
+    value?: DataView;
+}
 
 /**
  * @hidden
  */
 export interface Adapter extends EventEmitter {
     getEnabled: () => Promise<boolean>;
-    getAdapters: () => Array<{ index: number, address: string, active: boolean}>;
+    getAdapters: () => Array<{ index: number, address: string, active: boolean }>;
     useAdapter: (index: number) => void;
-    startScan: (serviceUUIDs: Array<string>, foundFn: (device: Partial<BluetoothDeviceImpl>) => void) => Promise<void>;
+    startScan: (serviceUUIDs: Array<string>, foundFn: (device: BluetoothDeviceInit) => void) => Promise<void>;
     stopScan: () => void;
     connect: (handle: string, disconnectFn?: () => void) => Promise<void>;
     disconnect: (handle: string) => Promise<void>;
-    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>>;
-    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTServiceImpl>>>;
-    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTCharacteristicImpl>>>;
-    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<Partial<BluetoothRemoteGATTDescriptorImpl>>>;
+    discoverServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<BluetoothRemoteGATTServiceInit>>;
+    discoverIncludedServices: (handle: string, serviceUUIDs?: Array<string>) => Promise<Array<BluetoothRemoteGATTServiceInit>>;
+    discoverCharacteristics: (handle: string, characteristicUUIDs?: Array<string>) => Promise<Array<BluetoothRemoteGATTCharacteristicInit>>;
+    discoverDescriptors: (handle: string, descriptorUUIDs?: Array<string>) => Promise<Array<BluetoothRemoteGATTDescriptorInit>>;
     readCharacteristic: (handle: string) => Promise<DataView>;
     writeCharacteristic: (handle: string, value: DataView, withoutResponse?: boolean) => Promise<void>;
     enableNotify: (handle: string, notifyFn: (value: DataView) => void) => Promise<void>;
