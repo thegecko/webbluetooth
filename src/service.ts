@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { EventDispatcher } from './events';
 import { adapter } from './adapters';
 import { BluetoothDevice } from './device';
 import { BluetoothRemoteGATTCharacteristic } from './characteristic';
@@ -41,7 +42,7 @@ import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
  * | `servicechanged` | Event | An existing service has changed. |
  * | `serviceremoved` | Event | A service is unavailable. |
  */
-class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRemoteGATTService {
+class BluetoothRemoteGATTServiceImpl extends EventDispatcher<BluetoothRemoteGATTCharacteristicEventMap & BluetoothRemoteGATTServiceEventMap> implements BluetoothRemoteGATTService {
 
     /**
      * The device the service is related to

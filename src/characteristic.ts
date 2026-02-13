@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { EventDispatcher } from './events';
 import { adapter } from './adapters';
 import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
@@ -40,7 +41,7 @@ const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferVie
  * | ---- | ----- | ----------- |
  * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
  */
-class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements BluetoothRemoteGATTCharacteristic {
+class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<BluetoothRemoteGATTCharacteristicEventMap> implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to

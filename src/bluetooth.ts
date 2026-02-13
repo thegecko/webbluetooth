@@ -23,6 +23,7 @@
 * SOFTWARE.
 */
 
+import { EventDispatcher } from './events';
 import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothDevice } from './device';
@@ -73,7 +74,7 @@ export interface BluetoothOptions {
  * | `servicechanged` | Event | An existing service has changed. |
  * | `serviceremoved` | Event | A service is unavailable. |
  */
-class BluetoothImpl extends EventTarget implements Bluetooth {
+class BluetoothImpl extends EventDispatcher<BluetoothEventMap & BluetoothDeviceEventMap & BluetoothRemoteGATTCharacteristicEventMap & BluetoothRemoteGATTServiceEventMap> implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
@@ -102,7 +103,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
             adapter.useAdapter(options.adapterIndex);
         }
 
-        adapter.addEventListener(EVENT_ENABLED, _value => {
+        adapter.on(EVENT_ENABLED, _value => {
             this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
         });
     }

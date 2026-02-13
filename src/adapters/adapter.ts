@@ -23,6 +23,8 @@
 * SOFTWARE.
 */
 
+import { EventEmitter } from 'events';
+
 export interface BluetoothDeviceInit {
     id: string;
     name: string;
@@ -50,7 +52,7 @@ export interface BluetoothRemoteGATTDescriptorInit {
 /**
  * @hidden
  */
-export interface Adapter extends EventTarget {
+export interface Adapter extends EventEmitter {
     getEnabled: () => Promise<boolean>;
     getAdapters: () => Array<{ index: number, address: string, active: boolean }>;
     useAdapter: (index: number) => void;
