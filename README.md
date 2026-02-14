@@ -31,17 +31,6 @@ Windows         | X | X | -
 MacOS           | - | X | X 
 Linux (glibc)   | - | X | X
 
-## Usage
-
-The module exports a default `navigator.bluetooth` instance, the `Bluetooth` class to allow you to instantiate your own bluetooth instances and the Bluetooth helper methods:
-
-- [bluetooth](globals.html#bluetooth)
-- [Bluetooth()](classes/bluetooth.html)
-- [BluetoothUUID.getService()](globals.html)
-- [BluetoothUUID.getCharacteristic()](globals.html)
-- [BluetoothUUID.getDescriptor()](globals.html)
-- [BluetoothUUID.canonicalUUID()](globals.html)
-
 ### Using the default bluetooth instance
 
 To use existing Web Bluetooth scripts, you can simply use the default `bluetooth` instance in place of the `navigator.bluetooth` object:
