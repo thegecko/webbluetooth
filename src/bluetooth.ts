@@ -25,9 +25,8 @@
 
 import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceInit } from './adapters/adapter';
-import { BluetoothDevice, BluetoothDeviceEvents } from './device';
+import { BluetoothDevice } from './device';
 import { BluetoothUUID } from './uuid';
-import { EventDispatcher } from './events';
 
 /**
  * Bluetooth Options interface
@@ -60,19 +59,21 @@ export interface BluetoothOptions {
 }
 
 /**
- * @hidden
- */
-export interface BluetoothEvents extends BluetoothDeviceEvents {
-    /**
-     * Bluetooth Availability Changed event
-     */
-    availabilitychanged: Event;
-}
-
-/**
  * Bluetooth class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `availabilitychanged` | Event | Bluetooth availability changed. |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | Event | GATT server has been disconnected. |
+ * | `serviceadded` | Event | A new service is available. |
+ * | `servicechanged` | Event | An existing service has changed. |
+ * | `serviceremoved` | Event | A service is unavailable. |
  */
-class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
+class BluetoothImpl extends EventTarget implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
@@ -100,7 +101,7 @@ class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetoot
             adapter.useAdapter(options.adapterIndex);
         }
 
-        adapter.on(EVENT_ENABLED, _value => {
+        adapter.addEventListener(EVENT_ENABLED, _value => {
             this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
         });
     }

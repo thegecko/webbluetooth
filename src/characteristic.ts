@@ -28,24 +28,19 @@ import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTService } from './service';
 import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
-import { EventDispatcher } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
- * @hidden
- */
-export interface CharacteristicEvents {
-    /**
-     * Characteristic value changed event
-     */
-    characteristicvaluechanged: Event;
-}
-
-/**
  * Bluetooth Remote GATT Characteristic class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
  */
-class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
+class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
