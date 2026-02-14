@@ -25,27 +25,22 @@
 
 import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothRemoteGATTServer } from './server';
-import { ServiceEvents } from './service';
-import { EventDispatcher } from './events';
-
-/**
- * @hidden
- */
-export interface BluetoothDeviceEvents extends ServiceEvents {
-    /**
-     * GATT server disconnected event
-     */
-    gattserverdisconnected: Event;
-    /**
-     * Advertisement received event
-     */
-    advertisementreceived: Event;
-}
 
 /**
  * Bluetooth Device class
+ *
+ * ### Events
+ *
+ * | Name | Event | Description |
+ * | ---- | ----- | ----------- |
+ * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
+ * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
+ * | `gattserverdisconnected` | Event | GATT server has been disconnected. |
+ * | `serviceadded` | Event | A new service is available. |
+ * | `servicechanged` | Event | An existing service has changed. |
+ * | `serviceremoved` | Event | A service is unavailable. |
  */
-class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
+class BluetoothDeviceImpl extends EventTarget implements BluetoothDevice {
 
     /**
      * The unique identifier of the device

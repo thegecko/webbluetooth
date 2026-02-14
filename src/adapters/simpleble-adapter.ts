@@ -23,7 +23,6 @@
 * SOFTWARE.
 */
 
-import { EventEmitter } from 'events';
 import { Adapter as BluetoothAdapter, BluetoothDeviceInit, BluetoothRemoteGATTServiceInit, BluetoothRemoteGATTCharacteristicInit, BluetoothRemoteGATTDescriptorInit } from './adapter';
 import { BluetoothUUID } from '../uuid';
 import {
@@ -248,7 +247,7 @@ class PeripheralHandles {
 /**
  * @hidden
  */
-export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
+export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
     private adapter: Adapter | undefined;
     private peripherals = new Map<string, Peripheral>();
     private handles = new PeripheralHandles(this.peripherals);
