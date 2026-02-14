@@ -25,18 +25,18 @@
 
 import { BluetoothUUID } from './uuid';
 import { adapter } from './adapters';
-import { BluetoothRemoteGATTServiceImpl } from './service';
-import { BluetoothDeviceImpl } from './device';
+import { BluetoothRemoteGATTService } from './service';
+import { BluetoothDevice } from './device';
 
 /**
  * Bluetooth Remote GATT Server class
  */
-export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
+class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer {
 
     /**
      * The device the gatt server is related to
      */
-    public readonly device: BluetoothDeviceImpl;
+    public readonly device: BluetoothDevice;
 
     private _connected = false;
     /**
@@ -56,7 +56,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
      * Server constructor
      * @param device Device the gatt server relates to
      */
-    constructor(device: BluetoothDeviceImpl) {
+    constructor(device: BluetoothDevice) {
         this.device = device;
         this._handle = this.device.id;
     }
@@ -124,7 +124,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         if (!this.services) {
             const services = await adapter.discoverServices(this._handle, this.device._allowedServices);
             this.services = services.map(serviceInfo => {
-                return new BluetoothRemoteGATTServiceImpl(serviceInfo, this.device);
+                return new BluetoothRemoteGATTService(serviceInfo, this.device);
             });
         }
 
@@ -141,3 +141,5 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         return filtered;
     }
 }
+
+export { BluetoothRemoteGATTServerImpl as BluetoothRemoteGATTServer };

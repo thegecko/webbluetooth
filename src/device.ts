@@ -24,7 +24,7 @@
 */
 
 import { BluetoothDeviceInit } from './adapters/adapter';
-import { BluetoothRemoteGATTServerImpl } from './server';
+import { BluetoothRemoteGATTServer } from './server';
 import { ServiceEvents } from './service';
 import { EventDispatcher } from './events';
 
@@ -45,7 +45,7 @@ export interface BluetoothDeviceEvents extends ServiceEvents {
 /**
  * Bluetooth Device class
  */
-export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
+class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> implements BluetoothDevice {
 
     /**
      * The unique identifier of the device
@@ -180,7 +180,7 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this._allowedServices = allowedServices;
         this._serviceUUIDs = init._serviceUUIDs;
 
-        this.gatt = new BluetoothRemoteGATTServerImpl(this);
+        this.gatt = new BluetoothRemoteGATTServer(this);
     }
 
     /**
@@ -204,3 +204,5 @@ export class BluetoothDeviceImpl extends EventDispatcher<BluetoothDeviceEvents> 
         this.forgetFn();
     }
 }
+
+export { BluetoothDeviceImpl as BluetoothDevice };

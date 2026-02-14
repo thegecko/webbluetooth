@@ -24,9 +24,9 @@
 */
 
 import { adapter } from './adapters';
-import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
+import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
-import { BluetoothRemoteGATTServiceImpl } from './service';
+import { BluetoothRemoteGATTService } from './service';
 import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
 import { EventDispatcher } from './events';
 
@@ -45,12 +45,12 @@ export interface CharacteristicEvents {
 /**
  * Bluetooth Remote GATT Characteristic class
  */
-export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
+class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTServiceImpl;
+    public readonly service: BluetoothRemoteGATTService;
 
     /**
      * The unique identifier of the characteristic
@@ -92,7 +92,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: BluetoothRemoteGATTCharacteristicInit, service: BluetoothRemoteGATTServiceImpl) {
+    constructor(init: BluetoothRemoteGATTCharacteristicInit, service: BluetoothRemoteGATTService) {
         super();
 
         this.service = service;
@@ -149,7 +149,7 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         if (!this.descriptors) {
             const descriptors = await adapter.discoverDescriptors(this._handle);
             this.descriptors = descriptors.map(descriptorInfo => {
-                return new BluetoothRemoteGATTDescriptorImpl(descriptorInfo, this);
+                return new BluetoothRemoteGATTDescriptor(descriptorInfo, this);
             });
         }
 
@@ -256,3 +256,5 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
         return this;
     }
 }
+
+export { BluetoothRemoteGATTCharacteristicImpl as BluetoothRemoteGATTCharacteristic };

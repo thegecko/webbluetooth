@@ -24,8 +24,8 @@
 */
 
 import { adapter } from './adapters';
-import { BluetoothDeviceImpl } from './device';
-import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
+import { BluetoothDevice } from './device';
+import { BluetoothRemoteGATTCharacteristic, CharacteristicEvents } from './characteristic';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
 import { EventDispatcher } from './events';
@@ -51,12 +51,12 @@ export interface ServiceEvents extends CharacteristicEvents {
 /**
  * Bluetooth Remote GATT Service class
  */
-export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvents> implements BluetoothRemoteGATTService {
+class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvents> implements BluetoothRemoteGATTService {
 
     /**
      * The device the service is related to
      */
-    public readonly device: BluetoothDeviceImpl;
+    public readonly device: BluetoothDevice;
 
     /**
      * The unique identifier of the service
@@ -128,7 +128,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
      * Service constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: BluetoothRemoteGATTServiceInit, device: BluetoothDeviceImpl) {
+    constructor(init: BluetoothRemoteGATTServiceInit, device: BluetoothDevice) {
         super();
 
         this.device = device;
@@ -176,7 +176,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         if (!this.characteristics) {
             const characteristics = await adapter.discoverCharacteristics(this._handle);
             this.characteristics = characteristics.map(characteristicInfo => {
-                return new BluetoothRemoteGATTCharacteristicImpl(characteristicInfo, this);
+                return new BluetoothRemoteGATTCharacteristic(characteristicInfo, this);
             });
         }
 
@@ -248,3 +248,5 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         return filtered;
     }
 }
+
+export { BluetoothRemoteGATTServiceImpl as BluetoothRemoteGATTService };

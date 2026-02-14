@@ -29,7 +29,7 @@ import { BluetoothRemoteGATTDescriptorInit } from './adapters/adapter';
 /**
  * Bluetooth Remote GATT Descriptor class
  */
-export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor {
+class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor {
 
     /**
      * The characteristic the descriptor is related to
@@ -96,3 +96,5 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
         this._value = dataView;
     }
 }
+
+export { BluetoothRemoteGATTDescriptorImpl as BluetoothRemoteGATTDescriptor };

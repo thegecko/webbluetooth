@@ -23,17 +23,17 @@
 * SOFTWARE.
 */
 
-import { BluetoothImpl, BluetoothOptions, getAdapters } from './bluetooth';
+import { Bluetooth, BluetoothOptions, getAdapters } from './bluetooth';
 
 /**
  * Default bluetooth instance synonymous with `navigator.bluetooth`
  */
-export const bluetooth = new BluetoothImpl();
+export const bluetooth = new Bluetooth();
 
 /**
  * Bluetooth class for creating new instances
  */
-export { BluetoothImpl as Bluetooth, BluetoothOptions, getAdapters };
+export { Bluetooth, BluetoothOptions, getAdapters };
 
 /**
  * Helper methods and enums

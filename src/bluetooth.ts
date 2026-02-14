@@ -25,7 +25,7 @@
 
 import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceInit } from './adapters/adapter';
-import { BluetoothDeviceImpl, BluetoothDeviceEvents } from './device';
+import { BluetoothDevice, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
 import { EventDispatcher } from './events';
 
@@ -72,7 +72,7 @@ export interface BluetoothEvents extends BluetoothDeviceEvents {
 /**
  * Bluetooth class
  */
-export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
+class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
@@ -349,7 +349,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
                         return array.indexOf(item) === index;
                     });
 
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, this, allowedServices, () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, allowedServices, () => this.forgetDevice(deviceInfo.id));
 
                     const selectFn = () => {
                         complete.call(this, bluetoothDevice);
@@ -382,7 +382,7 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
 
             adapter.startScan([], deviceInfo => {
                 if (this.options.allowAllDevices || this.allowedDevices.has(deviceInfo.id)) {
-                    const bluetoothDevice = new BluetoothDeviceImpl(deviceInfo, this, [], () => this.forgetDevice(deviceInfo.id));
+                    const bluetoothDevice = new BluetoothDevice(deviceInfo, this, [], () => this.forgetDevice(deviceInfo.id));
                     devices.push(bluetoothDevice);
                 }
             });
@@ -408,6 +408,8 @@ export class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements B
         throw new Error('requestLEScan error: method not implemented.');
     }
 }
+
+export { BluetoothImpl as Bluetooth };
 
 /**
  * List available bluetooth adapters
