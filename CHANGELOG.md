@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.6.0] - 2026-02-14
+
+### Fixed
+- Updated all TypeScript to work in strict mode - ([Rob Moran](https://github.com/thegecko))
+
 ## [3.5.0] - 2026-02-08
 
 ### Fixed
