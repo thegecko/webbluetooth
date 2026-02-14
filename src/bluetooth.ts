@@ -25,8 +25,9 @@
 
 import { adapter, EVENT_ENABLED } from './adapters';
 import { BluetoothDeviceInit } from './adapters/adapter';
-import { BluetoothDevice } from './device';
+import { BluetoothDevice, BluetoothDeviceEvents } from './device';
 import { BluetoothUUID } from './uuid';
+import { EventDispatcher } from './events';
 
 /**
  * Bluetooth Options interface
@@ -59,28 +60,26 @@ export interface BluetoothOptions {
 }
 
 /**
- * Bluetooth class
- *
- * ### Events
- *
- * | Name | Event | Description |
- * | ---- | ----- | ----------- |
- * | `advertisementreceived` | {@link BluetoothAdvertisingEvent} | Advertisement received. |
- * | `availabilitychanged` | Event | Bluetooth availability changed. |
- * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
- * | `gattserverdisconnected` | Event | GATT server has been disconnected. |
- * | `serviceadded` | Event | A new service is available. |
- * | `servicechanged` | Event | An existing service has changed. |
- * | `serviceremoved` | Event | A service is unavailable. |
+ * @hidden
  */
-class BluetoothImpl extends EventTarget implements Bluetooth {
+export interface BluetoothEvents extends BluetoothDeviceEvents {
+    /**
+     * Bluetooth Availability Changed event
+     */
+    availabilitychanged: Event;
+}
+
+/**
+ * Bluetooth class
+ */
+class BluetoothImpl extends EventDispatcher<BluetoothEvents> implements Bluetooth {
     /**
      * Referring device for the bluetooth instance
      */
     public readonly referringDevice?: BluetoothDevice;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private scanner: any;
+    private scanner: any = undefined;
     private deviceFound: ((device: BluetoothDevice, selectFn: () => void) => boolean) | undefined;
     private scanTime: number = 10.24 * 1000;
     private allowedDevices = new Set<string>();
@@ -91,7 +90,6 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
      */
     constructor(private options: BluetoothOptions = {}) {
         super();
-
         this.referringDevice = options.referringDevice;
         this.deviceFound = options.deviceFound;
         if (options.scanTime) {
@@ -102,7 +100,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
             adapter.useAdapter(options.adapterIndex);
         }
 
-        adapter.addEventListener(EVENT_ENABLED, _value => {
+        adapter.on(EVENT_ENABLED, _value => {
             this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
         });
     }
@@ -323,7 +321,8 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
                 }
             }, this.scanTime);
 
-            adapter.startScan(searchUUIDs, deviceInfo => {
+            adapter.startScan(searchUUIDs, initialInfo => {
+                let deviceInfo: BluetoothDeviceInit | undefined = initialInfo;
                 let validServices: string[] = [];
 
                 const complete = (bluetoothDevice: BluetoothDevice) => {
@@ -334,10 +333,7 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
 
                 // filter devices if filters specified
                 if (isFiltered(options)) {
-                    const filtered = this.filterDevice(options.filters, deviceInfo, validServices);
-                    if (filtered) {
-                        deviceInfo = filtered;
-                    }
+                    deviceInfo = this.filterDevice(options.filters, deviceInfo, validServices);
                 }
 
                 if (deviceInfo) {

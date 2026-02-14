@@ -28,19 +28,24 @@ import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTService } from './service';
 import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
+import { EventDispatcher } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
 /**
- * Bluetooth Remote GATT Characteristic class
- *
- * ### Events
- *
- * | Name | Event | Description |
- * | ---- | ----- | ----------- |
- * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
+ * @hidden
  */
-class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements BluetoothRemoteGATTCharacteristic {
+export interface CharacteristicEvents {
+    /**
+     * Characteristic value changed event
+     */
+    characteristicvaluechanged: Event;
+}
+
+/**
+ * Bluetooth Remote GATT Characteristic class
+ */
+class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<CharacteristicEvents> implements BluetoothRemoteGATTCharacteristic {
 
     /**
      * The service the characteristic is related to
@@ -57,11 +62,11 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView = new DataView(new ArrayBuffer(0));
+    private _value: DataView | undefined;
     /**
      * The value of the characteristic
      */
-    public get value(): DataView {
+    public get value(): DataView | undefined {
         return this._value;
     }
 
@@ -94,6 +99,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
         this.uuid = init.uuid;
         this.properties = init.properties;
         this._handle = init._handle;
+        this._value = init.value;
     }
 
     private setValue(value?: DataView, emit?: boolean) {

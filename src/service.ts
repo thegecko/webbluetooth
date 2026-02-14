@@ -25,23 +25,33 @@
 
 import { adapter } from './adapters';
 import { BluetoothDevice } from './device';
-import { BluetoothRemoteGATTCharacteristic } from './characteristic';
+import { BluetoothRemoteGATTCharacteristic, CharacteristicEvents } from './characteristic';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
+import { EventDispatcher } from './events';
+
+/**
+ * @hidden
+ */
+export interface ServiceEvents extends CharacteristicEvents {
+    /**
+     * Service added event
+     */
+    serviceadded: Event;
+    /**
+     * Service changed event
+     */
+    servicechanged: Event;
+    /**
+     * Service removed event
+     */
+    serviceremoved: Event;
+}
 
 /**
  * Bluetooth Remote GATT Service class
- *
- * ### Events
- *
- * | Name | Event | Description |
- * | ---- | ----- | ----------- |
- * | `characteristicvaluechanged` | Event | The value of a BLE Characteristic has changed. |
- * | `serviceadded` | Event | A new service is available. |
- * | `servicechanged` | Event | An existing service has changed. |
- * | `serviceremoved` | Event | A service is unavailable. |
  */
-class BluetoothRemoteGATTServiceImpl extends EventTarget implements BluetoothRemoteGATTService {
+class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvents> implements BluetoothRemoteGATTService {
 
     /**
      * The device the service is related to

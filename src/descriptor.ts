@@ -41,11 +41,11 @@ class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor
      */
     public readonly uuid: string;
 
-    private _value: DataView = new DataView(new ArrayBuffer(0));
+    private _value: DataView | undefined;
     /**
      * The value of the descriptor
      */
-    public get value(): DataView {
+    public get value(): DataView | undefined {
         return this._value;
     }
 
@@ -62,6 +62,7 @@ class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDescriptor
         this.characteristic = characteristic;
         this.uuid = init.uuid;
         this._handle = init._handle;
+        this._value = init.value;
     }
 
     /**
