@@ -27,6 +27,7 @@ import { adapter } from './adapters';
 import { BluetoothRemoteGATTDescriptor } from './descriptor';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTService } from './service';
+import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
@@ -56,11 +57,11 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      */
     public readonly properties: BluetoothCharacteristicProperties;
 
-    private _value: DataView;
+    private _value: DataView | undefined;
     /**
      * The value of the characteristic
      */
-    public get value(): DataView {
+    public get value(): DataView | undefined {
         return this._value;
     }
 
@@ -86,14 +87,14 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * Characteristic constructor
      * @param init A partial class to initialise values
      */
-    constructor(init: Partial<BluetoothRemoteGATTCharacteristicImpl>) {
+    constructor(init: BluetoothRemoteGATTCharacteristicInit, service: BluetoothRemoteGATTService) {
         super();
 
-        this.service = init.service!;
-        this.uuid = init.uuid!;
-        this.properties = init.properties!;
-        this._value = init.value!;
-        this._handle = init._handle!;
+        this.service = service;
+        this.uuid = init.uuid;
+        this.properties = init.properties;
+        this._handle = init._handle;
+        this._value = init.value;
     }
 
     private setValue(value?: DataView, emit?: boolean) {
@@ -143,10 +144,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
         if (!this.descriptors) {
             const descriptors = await adapter.discoverDescriptors(this._handle);
             this.descriptors = descriptors.map(descriptorInfo => {
-                Object.assign(descriptorInfo, {
-                    characteristic: this
-                });
-                return new BluetoothRemoteGATTDescriptor(descriptorInfo);
+                return new BluetoothRemoteGATTDescriptor(descriptorInfo, this);
             });
         }
 
@@ -228,7 +226,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * Start notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public async startNotifications(): Promise<BluetoothRemoteGATTCharacteristicImpl> {
+    public async startNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
         if (!this.service.device.gatt.connected) {
             throw new Error('startNotifications error: device not connected');
         }
@@ -244,7 +242,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * Stop notifications of changes for the characteristic
      * @returns Promise containing the characteristic
      */
-    public async stopNotifications(): Promise<BluetoothRemoteGATTCharacteristicImpl> {
+    public async stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic> {
         if (!this.service.device.gatt.connected) {
             throw new Error('stopNotifications error: device not connected');
         }
