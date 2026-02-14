@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -28,7 +28,7 @@ import { BluetoothRemoteGATTDescriptorImpl } from './descriptor';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceImpl } from './service';
 import { BluetoothRemoteGATTCharacteristicInit } from './adapters/adapter';
-import { EventDispatcher, DOMEvent } from './events';
+import { EventDispatcher } from './events';
 
 const isView = (source: ArrayBuffer | ArrayBufferView): source is ArrayBufferView => (source as ArrayBufferView).buffer !== undefined;
 
@@ -50,12 +50,12 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     /**
      * The service the characteristic is related to
      */
-    public readonly service: BluetoothRemoteGATTServiceImpl = undefined;
+    public readonly service: BluetoothRemoteGATTServiceImpl;
 
     /**
      * The unique identifier of the characteristic
      */
-    public readonly uuid: string = undefined;
+    public readonly uuid: string;
 
     /**
      * The properties of the characteristic
@@ -73,10 +73,10 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     /**
      * @hidden
      */
-    public _handle: string = undefined;
-    private descriptors: Array<BluetoothRemoteGATTDescriptor> = undefined;
+    public _handle: string;
+    private descriptors: Array<BluetoothRemoteGATTDescriptor> | undefined;
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -103,12 +103,14 @@ export class BluetoothRemoteGATTCharacteristicImpl extends EventDispatcher<Chara
     }
 
     private setValue(value?: DataView, emit?: boolean) {
-        this._value = value;
-        if (emit) {
-            this.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
-            this.service.device._bluetooth.dispatchEvent(new DOMEvent(this, 'characteristicvaluechanged'));
+        if (value) {
+            this._value = value;
+            if (emit) {
+                this.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.device.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+                this.service.device._bluetooth.dispatchEvent(new CustomEvent('characteristicvaluechanged', { bubbles: true }));
+            }
         }
     }
 

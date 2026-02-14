@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -26,7 +26,6 @@
 import { BluetoothUUID } from './uuid';
 import { adapter } from './adapters';
 import { BluetoothRemoteGATTServiceImpl } from './service';
-import { DOMEvent } from './events';
 import { BluetoothDeviceImpl } from './device';
 
 /**
@@ -37,7 +36,7 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     /**
      * The device the gatt server is related to
      */
-    public readonly device: BluetoothDeviceImpl = undefined;
+    public readonly device: BluetoothDeviceImpl;
 
     private _connected = false;
     /**
@@ -50,8 +49,8 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
     /**
     * @hidden
     */
-    public _handle: string = undefined;
-    private services: Array<BluetoothRemoteGATTService> = undefined;
+    public _handle: string;
+    private services: Array<BluetoothRemoteGATTService> | undefined;
 
     /**
      * Server constructor
@@ -74,8 +73,8 @@ export class BluetoothRemoteGATTServerImpl implements BluetoothRemoteGATTServer 
         await adapter.connect(this._handle, () => {
             this.services = undefined;
             this._connected = false;
-            this.device.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
-            this.device._bluetooth.dispatchEvent(new DOMEvent(this.device, 'gattserverdisconnected'));
+            this.device.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
+            this.device._bluetooth.dispatchEvent(new CustomEvent('gattserverdisconnected', { bubbles: true }));
         });
 
         this._connected = true;

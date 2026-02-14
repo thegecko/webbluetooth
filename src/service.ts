@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -28,7 +28,7 @@ import { BluetoothDeviceImpl } from './device';
 import { BluetoothRemoteGATTCharacteristicImpl, CharacteristicEvents } from './characteristic';
 import { BluetoothUUID } from './uuid';
 import { BluetoothRemoteGATTServiceInit } from './adapters/adapter';
-import { EventDispatcher, DOMEvent } from './events';
+import { EventDispatcher } from './events';
 
 /**
  * @hidden
@@ -56,12 +56,12 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
     /**
      * The device the service is related to
      */
-    public readonly device: BluetoothDeviceImpl = undefined;
+    public readonly device: BluetoothDeviceImpl;
 
     /**
      * The unique identifier of the service
      */
-    public readonly uuid: string = undefined;
+    public readonly uuid: string;
 
     /**
      * Whether the service is a primary one
@@ -72,11 +72,11 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
     /**
      * @hidden
      */
-    public _handle: string = undefined;
-    private services: Array<BluetoothRemoteGATTService> = undefined;
-    private characteristics: Array<BluetoothRemoteGATTCharacteristic> = undefined;
+    public _handle: string;
+    private services: Array<BluetoothRemoteGATTService> | undefined;
+    private characteristics: Array<BluetoothRemoteGATTCharacteristic> | undefined;
 
-    private _oncharacteristicvaluechanged: (ev: Event) => void;
+    private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
     public set oncharacteristicvaluechanged(fn: (ev: Event) => void) {
         if (this._oncharacteristicvaluechanged) {
             this.removeEventListener('characteristicvaluechanged', this._oncharacteristicvaluechanged);
@@ -88,7 +88,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
     }
 
-    private _onserviceadded: (ev: Event) => void;
+    private _onserviceadded: ((ev: Event) => void) | undefined;
     public set onserviceadded(fn: (ev: Event) => void) {
         if (this._onserviceadded) {
             this.removeEventListener('serviceadded', this._onserviceadded);
@@ -100,7 +100,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
     }
 
-    private _onservicechanged: (ev: Event) => void;
+    private _onservicechanged: ((ev: Event) => void) | undefined;
     public set onservicechanged(fn: (ev: Event) => void) {
         if (this._onservicechanged) {
             this.removeEventListener('servicechanged', this._onservicechanged);
@@ -112,7 +112,7 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         }
     }
 
-    private _onserviceremoved: (ev: Event) => void;
+    private _onserviceremoved: ((ev: Event) => void) | undefined;
     public set onserviceremoved(fn: (ev: Event) => void) {
         if (this._onserviceremoved) {
             this.removeEventListener('serviceremoved', this._onserviceremoved);
@@ -136,9 +136,9 @@ export class BluetoothRemoteGATTServiceImpl extends EventDispatcher<ServiceEvent
         this.isPrimary = init.isPrimary;
         this._handle = init._handle;
 
-        this.dispatchEvent(new DOMEvent(this, 'serviceadded'));
-        this.device.dispatchEvent(new DOMEvent(this, 'serviceadded'));
-        this.device._bluetooth.dispatchEvent(new DOMEvent(this, 'serviceadded'));
+        this.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
+        this.device.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
+        this.device._bluetooth.dispatchEvent(new CustomEvent('serviceadded', { bubbles: true }));
     }
 
     /**

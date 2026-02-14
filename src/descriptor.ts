@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -34,12 +34,12 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
     /**
      * The characteristic the descriptor is related to
      */
-    public readonly characteristic: BluetoothRemoteGATTCharacteristic = undefined;
+    public readonly characteristic: BluetoothRemoteGATTCharacteristic;
 
     /**
      * The unique identifier of the descriptor
      */
-    public readonly uuid: string = undefined;
+    public readonly uuid: string;
 
     private _value: DataView | undefined;
     /**
@@ -52,7 +52,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
     /**
      * @hidden
      */
-    public _handle: string = undefined;
+    public _handle: string;
 
     /**
      * Descriptor constructor
@@ -70,7 +70,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
      * @returns Promise containing the value
      */
     public async readValue(): Promise<DataView> {
-        if (!this.characteristic.service.device.gatt.connected) {
+        if (!this.characteristic.service.device.gatt?.connected) {
             throw new Error('readValue error: device not connected');
         }
 
@@ -84,7 +84,7 @@ export class BluetoothRemoteGATTDescriptorImpl implements BluetoothRemoteGATTDes
      * @param value The value to write
      */
     public async writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        if (!this.characteristic.service.device.gatt.connected) {
+        if (!this.characteristic.service.device.gatt?.connected) {
             throw new Error('writeValue error: device not connected');
         }
 

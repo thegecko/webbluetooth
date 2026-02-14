@@ -1,6 +1,6 @@
 /*
 * Node Web Bluetooth
-* Copyright (c) 2025 Rob Moran
+* Copyright (c) 2026 Rob Moran
 *
 * The MIT License (MIT)
 *
@@ -87,13 +87,15 @@ class PeripheralHandles {
 
     public deleteHandles(peripheral: Peripheral): void {
         const children = this.peripheralChildren.get(peripheral);
-        for (const child of children) {
-            this.children.delete(child);
-            this.parents.delete(child);
-            this.services.delete(child);
-            this.characteristics.delete(child);
-            this.descriptors.delete(child);
-            this.characteristicEvents.delete(child);
+        if (children) {
+            for (const child of children) {
+                this.children.delete(child);
+                this.parents.delete(child);
+                this.services.delete(child);
+                this.characteristics.delete(child);
+                this.descriptors.delete(child);
+                this.characteristicEvents.delete(child);
+            }
         }
         this.peripheralChildren.delete(peripheral);
     }
@@ -102,8 +104,13 @@ class PeripheralHandles {
         const children = this.children.get(deviceHandle);
         const services: { [key: string]: Service } = {};
 
-        for (const child of children) {
-            services[child] = this.services.get(child);
+        if (children) {
+            for (const child of children) {
+                const service = this.services.get(child);
+                if (service) {
+                    services[child] = service;
+                }
+            }
         }
 
         return services;
@@ -113,8 +120,13 @@ class PeripheralHandles {
         const children = this.children.get(serviceHandle);
         const characteristics: { [key: string]: Characteristic } = {};
 
-        for (const child of children) {
-            characteristics[child] = this.characteristics.get(child);
+        if (children) {
+            for (const child of children) {
+                const characteristic = this.characteristics.get(child);
+                if (characteristic) {
+                    characteristics[child] = characteristic;
+                }
+            }
         }
 
         const peripheralHandle = this.parents.get(serviceHandle);
@@ -143,8 +155,13 @@ class PeripheralHandles {
         const children = this.children.get(characteristicHandle);
         const descriptors: { [key: string]: Descriptor } = {};
 
-        for (const child of children) {
-            descriptors[child] = this.descriptors.get(child);
+        if (children) {
+            for (const child of children) {
+                const descriptor = this.descriptors.get(child);
+                if (descriptor) {
+                    descriptors[child] = descriptor;
+                }
+            }
         }
 
         return descriptors;
@@ -232,7 +249,7 @@ class PeripheralHandles {
  * @hidden
  */
 export class SimplebleAdapter extends EventEmitter implements BluetoothAdapter {
-    private adapter: Adapter;
+    private adapter: Adapter | undefined;
     private peripherals = new Map<string, Peripheral>();
     private handles = new PeripheralHandles(this.peripherals);
 
