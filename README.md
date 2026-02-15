@@ -3,7 +3,33 @@ Node.js implementation of the [Web Bluetooth Specification](https://webbluetooth
 
 [![Build Status](https://github.com/thegecko/webbluetooth/workflows/prebuild/badge.svg)](https://github.com/thegecko/webbluetooth/actions)
 [![npm](https://img.shields.io/npm/dm/webbluetooth.svg)](https://www.npmjs.com/package/webbluetooth)
-[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+
+## Licensing
+
+This library is [MIT](http://opensource.org/licenses/MIT) licensed, however it relies on the [SimpleBLE](https://github.com/simpleble/simpleble) library which has a separate license with a confusing history...
+
+### SimpleBLE History
+
+Since v0.7.0 a commercial license is required for any commercial usage, but is otherwise free to use for non-commercial purposes.
+
+- v0.6.1: MIT
+- v0.7.0: BSD3/GPLv3
+- v0.7.1: BSD3/GPLv3
+- v0.7.3: GPLv3
+- v0.8.1: GPLv3
+- v0.9.0+: BUSL-1.1
+
+*Note: v0.10.3 was the last to support MacOS Catalina, Big Sur and Monterey*
+
+### Webbluetooth Library Versions
+
+The default (`latest`) version of `webbluetooth` released on npm will always include the MIT version of SimpleBLE. However, if you want to use a newer version, others are available as follows and we will endeveuer to keep these up to date.
+Note that the license terms when using these are your responsibility.
+
+- v3.x.x webbluetooth@latest (default) - SimpleBLE v0.6.1 ([MIT licensed](https://github.com/simpleble/simpleble/blob/818eeb43574119bde87e9b8cdfea34e9bb17dc98/LICENSE.md))
+- v4.x.x webbluetooth@bsd-3 - SimpleBLE v0.7.1 ([BSD-3-Clause](https://github.com/simpleble/simpleble/blob/fe5c54c4253b15e2bd255fb179ea79d2073b10cc/LICENSE.md))
+- v5.x.x webbluetooth@gpl-3.0 - SimpleBLE v0.8.1 ([GPLv3 licensed](https://github.com/simpleble/simpleble/blob/5d19f5048408fb7a273bc55de5c3a816f4ff417d/LICENSE.md))
+- v6.x.x webbluetooth@busl-1.1 - latest SimpleBLE ([BUSL-1.1 licensed](https://github.com/simpleble/simpleble/blob/main/LICENSE.md))
 
 ## Prerequisites
 
