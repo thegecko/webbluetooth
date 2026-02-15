@@ -1,5 +1,5 @@
 #include "peripheral.h"
-#include "simpleble_c/simpleble.h"
+#include "simplecble/simplecble.h"
 
 Napi::FunctionReference Peripheral::constructor;
 
@@ -724,7 +724,8 @@ void Peripheral::onDisconnected(simpleble_peripheral_t, void *userdata) {
   peripheral->onDisconnectedFn.NonBlockingCall(callback);
 }
 
-void Peripheral::onNotify(simpleble_uuid_t service,
+void Peripheral::onNotify(simpleble_peripheral_t,
+                          simpleble_uuid_t service,
                           simpleble_uuid_t characteristic, const uint8_t *data,
                           size_t data_length, void *userdata) {
   auto peripheral = reinterpret_cast<Peripheral *>(userdata);
@@ -742,7 +743,8 @@ void Peripheral::onNotify(simpleble_uuid_t service,
     it->second.NonBlockingCall(callback);
 }
 
-void Peripheral::onIndicate(simpleble_uuid_t service,
+void Peripheral::onIndicate(simpleble_peripheral_t,
+                            simpleble_uuid_t service,
                             simpleble_uuid_t characteristic,
                             const uint8_t *data, size_t data_length,
                             void *userdata) {

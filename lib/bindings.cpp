@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <napi.h>
-#include <simpleble_c/simpleble.h>
+#include <simplecble/simplecble.h>
 
 #include "adapter.h"
 #include "peripheral.h"

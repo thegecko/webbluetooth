@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include <simpleble_c/adapter.h>
+#include <simplecble/adapter.h>
 
 class Adapter : public Napi::ObjectWrap<Adapter> {
 public:
