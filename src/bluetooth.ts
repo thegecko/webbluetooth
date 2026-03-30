@@ -23,7 +23,7 @@
 * SOFTWARE.
 */
 
-import { adapter, EVENT_ENABLED } from './adapters';
+import { adapter } from './adapters';
 import { BluetoothDeviceInit } from './adapters/adapter';
 import { BluetoothDevice } from './device';
 import { BluetoothUUID } from './uuid';
@@ -100,10 +100,6 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
         if (typeof options.adapterIndex === 'number') {
             adapter.useAdapter(options.adapterIndex);
         }
-
-        adapter.addEventListener(EVENT_ENABLED, _value => {
-            this.dispatchEvent(new CustomEvent('availabilitychanged', { bubbles: true }));
-        });
     }
 
     private _oncharacteristicvaluechanged: ((ev: Event) => void) | undefined;
@@ -181,13 +177,15 @@ class BluetoothImpl extends EventTarget implements Bluetooth {
     private _onavailabilitychanged: ((ev: Event) => void) | undefined;
     public set onavailabilitychanged(fn: (ev: Event) => void) {
         if (this._onavailabilitychanged) {
-            this.removeEventListener('availabilitychanged', this._onavailabilitychanged);
+            // adapter.removeEventListener(EVENT_ENABLED, this._onavailabilitychanged);
             this._onavailabilitychanged = undefined;
         }
         if (fn) {
             this._onavailabilitychanged = fn;
-            this.addEventListener('availabilitychanged', this._onavailabilitychanged);
+            // adapter.addEventListener(EVENT_ENABLED, this._onavailabilitychanged);
         }
+
+        throw new Error('onavailabilitychanged error: method not implemented');
     }
 
     private filterDevice(filters: Array<BluetoothLEScanFilter>, deviceInfo: BluetoothDeviceInit, validServices: string[]): BluetoothDeviceInit | undefined {
