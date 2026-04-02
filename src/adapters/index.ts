@@ -26,5 +26,4 @@
 import type { Adapter } from './adapter';
 import { SimplebleAdapter } from './simpleble-adapter';
 
-export const EVENT_ENABLED = 'enabledchanged';
 export const adapter = new SimplebleAdapter() as Adapter;
