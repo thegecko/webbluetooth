@@ -11,7 +11,7 @@ elseif(WIN32)
     set(CMAKE_SYSTEM_VERSION "10.0.22000.0" CACHE STRING "Windows version" FORCE)
 endif()
 
-add_subdirectory(SimpleBLE/simpleble)
+add_subdirectory(SimpleBLE/simplecble)
 
 # Add Node bindings.
 execute_process(COMMAND node -p "require('node-addon-api').include_dir"
