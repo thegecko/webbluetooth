@@ -178,7 +178,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * Updates the value of the characteristic
      * @param value The value to write
      */
-    public async writeValue(value: ArrayBuffer | ArrayBufferView): Promise<void> {
+    public async writeValue(value: ArrayBuffer | ArrayBufferView, withoutResponse = false): Promise<void> {
         if (!this.service.device.gatt.connected) {
             throw new Error('writeValue error: device not connected');
         }
@@ -186,7 +186,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
         const arrayBuffer = isView(value) ? value.buffer : value;
         const dataView = new DataView(arrayBuffer);
 
-        await adapter.writeCharacteristic(this._handle, dataView);
+        await adapter.writeCharacteristic(this._handle, dataView, withoutResponse);
         this.setValue(dataView);
     }
 
@@ -195,15 +195,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * @param value The value to write
      */
     public async writeValueWithResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        if (!this.service.device.gatt.connected) {
-            throw new Error('writeValue error: device not connected');
-        }
-
-        const arrayBuffer = isView(value) ? value.buffer : value;
-        const dataView = new DataView(arrayBuffer);
-
-        await adapter.writeCharacteristic(this._handle, dataView, false);
-        this.setValue(dataView);
+        return this.writeValue(value, false);
     }
 
     /**
@@ -211,15 +203,7 @@ class BluetoothRemoteGATTCharacteristicImpl extends EventTarget implements Bluet
      * @param value The value to write
      */
     public async writeValueWithoutResponse(value: ArrayBuffer | ArrayBufferView): Promise<void> {
-        if (!this.service.device.gatt.connected) {
-            throw new Error('writeValue error: device not connected');
-        }
-
-        const arrayBuffer = isView(value) ? value.buffer : value;
-        const dataView = new DataView(arrayBuffer);
-
-        await adapter.writeCharacteristic(this._handle, dataView, true);
-        this.setValue(dataView);
+        return this.writeValue(value, true);
     }
 
     /**
