@@ -442,8 +442,8 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
                         // Not all of these are supported in SimpleBle
                         broadcast: false, // characteristic.capabilities.includes('???'),
                         read: characteristic.canRead,
-                        writeWithoutResponse: characteristic.canWriteRequest,
-                        write: characteristic.canWriteCommand,
+                        write: characteristic.canWriteRequest, // Request includes a response
+                        writeWithoutResponse: characteristic.canWriteCommand, // Command is 'fire and forget'
                         notify: characteristic.canNotify,
                         indicate: characteristic.canIndicate,
                         authenticatedSignedWrites: false, // characteristic.capabilities.includes('???'),
@@ -503,13 +503,15 @@ export class SimplebleAdapter extends EventTarget implements BluetoothAdapter {
         return new DataView(data.buffer);
     }
 
-    public async writeCharacteristic(handle: string, value: DataView, withoutResponse = false): Promise<void> {
+    public async writeCharacteristic(handle: string, value: DataView, withoutResponse: boolean): Promise<void> {
         const { peripheral, service, characteristic } = this.handles.getCharacteristicGraph(handle);
         let success = false;
 
         if (withoutResponse) {
+            // Command is 'fire and forget'
             success = peripheral.writeCommand(service.uuid, characteristic.uuid, new Uint8Array(value.buffer));
         } else {
+            // Request includes a response
             success = peripheral.writeRequest(service.uuid, characteristic.uuid, new Uint8Array(value.buffer));
         }
 

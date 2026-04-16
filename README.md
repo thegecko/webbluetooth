@@ -167,8 +167,8 @@ https://webbluetoothcg.github.io/web-bluetooth/
 - [x] value
 - [ ] properties.broadcast - unsupported in adapter
 - [x] properties.read
-- [x] properties.writeWithoutResponse
 - [x] properties.write
+- [x] properties.writeWithoutResponse
 - [x] properties.notify
 - [x] properties.indicate
 - [ ] properties.authenticatedSignedWrites - unsupported in adapter

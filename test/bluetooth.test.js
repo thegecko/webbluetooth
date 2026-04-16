@@ -218,7 +218,7 @@ describe('characteristics', () => {
         const array = encoder.encode(time);
         const service = await device.gatt.getPrimaryService(ledServiceUuid);
         const char = await service.getCharacteristic(ledTextCharUuid);
-        await char.writeValue(new DataView(array.buffer));
+        await char.writeWithoutResponse(new DataView(array.buffer));
     });
 
     it('should emit characteristic value changed event', () => {
