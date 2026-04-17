@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.7.0] - 2026-04-17
+
+### Fixed
+- Fixed inversion of write properties - [437](https://github.com/thegecko/webbluetooth/pull/437) ([Rob Moran](https://github.com/thegecko))
+
 ## [3.6.0] - 2026-02-14
 
 ### Fixed

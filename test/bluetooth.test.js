@@ -182,7 +182,7 @@ describe('characteristics', () => {
         assert.equal(uuids.includes('00002a26-0000-1000-8000-00805f9b34fb'), true);
     });
 
-    it('should get characteristic', async () => {
+    it('should get read characteristic', async () => {
         const deviceInfoServiceUuid = '0000180a-0000-1000-8000-00805f9b34fb';
         const modelNumberCharUuid = '00002a24-0000-1000-8000-00805f9b34fb';
         const service = await device.gatt.getPrimaryService(deviceInfoServiceUuid);
@@ -192,8 +192,8 @@ describe('characteristics', () => {
         assert.equal(char.value, undefined);
         assert.deepEqual(char.service, service);
         assert.equal(char.properties.read, true);
-        assert.equal(char.properties.writeWithoutResponse, false);
         assert.equal(char.properties.write, false);
+        assert.equal(char.properties.writeWithoutResponse, false);
         assert.equal(char.properties.notify, false);
         assert.equal(char.properties.indicate, false);
     });
@@ -209,6 +209,22 @@ describe('characteristics', () => {
         assert.equal(decoder.decode(value).startsWith('BBC micro:bit'), true);
     });
 
+    it('should get write characteristic', async () => {
+        const ledServiceUuid = 'e95dd91d-251d-470a-a062-fa1922dfa9a8';
+        const ledTextCharUuid = 'e95d93ee-251d-470a-a062-fa1922dfa9a8';
+        const service = await device.gatt.getPrimaryService(ledServiceUuid);
+        const char = await service.getCharacteristic(ledTextCharUuid);
+        assert.notEqual(char, undefined);
+        assert.equal(char.uuid, ledTextCharUuid);
+        assert.equal(char.value, undefined);
+        assert.deepEqual(char.service, service);
+        assert.equal(char.properties.read, false);
+        assert.equal(char.properties.write, true);
+        assert.equal(char.properties.writeWithoutResponse, false);
+        assert.equal(char.properties.notify, false);
+        assert.equal(char.properties.indicate, false);
+    });
+
     it('should write characteristic value', async () => {
         const ledServiceUuid = 'e95dd91d-251d-470a-a062-fa1922dfa9a8';
         const ledTextCharUuid = 'e95d93ee-251d-470a-a062-fa1922dfa9a8';
@@ -218,7 +234,7 @@ describe('characteristics', () => {
         const array = encoder.encode(time);
         const service = await device.gatt.getPrimaryService(ledServiceUuid);
         const char = await service.getCharacteristic(ledTextCharUuid);
-        await char.writeWithoutResponse(new DataView(array.buffer));
+        await char.writeValueWithResponse(new DataView(array.buffer));
     });
 
     it('should emit characteristic value changed event', () => {
