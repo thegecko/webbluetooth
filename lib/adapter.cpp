@@ -1,6 +1,8 @@
 #include "adapter.h"
 #include "peripheral.h"
 
+#include <simpleble/AdapterSafe.h>
+
 Napi::FunctionReference Adapter::constructor;
 
 Napi::Object Adapter::Init(Napi::Env env, Napi::Object exports) {
@@ -43,26 +45,43 @@ Adapter::Adapter(const Napi::CallbackInfo &info)
 }
 
 Adapter::~Adapter() {
+  Cleanup();
+}
+
+void Adapter::Cleanup() {
   if (this->handle != nullptr) {
+    bool active = false;
+    auto adapter = reinterpret_cast<SimpleBLE::Safe::Adapter *>(this->handle);
+    adapter->set_callback_on_scan_start(nullptr);
+    adapter->set_callback_on_scan_stop(nullptr);
+    adapter->set_callback_on_scan_updated(nullptr);
+    adapter->set_callback_on_scan_found(nullptr);
+    if (simpleble_adapter_scan_is_active(this->handle, &active) == SIMPLEBLE_SUCCESS && active) {
+      simpleble_adapter_scan_stop(this->handle);
+    }
     simpleble_adapter_release_handle(this->handle);
+    this->handle = nullptr;
   }
+
   if (this->onScanStartFn) {
     this->onScanStartFn.Release();
+    this->onScanStartFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanStopFn) {
     this->onScanStopFn.Release();
+    this->onScanStopFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanUpdatedFn) {
     this->onScanUpdatedFn.Release();
+    this->onScanUpdatedFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanFoundFn) {
     this->onScanFoundFn.Release();
+    this->onScanFoundFn = Napi::ThreadSafeFunction();
   }
-
-  this->handle = nullptr;
 }
 
 Napi::Value Adapter::Identifier(const Napi::CallbackInfo &info) {
@@ -273,7 +292,7 @@ Napi::Value Adapter::SetCallbackOnScanFound(const Napi::CallbackInfo &info) {
 Napi::Value Adapter::Release(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  delete this;
+  Cleanup();
 
   return env.Null();
 }

@@ -12,11 +12,13 @@ public:
   static Napi::FunctionReference constructor;
 
 private:
-  simpleble_adapter_t handle;
+  simpleble_adapter_t handle = nullptr;
   Napi::ThreadSafeFunction onScanStartFn;
   Napi::ThreadSafeFunction onScanStopFn;
   Napi::ThreadSafeFunction onScanUpdatedFn;
   Napi::ThreadSafeFunction onScanFoundFn;
+
+  void Cleanup();
 
   static void onScanStart(simpleble_adapter_t handle, void *userdata);
   static void onScanStop(simpleble_adapter_t handle, void *userdata);
