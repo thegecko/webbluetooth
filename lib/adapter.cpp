@@ -3,7 +3,17 @@
 
 #include <simpleble/AdapterSafe.h>
 
+#include <algorithm>
+#include <mutex>
+#include <vector>
+
 Napi::FunctionReference Adapter::constructor;
+
+namespace {
+std::mutex adaptersMutex;
+std::vector<Adapter *> adapters;
+std::atomic_bool shuttingDown{false};
+}
 
 Napi::Object Adapter::Init(Napi::Env env, Napi::Object exports) {
   // clang-format off
@@ -26,6 +36,8 @@ Napi::Object Adapter::Init(Napi::Env env, Napi::Object exports) {
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
+  shuttingDown = false;
+  env.AddCleanupHook(Adapter::CleanupAll);
 
   exports.Set("Adapter", func);
   return exports;
@@ -42,13 +54,20 @@ Adapter::Adapter(const Napi::CallbackInfo &info)
   }
   size_t index = info[0].As<Napi::Number>().Int64Value();
   this->handle = simpleble_adapter_get_handle(index);
+  Register(this);
 }
 
 Adapter::~Adapter() {
   Cleanup();
+  Unregister(this);
 }
 
-void Adapter::Cleanup() {
+void Adapter::Cleanup(bool releaseHandle, bool cleanupThreadSafeFunctions) {
+  this->closing = true;
+  if (!cleanupThreadSafeFunctions) {
+    this->skipThreadSafeFunctionCleanup = true;
+  }
+
   if (this->handle != nullptr) {
     bool active = false;
     auto adapter = reinterpret_cast<SimpleBLE::Safe::Adapter *>(this->handle);
@@ -59,29 +78,63 @@ void Adapter::Cleanup() {
     if (simpleble_adapter_scan_is_active(this->handle, &active) == SIMPLEBLE_SUCCESS && active) {
       simpleble_adapter_scan_stop(this->handle);
     }
-    simpleble_adapter_release_handle(this->handle);
+    if (releaseHandle) {
+      simpleble_adapter_release_handle(this->handle);
+    }
     this->handle = nullptr;
   }
 
+  if (!cleanupThreadSafeFunctions || this->skipThreadSafeFunctionCleanup) {
+    return;
+  }
+
   if (this->onScanStartFn) {
-    this->onScanStartFn.Release();
+    this->onScanStartFn.Abort();
     this->onScanStartFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanStopFn) {
-    this->onScanStopFn.Release();
+    this->onScanStopFn.Abort();
     this->onScanStopFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanUpdatedFn) {
-    this->onScanUpdatedFn.Release();
+    this->onScanUpdatedFn.Abort();
     this->onScanUpdatedFn = Napi::ThreadSafeFunction();
   }
 
   if (this->onScanFoundFn) {
-    this->onScanFoundFn.Release();
+    this->onScanFoundFn.Abort();
     this->onScanFoundFn = Napi::ThreadSafeFunction();
   }
+}
+
+void Adapter::CleanupAll() {
+  try {
+    shuttingDown = true;
+
+    std::vector<Adapter *> liveAdapters;
+    {
+      std::lock_guard<std::mutex> lock(adaptersMutex);
+      liveAdapters = adapters;
+    }
+
+    for (auto adapter : liveAdapters) {
+      adapter->Cleanup(false, false);
+    }
+  } catch (...) {
+    // Cleanup hooks are noexcept; process shutdown must not terminate here.
+  }
+}
+
+void Adapter::Register(Adapter *adapter) {
+  std::lock_guard<std::mutex> lock(adaptersMutex);
+  adapters.push_back(adapter);
+}
+
+void Adapter::Unregister(Adapter *adapter) {
+  std::lock_guard<std::mutex> lock(adaptersMutex);
+  adapters.erase(std::remove(adapters.begin(), adapters.end(), adapter), adapters.end());
 }
 
 Napi::Value Adapter::Identifier(const Napi::CallbackInfo &info) {
@@ -299,7 +352,13 @@ Napi::Value Adapter::Release(const Napi::CallbackInfo &info) {
 
 void Adapter::onScanStart(simpleble_adapter_t handle, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
+  if (adapter == nullptr || adapter->closing || !adapter->onScanStartFn) {
+    return;
+  }
   auto callback = [](Napi::Env env, Napi::Function jsCallback) {
+    if (shuttingDown || env == nullptr || jsCallback.IsEmpty()) {
+      return;
+    }
     jsCallback.Call({});
   };
   adapter->onScanStartFn.NonBlockingCall(callback);
@@ -307,7 +366,13 @@ void Adapter::onScanStart(simpleble_adapter_t handle, void *userdata) {
 
 void Adapter::onScanStop(simpleble_adapter_t handle, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
+  if (adapter == nullptr || adapter->closing || !adapter->onScanStopFn) {
+    return;
+  }
   auto callback = [](Napi::Env env, Napi::Function jsCallback) {
+    if (shuttingDown || env == nullptr || jsCallback.IsEmpty()) {
+      return;
+    }
     jsCallback.Call({});
   };
   adapter->onScanStopFn.NonBlockingCall(callback);
@@ -316,8 +381,14 @@ void Adapter::onScanStop(simpleble_adapter_t handle, void *userdata) {
 void Adapter::onScanUpdated(simpleble_adapter_t handle,
                             simpleble_peripheral_t peripheral, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
+  if (adapter == nullptr || adapter->closing || !adapter->onScanUpdatedFn) {
+    return;
+  }
   auto callback = [](Napi::Env env, Napi::Function jsCallback,
                      simpleble_peripheral_t peripheral) {
+    if (shuttingDown || env == nullptr || jsCallback.IsEmpty()) {
+      return;
+    }
     Napi::Value peripheralInstance = Peripheral::constructor.New(
         {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
     jsCallback.Call({peripheralInstance});
@@ -328,8 +399,14 @@ void Adapter::onScanUpdated(simpleble_adapter_t handle,
 void Adapter::onScanFound(simpleble_adapter_t handle,
                           simpleble_peripheral_t peripheral, void *userdata) {
   auto adapter = reinterpret_cast<Adapter *>(userdata);
+  if (adapter == nullptr || adapter->closing || !adapter->onScanFoundFn) {
+    return;
+  }
   auto callback = [](Napi::Env env, Napi::Function jsCallback,
                      simpleble_peripheral_t peripheral) {
+    if (shuttingDown || env == nullptr || jsCallback.IsEmpty()) {
+      return;
+    }
     Napi::Value peripheralInstance = Peripheral::constructor.New(
         {Napi::BigInt::New(env, reinterpret_cast<uint64_t>(peripheral))});
     jsCallback.Call({peripheralInstance});

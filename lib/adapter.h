@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <napi.h>
 #include <simpleble_c/adapter.h>
 
@@ -13,12 +14,17 @@ public:
 
 private:
   simpleble_adapter_t handle = nullptr;
+  std::atomic_bool closing{false};
+  bool skipThreadSafeFunctionCleanup = false;
   Napi::ThreadSafeFunction onScanStartFn;
   Napi::ThreadSafeFunction onScanStopFn;
   Napi::ThreadSafeFunction onScanUpdatedFn;
   Napi::ThreadSafeFunction onScanFoundFn;
 
-  void Cleanup();
+  void Cleanup(bool releaseHandle = true, bool cleanupThreadSafeFunctions = true);
+  static void CleanupAll();
+  static void Register(Adapter *adapter);
+  static void Unregister(Adapter *adapter);
 
   static void onScanStart(simpleble_adapter_t handle, void *userdata);
   static void onScanStop(simpleble_adapter_t handle, void *userdata);
