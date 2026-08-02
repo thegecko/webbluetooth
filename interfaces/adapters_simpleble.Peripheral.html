@@ -16,7 +16,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">Peripheral</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#address">address</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#addresstype">addressType</a><span class="tsd-signature-symbol">:</span> <a href="../enums/adapters_simpleble.AddressType.html" class="tsd-signature-type tsd-kind-enum">AddressType</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#connectable">connectable</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#connected">connected</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#identifier">identifier</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#manufacturerdata">manufacturerData</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#mtu">mtu</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#paired">paired</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#rssi">rssi</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#services">services</a><span class="tsd-signature-symbol">:</span> <a href="adapters_simpleble.Service.html" class="tsd-signature-type tsd-kind-interface">Service</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#txpower">txPower</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#connect-1">connect</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#disconnect-1">disconnect</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#indicate-1">indicate</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">cb</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#notify-1">notify</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">cb</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#read-1">read</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#readdescriptor-1">readDescriptor</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">descriptor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#setcallbackonconnected-1">setCallbackOnConnected</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">cb</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#setcallbackondisconnected-1">setCallbackOnDisconnected</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">cb</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#unpair-1">unpair</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#unsubscribe-1">unsubscribe</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#writecommand-1">writeCommand</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#writedescriptor-1">writeDescriptor</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">descriptor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#writerequest-1">writeRequest</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">service</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">characteristic</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L66">src/adapters/simpleble.ts:66</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L66">src/adapters/simpleble.ts:66</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -59,57 +59,57 @@
 <h3 class="tsd-anchor-link" id="address"><span>address</span><a href="#address" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">address</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L68">src/adapters/simpleble.ts:68</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L68">src/adapters/simpleble.ts:68</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="addresstype"><span>address<wbr/>Type</span><a href="#addresstype" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">addressType</span><span class="tsd-signature-symbol">:</span> <a href="../enums/adapters_simpleble.AddressType.html" class="tsd-signature-type tsd-kind-enum">AddressType</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L69">src/adapters/simpleble.ts:69</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L69">src/adapters/simpleble.ts:69</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="connectable"><span>connectable</span><a href="#connectable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">connectable</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L74">src/adapters/simpleble.ts:74</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L74">src/adapters/simpleble.ts:74</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="connected"><span>connected</span><a href="#connected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">connected</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L73">src/adapters/simpleble.ts:73</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L73">src/adapters/simpleble.ts:73</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="identifier"><span>identifier</span><a href="#identifier" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">identifier</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L67">src/adapters/simpleble.ts:67</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L67">src/adapters/simpleble.ts:67</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="manufacturerdata"><span>manufacturer<wbr/>Data</span><a href="#manufacturerdata" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">manufacturerData</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&gt;</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L76">src/adapters/simpleble.ts:76</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L76">src/adapters/simpleble.ts:76</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="mtu"><span>mtu</span><a href="#mtu" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">mtu</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L72">src/adapters/simpleble.ts:72</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L72">src/adapters/simpleble.ts:72</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="paired"><span>paired</span><a href="#paired" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">paired</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L75">src/adapters/simpleble.ts:75</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L75">src/adapters/simpleble.ts:75</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="rssi"><span>rssi</span><a href="#rssi" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">rssi</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L70">src/adapters/simpleble.ts:70</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L70">src/adapters/simpleble.ts:70</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="services"><span>services</span><a href="#services" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">services</span><span class="tsd-signature-symbol">:</span> <a href="adapters_simpleble.Service.html" class="tsd-signature-type tsd-kind-interface">Service</a><span class="tsd-signature-symbol">[]</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L77">src/adapters/simpleble.ts:77</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L77">src/adapters/simpleble.ts:77</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="txpower"><span>tx<wbr/>Power</span><a href="#txpower" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">txPower</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L71">src/adapters/simpleble.ts:71</a></li></ul></aside></section></section></details>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L71">src/adapters/simpleble.ts:71</a></li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -121,7 +121,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L79">src/adapters/simpleble.ts:79</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L79">src/adapters/simpleble.ts:79</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="disconnect"><span>disconnect</span><a href="#disconnect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -130,7 +130,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L80">src/adapters/simpleble.ts:80</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L80">src/adapters/simpleble.ts:80</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="indicate"><span>indicate</span><a href="#indicate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -145,7 +145,7 @@
 <li><span><span class="tsd-kind-parameter">cb</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L86">src/adapters/simpleble.ts:86</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L86">src/adapters/simpleble.ts:86</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="notify"><span>notify</span><a href="#notify" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -160,7 +160,7 @@
 <li><span><span class="tsd-kind-parameter">cb</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L85">src/adapters/simpleble.ts:85</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L85">src/adapters/simpleble.ts:85</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="read"><span>read</span><a href="#read" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -174,7 +174,7 @@
 <li><span><span class="tsd-kind-parameter">characteristic</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L82">src/adapters/simpleble.ts:82</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L82">src/adapters/simpleble.ts:82</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readdescriptor"><span>read<wbr/>Descriptor</span><a href="#readdescriptor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -189,7 +189,7 @@
 <li><span><span class="tsd-kind-parameter">descriptor</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L88">src/adapters/simpleble.ts:88</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L88">src/adapters/simpleble.ts:88</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="setcallbackonconnected"><span>set<wbr/>Callback<wbr/>On<wbr/>Connected</span><a href="#setcallbackonconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -202,7 +202,7 @@
 <li><span><span class="tsd-kind-parameter">cb</span>: <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L90">src/adapters/simpleble.ts:90</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L90">src/adapters/simpleble.ts:90</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="setcallbackondisconnected"><span>set<wbr/>Callback<wbr/>On<wbr/>Disconnected</span><a href="#setcallbackondisconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -215,7 +215,7 @@
 <li><span><span class="tsd-kind-parameter">cb</span>: <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L91">src/adapters/simpleble.ts:91</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L91">src/adapters/simpleble.ts:91</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="unpair"><span>unpair</span><a href="#unpair" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -224,7 +224,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L81">src/adapters/simpleble.ts:81</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L81">src/adapters/simpleble.ts:81</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="unsubscribe"><span>unsubscribe</span><a href="#unsubscribe" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -238,7 +238,7 @@
 <li><span><span class="tsd-kind-parameter">characteristic</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L87">src/adapters/simpleble.ts:87</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L87">src/adapters/simpleble.ts:87</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="writecommand"><span>write<wbr/>Command</span><a href="#writecommand" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -253,7 +253,7 @@
 <li><span><span class="tsd-kind-parameter">data</span>: <span class="tsd-signature-type">Uint8Array</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L84">src/adapters/simpleble.ts:84</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L84">src/adapters/simpleble.ts:84</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="writedescriptor"><span>write<wbr/>Descriptor</span><a href="#writedescriptor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -269,7 +269,7 @@
 <li><span><span class="tsd-kind-parameter">data</span>: <span class="tsd-signature-type">Uint8Array</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L89">src/adapters/simpleble.ts:89</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L89">src/adapters/simpleble.ts:89</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="writerequest"><span>write<wbr/>Request</span><a href="#writerequest" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -284,7 +284,7 @@
 <li><span><span class="tsd-kind-parameter">data</span>: <span class="tsd-signature-type">Uint8Array</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/638200b6c71036ee242b6016b42b5218a12b3629/src/adapters/simpleble.ts#L83">src/adapters/simpleble.ts:83</a></li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in <a href="https://github.com/thegecko/webbluetooth/blob/d369edb86166b47dc6c011bf162787d1423938df/src/adapters/simpleble.ts#L83">src/adapters/simpleble.ts:83</a></li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
