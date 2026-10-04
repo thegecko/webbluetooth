@@ -1,0 +1,23 @@
+---
+name: Bug Report
+about: Create a report to help us improve Node Web Bluetooth
+---
+
+<!-- If you are using Node Web Bluetooth v7.0.0 or above, please create your issue at https://github.com/thegecko/webbluetooth-rs/issues instead. -->
+
+<!-- Please provide a detailed description of the bug. -->
+## Bug Description:
+
+<!-- Please provide clear steps to reproduce the bug, using a small Node.js script if possible. -->
+## Steps to Reproduce:
+1.
+2.
+3.
+
+<!-- Please provide any additional information available. -->
+<!-- Additional information can be in the form of logs, screenshots, screencasts. -->
+<!-- If possible, help to bisect the issue by outlining versions the issue didn't occur in. -->
+## Additional Information
+- Operating System: <!-- example: Ubuntu 16.04, Windows 10, macOS Big Sur -->
+- Runtime (`node -v` or `electron -v`):
+- Node Web Bluetooth Version (`npm ls webbluetooth`):
