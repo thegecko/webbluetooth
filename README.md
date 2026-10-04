@@ -4,6 +4,9 @@ Node.js implementation of the [Web Bluetooth Specification](https://webbluetooth
 [![Build Status](https://github.com/thegecko/webbluetooth/workflows/prebuild/badge.svg)](https://github.com/thegecko/webbluetooth/actions)
 [![npm](https://img.shields.io/npm/dm/webbluetooth.svg)](https://www.npmjs.com/package/webbluetooth)
 
+> [!NOTE]
+> Development of this library has now moved to https://github.com/thegecko/webbluetooth-rs since v7.0.0
+
 ## Licensing
 
 This library is [MIT](http://opensource.org/licenses/MIT) licensed, however it relies on the [SimpleBLE](https://github.com/simpleble/simpleble) library which has a separate license with a confusing history...
